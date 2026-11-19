@@ -52,14 +52,6 @@ const upload = async (series, qty) => {
     payload: { weeks: Object.fromEntries(keys.map((k) => [k, qty])), sourceFile: `${series}.csv` }
   });
 };
-/** @param {string} choice */
-const choose = (choice) =>
-  cmd.dispatch(planning, {
-    transitionId: 't_ltpinput_set',
-    entity: 'ltpInput',
-    entityId: `choice|${MAT}`,
-    payload: { ltpChoice: choice }
-  });
 const publish = () =>
   cmd.dispatch(planning, {
     transitionId: 't_demandanticipation_publish',
@@ -72,21 +64,21 @@ describe('out of date (BR-01)', () => {
     for (const r of await rows()) expect(r.outOfDate).toBeNull();
   });
 
-  it('AC-01: LTP B uploaded with the choice on A marks nothing', async () => {
+  it('PSC-4 BR-01: an LTP B upload marks nothing (DA reads LTP A only)', async () => {
     await upload('B', 5_000_000);
     for (const r of await rows()) expect(r.outOfDate).toBeNull();
   });
 
-  it('AC-01: switching the choice to B marks the published DA out of date, cause "LTP choice A → B"', async () => {
-    await upload('B', 5_000_000);
-    await choose('B');
+  it('AC-01: an LTP A upload that moves DA marks the published DA out of date, cause "LTP A"', async () => {
+    await upload('A', 5_000_000);
     const marked = (await rows()).filter((r) => r.outOfDate);
     expect(marked.length).toBeGreaterThan(0);
     for (const r of marked) {
       const causes = r.outOfDate?.causes ?? [];
-      expect(causes.map((c) => c.kind)).toContain('ltpChoice');
-      const c = causes.find((x) => x.kind === 'ltpChoice');
-      expect(c).toMatchObject({ before: 'A', after: 'B' });
+      expect(causes.map((c) => c.kind)).toContain('ltpA');
+      const c = causes.find((x) => x.kind === 'ltpA');
+      expect(c?.before).toBeNull();
+      expect(c?.after).toBeGreaterThan(0);
     }
   });
 
@@ -110,14 +102,13 @@ describe('out of date (BR-01)', () => {
 
 describe('the next publication stores the causes (BR-02, BR-04)', () => {
   it('records the cause, numbers the version and keeps the previous figure to compare', async () => {
-    await upload('B', 5_000_000);
-    await choose('B');
+    await upload('A', 5_000_000);
     expect((await publish()).status).toBe('done');
     const pub = lastPublication();
     const withCause = (pub?.entries ?? []).filter((e) => (e.causes ?? []).length > 0);
     expect(withCause.length).toBeGreaterThan(0);
-    expect(withCause[0].causes?.some((c) => c.kind === 'ltpChoice')).toBe(true);
-    expect(pub?.ledgerMark).toEqual({ ltp: 2, osip: 0 });
+    expect(withCause[0].causes?.some((c) => c.kind === 'ltpA')).toBe(true);
+    expect(pub?.ledgerMark).toEqual({ ltp: 1, osip: 0 });
     // Nothing is out of date once published.
     for (const r of await rows()) expect(r.outOfDate).toBeNull();
 
@@ -127,7 +118,7 @@ describe('the next publication stores the causes (BR-02, BR-04)', () => {
     expect(v2.length).toBeGreaterThan(0);
     expect(v1.length).toBe(v2.length);
     const row = v2.find((h) => h.causes.length > 0);
-    expect(row?.causes.some((c) => c.kind === 'ltpChoice')).toBe(true);
+    expect(row?.causes.some((c) => c.kind === 'ltpA')).toBe(true);
     // The version-1 row has no cause; the version-2 row carries the version-1 figure as "before".
     expect(v1.every((h) => h.causes.length === 0)).toBe(true);
     const first = v1.find((h) => h.supplierId === row?.supplierId);
@@ -136,7 +127,7 @@ describe('the next publication stores the causes (BR-02, BR-04)', () => {
   });
 
   it('an input change that moves no DA figure is not a cause: the second publication carries none', async () => {
-    await upload('B', 5_000_000); // choice stays A: DA does not move, ROP Order does
+    await upload('B', 5_000_000); // DA reads LTP A: DA does not move, ROP Order's Protection does
     expect((await publish()).status).toBe('done');
     const pub = lastPublication();
     expect((pub?.entries ?? []).every((e) => (e.causes ?? []).length === 0)).toBe(true);

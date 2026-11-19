@@ -4,6 +4,7 @@ import {
   BellRing,
   Tags,
   Building2,
+  CalendarCheck,
   CalendarDays,
   Layers,
   Link2,
@@ -41,6 +42,14 @@ export const ADMIN_SECTIONS = [
     labelKey: 'adminCal.section.workingCalendar',
     icon: CalendarDays,
     path: `${ADMIN_BASE_PATH}/working-calendar`
+  },
+  {
+    // PSC-4 BR-07 (BL-339) — the CNY and Typhoon windows the Material Buffer
+    // switches on in. ADM maintains them.
+    id: 'event-calendar',
+    labelKey: 'eventCal.section',
+    icon: CalendarCheck,
+    path: `${ADMIN_BASE_PATH}/event-calendar`
   },
   {
     id: '3pl-tracking',

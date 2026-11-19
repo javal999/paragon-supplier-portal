@@ -62,7 +62,7 @@ const rows = async () =>
   (await svc.getDemandAnticipation(planning)).items.filter((r) => r.materialCode === MAT);
 
 describe('t_ltpinput_set', () => {
-  it('the planner uploads and chooses; the grid carries the series and DA reads the choice', async () => {
+  it('the planner uploads the three series; the grid carries them and DA reads LTP A', async () => {
     const before = await rows();
     expect(before.length).toBeGreaterThan(0);
     const w = before[0].weeks.slice(0, 3).map((x) => x.week);
@@ -76,30 +76,26 @@ describe('t_ltpinput_set', () => {
       (await upload(planning, 'B', Object.fromEntries(Object.keys(all).map((k) => [k, 115]))))
         .status
     ).toBe('done');
-    expect((await choose(planning, 'Festive')).status).toBe('done');
     const after = await rows();
     const total = after.reduce((n, r) => n + (r.share ?? 0), 0);
     expect(total).toBeCloseTo(1, 5);
     for (const r of after) {
       const li = r.ltpInputs;
-      expect(li?.choice).toBe('Festive');
       expect(li?.hasUpload).toBe(true);
       // The uploaded quantity is the material's; a supplier reads its share.
       expect(li?.byWeek[w[0]].a).toBe(Math.round(100 * (r.share ?? 0)));
-      expect(li?.byWeek[w[0]].used).toBe(Math.round(130 * (r.share ?? 0)));
+      // PSC-4 BR-01 — DA reads LTP A, never the chosen series.
+      expect(li?.byWeek[w[0]].used).toBe(Math.round(100 * (r.share ?? 0)));
       // What a publication would store today (the page's published figure stays as published).
       const today = demandAnticipationToPublish([]).figures.find(
         (f) => f.supplierId === r.supplierId && f.materialCode === MAT
       );
-      expect(today?.figure.weeks[0].ltp).toBe(Math.round(130 * (r.share ?? 0)));
-      expect(li?.strategicFromFestive).toBe(true);
-      expect(li?.protectionFromB).toBe(true);
+      expect(today?.figure.weeks[0].ltp).toBe(Math.round(100 * (r.share ?? 0)));
     }
     expect(ltpInputStore.all().map((x) => `${x.kind}:${x.series ?? x.choice}`)).toEqual([
       'upload:A',
       'upload:Festive',
-      'upload:B',
-      'choice:Festive'
+      'upload:B'
     ]);
     expect(ltpInputStore.all()[0]).toMatchObject({ sourceFile: 'A.csv' });
     expect(ltpInputStore.all()[0].setAt).toBeTruthy();

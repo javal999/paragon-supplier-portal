@@ -52,13 +52,8 @@ import { withConsumption } from '../../transitions/consumptionRules';
 import { blanketBalances, openSupplyIndex } from '../../transitions/supplyBelowDemandRules';
 import { addDays } from '../../transitions/inventoryRules';
 import { groupWeekLtp } from '../../transitions/capacityRules';
-import { horizonWeeksOf } from '../../transitions/osipRules';
-import {
-  choiceInForce,
-  ltpWeeks,
-  materialLtpInputs,
-  protectionForRopOrder
-} from '../../transitions/ltpInputRules';
+import { ltpWeeks, materialLtpInputs } from '../../transitions/ltpInputRules';
+import { bufferModelAFor } from './bufferModelARead';
 import { ltpInputStore } from './stores/ltpInputStore';
 import { osipParamStore } from './stores/osipParamStore';
 import { daCauses, daMoved } from '../../transitions/daCauseRules';
@@ -100,8 +95,9 @@ export function leadTimeWeeksOf(supplierId, materialCode) {
 }
 
 /**
- * BL-267 (PEX-5) — the pair's LTP weeks: the three series, the chosen one (DA
- * reads it, BR-04) and the buffers. `source` is the forecast spread by week.
+ * BL-267 (PEX-5) — the pair's LTP weeks: the three series and the buffers.
+ * `source` is the forecast spread by week. PSC-4 (BL-339) — DA reads LTP A
+ * (`ltpWeeks().used`, BR-01); the choice no longer picks the series.
  * PEX-D25 (BL-293) — an uploaded series is split to the supplier by the
  * sourcing share on record (`ltpSplitShares`); the LTP share over the first
  * share-window weeks only when the material has none. `split` says which.
@@ -115,7 +111,6 @@ export function ltpWeeksOf(p, weeks, lines) {
   // weekly spread, which is the costly part (a day loop per line and week).
   if (!inputs.hasUpload)
     return {
-      choice: inputs.choice,
       aFromUpload: false,
       a: /** @type {readonly number[]} */ ([]),
       festive: /** @type {readonly (number | null)[]} */ ([]),
@@ -202,19 +197,25 @@ function pairInputs(publications, nowIso, agreed) {
     const src = sourceOf(p.supplierId, p.materialCode);
     // BL-210 — ROP Order's own consumption, MOQ and koli; none for a pair with no source.
     const size = sizes.get(pairKey(p.supplierId, p.materialCode));
-    // BL-267 (PEX-5 BR-06) — LTP B − LTP A, added to ROP Order only, when B is given.
+    // PSC-4 (BL-339) — model A's buffers: Protection and the Strategic total,
+    // each added to ROP Order once (BR-06); a buffer whose input is missing
+    // adds nothing (BR-08). LTP A is the baseline (BR-01, BR-02).
     const lw = ltpWeeksOf(p, p.weeks, lines);
-    const horizon = horizonWeeksOf(
-      (src ? leadTimeBreakdown(src).totalWeeks : null) ??
-        DEMAND_ANTICIPATION_RULES.fallbackHorizonWeeks
-    );
-    const protection = lw.inputs.uploads.B ? protectionForRopOrder(lw, horizon) : 0;
+    const leadTimeWeeks = src ? leadTimeBreakdown(src).totalWeeks : null;
+    const buffers = bufferModelAFor({
+      materialCode: p.materialCode,
+      week: planningWeek,
+      ltpA: lw.hasUpload ? lw.a : p.ltp,
+      ltpB: lw.hasUpload ? lw.b : null,
+      ltpFestive: lw.hasUpload ? lw.festive : null,
+      leadTimeWeeks
+    });
     return {
       ...p,
       inputs: {
         weeks: p.weeks,
         ltp: p.ltp,
-        leadTimeWeeks: src ? leadTimeBreakdown(src).totalWeeks : null,
+        leadTimeWeeks,
         mpq: src ? src[DEMAND_ANTICIPATION_RULES.mpqField] : 0,
         soh: p.soh,
         ospoOpen: blanketBalances(pos, callOffs, p.supplierId, p.materialCode).reduce(
@@ -232,7 +233,13 @@ function pairInputs(publications, nowIso, agreed) {
         salesOrderQty4w: null,
         // The hub's PRs carry no material code: no open PR quantity per pair.
         ospr: null,
-        ...(protection > 0 ? { protectionBuffer: protection } : {}),
+        // PSC-4 BR-06 — the two model A quantities ROP Order adds, once each.
+        ...(buffers.protection.value !== null && buffers.protection.value > 0
+          ? { protectionBuffer: buffers.protection.value }
+          : {}),
+        ...(buffers.strategic.value !== null && buffers.strategic.value > 0
+          ? { strategicBuffer: buffers.strategic.value }
+          : {}),
         ...(size
           ? {
               consumption: size.consumption,
@@ -301,7 +308,6 @@ export function demandAnticipationToPublish(agreed, nowIso = sdcClock.now()) {
           materialCode: f.materialCode,
           since: prevPub.ledgerMark ?? { ltp: 0, osip: 0 },
           moved: daMoved(prev.figure.value.weeks, f.figure.weeks),
-          choice: choiceInForce(ltpRows, f.materialCode),
           ltpRows,
           osipRows
         })
@@ -426,16 +432,18 @@ export function incomingDaFor(supplierId, materialCode) {
 
 /**
  * BL-267 (PEX-5 BR-03) — what the DA grid adds to a row: the three LTP series
- * per week, the chosen one, the buffers and where each came from.
- * `byWeek` is keyed by the row's week Monday.
+ * per week, and DA's series (LTP A, PSC-4 BR-01) with where the upload came
+ * from. `byWeek` is keyed by the row's week Monday.
+ * PSC-4 (BL-339) — the chosen-LTP field is gone (BR-09): DA reads LTP A. The
+ * grid no longer renders the per-week buffer rows (model A's buffers are
+ * quantities on Safety stock targets), but the read keeps them: the Capacity
+ * page's DRC-9a fallback display reads the same weekly figures, and a spec
+ * checks the two agree (`strategicBufferInputs.pexd10.test.js`).
  * @typedef {{
- *   readonly choice: import('../../transitions/ltpInputRules').LtpSeries;
  *   readonly hasUpload: boolean;
  *   readonly aFromUpload: boolean;
- *   readonly strategicFromFestive: boolean;
- *   readonly protectionFromB: boolean;
  *   readonly flags: readonly string[];
- *   readonly uploads: Readonly<Record<'A' | 'Festive' | 'B', { readonly sourceFile: string; readonly setAt: string } | null>>;
+ *   readonly uploads: Readonly<Record<'A' | 'Festive' | 'B', { readonly sourceFile: string; readonly setAt: string; readonly setBy: import('@lib/enforcement').ActorAttribution } | null>>;
  *   readonly byWeek: Readonly<Record<string, {
  *     readonly a: number;
  *     readonly festive: number | null;
@@ -461,16 +469,15 @@ export function withLtpInputsRead(rows) {
     /** @param {'A' | 'Festive' | 'B'} s */
     const meta = (s) => {
       const u = lw.inputs.uploads[s];
-      return u && u.sourceFile !== null ? { sourceFile: u.sourceFile, setAt: u.setAt } : null;
+      return u && u.sourceFile !== null
+        ? { sourceFile: u.sourceFile, setAt: u.setAt, setBy: u.setBy }
+        : null;
     };
     return {
       ...r,
       ltpInputs: {
-        choice: lw.choice,
         hasUpload: lw.hasUpload,
         aFromUpload: lw.aFromUpload,
-        strategicFromFestive: lw.inputs.uploads.Festive !== null,
-        protectionFromB: lw.inputs.uploads.B !== null,
         flags: lw.flags,
         uploads: { A: meta('A'), Festive: meta('Festive'), B: meta('B') },
         // Without an upload the grid shows no LTP rows, so there is no weekly figure to carry.
@@ -521,7 +528,6 @@ export function withOutOfDateRead(rows) {
       materialCode: r.materialCode,
       since: pub.ledgerMark ?? { ltp: 0, osip: 0 },
       moved,
-      choice: choiceInForce(ltpRows, r.materialCode),
       ltpRows,
       osipRows
     });

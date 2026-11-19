@@ -30,6 +30,7 @@ import { reasonCodeEntityId } from '../transitions/reasonCodes';
 import { warehouseDecisionEntityId } from '../transitions/warehouseDecisionRules';
 import { osipParamKey } from '../transitions/osipParams';
 import { ltpChoiceKey, ltpUploadKey } from '../transitions/ltpInputRules';
+import { eventKey } from '../transitions/eventCalendarRules';
 import { promotionKey } from '../engine/promotions';
 /** @import { ForecastStream } from '../sdc/types' */
 
@@ -2153,6 +2154,41 @@ export function useCalendarDaySet() {
         entity: 'workingCalendar',
         entityId: date,
         payload: { kind, reason, setBy: identity.actor }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    }
+  });
+}
+
+// ── PSC-4 BR-07 (BL-339) · ONE WINDOW ON THE MATERIAL BUFFER'S EVENT CALENDAR ─
+// `entityId` IS `<kind>|<startsOn>`; `setBy` comes from the session, never the
+// form (C10 §6.2). A window moves the Material Buffer switch, which moves ROP
+// Order, so every procurement read re-reads. It writes no DA version (BR-10).
+/**
+ * @typedef {object} EventCalendarSetVars
+ * @property {'CNY' | 'Typhoon'} kind
+ * @property {string} startsOn -  YYYY-MM-DD
+ * @property {string} endsOn -  YYYY-MM-DD
+ * @property {string} reason
+ */
+
+/** Add or replace one CNY or Typhoon window (`t_eventcalendar_set`). */
+export function useEventCalendarSet() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+  const { identity } = useCurrentIdentity();
+
+  return /** @type {typeof useMutation<CommandResult, Error, EventCalendarSetVars>} */ (
+    useMutation
+  )({
+    mutationFn: ({ kind, startsOn, endsOn, reason }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_eventcalendar_set',
+        entity: 'eventCalendar',
+        entityId: eventKey(kind, startsOn),
+        payload: { kind, startsOn, endsOn, reason, setBy: identity.actor }
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') void qc.invalidateQueries();

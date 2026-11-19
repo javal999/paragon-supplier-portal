@@ -2,24 +2,27 @@
 // BL-267 — LTP INPUTS (PEX-5), SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.
 //
 // Four inputs per material, all from outside the hub (BR-01): LTP A, LTP
-// Festive and LTP B (a quantity per hub week) and the LTP CHOICE (A, Festive or
-// B). Until a feed exists the planner uploads them from a file on the DA page
-// [Proposed, PEX-D12]; each upload is stamped with who, when and the source
-// file name (BR-02). Pure: rows in, figures out.
+// Festive and LTP B (a quantity per hub week) and, until PSC-4 (BL-339), the
+// LTP CHOICE (A, Festive or B). Until a feed exists the planner uploads them
+// from a file on the DA page [Proposed, PEX-D12]; each upload is stamped with
+// who, when and the source file name (BR-02). Pure: rows in, figures out.
 //
-//   DA(w)             = the chosen LTP(w)                              (BR-04)
-//   strategic buffer  = LTP Festive − LTP A, when Festive is given     (BR-05)
-//   protection buffer = LTP B − LTP A, when B is given, ROP Order only (BR-06)
-//   the hub never picks the LTP; no choice reads LTP A                 (BR-07)
+//   DA(w)             = LTP A(w)                      (PSC-4 BR-01, BR-02)
+//   strategic buffer  = LTP Festive − LTP A, when Festive is given     (PEX-5 BR-05)
+//   protection buffer = the model A figure, PSC-4 BR-03 (`bufferModelA`)
+//
+// ⚠️ **THE LTP CHOICE IS RETIRED AS A DA INPUT (PSC-4 BR-01, owner 2026-11-18,
+// model A).** Its ledger rows and its verb stay (append-only history), but
+// nothing reads them into DA any more: `ltpWeeks().used` IS LTP A, and the DA
+// grid no longer carries the chosen-LTP marker (BR-09). The per-week buffers the
+// grid used to show are quantities now, on Safety stock targets.
 //
 // MY CALLS (listed in the MR; none is in the requirements doc):
 //   · An upload replaces the whole series of its material: the latest upload of
 //     a series is the one in force; earlier ones stay on the ledger.
-//   · A buffer is never below 0 (DRC-9a's rule), per week.
-//   · A week the chosen series has no quantity for reads LTP A (or the source
-//     forecast when A is not uploaded), flagged `CHOICE_WEEK_EMPTY`.
-//   · ROP Order adds the protection buffer summed over the horizon weeks, as
-//     cycle stock is a horizon total.
+//   · A week the chosen series has no quantity for read LTP A; that rule now
+//     only ever applies to A itself (a week the A upload leaves out reads the
+//     forecast source).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'A' | 'Festive' | 'B'} LtpSeries */
@@ -176,15 +179,19 @@ export function materialLtpInputs(rows, materialCode) {
 }
 
 /**
- * One supplier × material's LTP weeks, with the three series, the chosen one,
- * and the buffers (BR-03 to BR-06). `source` is the weekly figure the hub read
- * before (the Foresight commitment `forecastQty`, spread by week) and stays the
- * LTP A until A is uploaded (BR-02). `share` splits a material's uploaded
- * quantity to this supplier [my call, see the MR].
+ * One supplier × material's LTP weeks, with the three series and the buffers
+ * they used to give per week (BR-03 to BR-06). `source` is the weekly figure the
+ * hub read before (the Foresight commitment `forecastQty`, spread by week) and
+ * stays the LTP A until A is uploaded (BR-02). `share` splits a material's
+ * uploaded quantity to this supplier [my call, see the MR].
+ *
+ * PSC-4 (BL-339) — `used` IS LTP A (BR-01, BR-02): the choice no longer picks
+ * the series DA reads. `strategicBuffer` / `protectionBuffer` stay the per-week
+ * differences for the DA grid's legacy fields; they are NOT what ROP Order adds
+ * any more — model A's quantities live in `bufferModelA`.
  *
  * @typedef {'CHOICE_WEEK_EMPTY' | 'CHOICE_SERIES_NOT_UPLOADED'} LtpInputFlag
  * @typedef {{
- *   readonly choice: LtpSeries;
  *   readonly aFromUpload: boolean;
  *   readonly a: readonly number[];
  *   readonly festive: readonly (number | null)[];
@@ -220,26 +227,14 @@ export function ltpWeeks(weeks, source, inputs, share) {
   const a = weeks.map((_, i) => aUp[i] ?? source[i] ?? 0);
   const festive = series('Festive');
   const b = series('B');
-  const choice = inputs?.choice ?? DEFAULT_LTP_CHOICE;
-  const chosen = choice === 'Festive' ? festive : choice === 'B' ? b : null;
-  if (chosen !== null && inputs?.uploads[choice] == null) flags.push('CHOICE_SERIES_NOT_UPLOADED');
-  const used = weeks.map((_, i) => {
-    if (chosen === null) return a[i];
-    if (chosen[i] === null) {
-      if (inputs?.uploads[choice] != null && !flags.includes('CHOICE_WEEK_EMPTY'))
-        flags.push('CHOICE_WEEK_EMPTY');
-      return a[i];
-    }
-    return /** @type {number} */ (chosen[i]);
-  });
   return {
-    choice,
     aFromUpload,
     a,
     festive,
     b,
-    used,
-    // BR-05 / BR-06, never below 0 [my call].
+    // PSC-4 BR-01 — DA reads LTP A; the choice is retired as a DA input.
+    used: a,
+    // PEX-5's per-week display figures; kept for the DA grid's own tests.
     strategicBuffer: festive.map((f, i) => (f === null ? null : Math.max(0, f - a[i]))),
     protectionBuffer: b.map((x, i) => (x === null ? null : Math.max(0, x - a[i]))),
     flags
@@ -247,29 +242,8 @@ export function ltpWeeks(weeks, source, inputs, share) {
 }
 
 /**
- * BR-06 — the protection buffer ROP Order adds, summed over `horizon` weeks;
- * 0 when LTP B is not given.
- * @param {LtpWeeks} w
- * @param {number} horizon
- * @returns {number}
- */
-export function protectionForRopOrder(w, horizon) {
-  let total = 0;
-  for (const v of w.protectionBuffer.slice(0, horizon)) total += v ?? 0;
-  return total;
-}
-
-/**
- * The protection buffer of the BL-205 uplift (`protectionUplift`) is replaced by
- * LTP B − LTP A when LTP B is given (BR-06). True when the figure comes from B.
- * @param {MaterialLtpInputs | null} inputs
- * @returns {boolean}
- */
-export const protectionFromInputs = (inputs) => inputs?.uploads.B != null;
-
-/**
  * BR-05 — true when the strategic buffer comes from LTP Festive; false: the
- * DRC-9a calculation (LTP − baseline) is the fallback.
+ * DRC-9a calculation (LTP − baseline) is the fallback display (PSC-4 BR-08).
  * @param {MaterialLtpInputs | null} inputs
  * @returns {boolean}
  */
@@ -279,9 +253,11 @@ export const strategicFromInputs = (inputs) => inputs?.uploads.Festive != null;
 const INVISIBLE_CHARS = /[\u200B-\u200D\u2060\uFEFF]/g;
 
 /**
- * PEX-5 BR-02 — the planner's upload file: one line per week, `week,quantity`
- * (`YYYY-MM-DD` Monday, a quantity from 0), comma or semicolon, a header line
- * optional. Returns the weeks, or the reason the file is refused.
+ * PEX-5 BR-02 — the planner's per-material upload file: one line per week,
+ * `week,quantity` (`YYYY-MM-DD` Monday, a quantity from 0), comma or semicolon,
+ * a header line optional. Returns the weeks, or the reason the file is refused.
+ * Superseded on screen by the batch file below (PSC-3 BR-01); kept because the
+ * per-material format is what its own parser's tests pin.
  *
  * Invisible characters are removed first (zero-width space U+200B, joiners
  * U+200C/U+200D, word joiner U+2060, byte-order mark U+FEFF): they come in when
@@ -306,4 +282,120 @@ export function parseLtpCsv(text) {
   });
   const refusal = ltpUploadRefusal({ weeks, sourceFile: 'x' });
   return refusal ? { refusal } : { weeks };
+}
+
+/**
+ * PSC-3 BR-01 (BL-338) — one material's rows in a batch file, collapsed: the
+ * last row of a material × week is the one kept (the edge case below).
+ * @typedef {{ readonly materialCode: string; readonly weeks: Readonly<Record<string, number>> }} LtpBatchMaterial
+ */
+
+/**
+ * A material × week the file repeats, so the page can list it (PSC-3 edge
+ * case: a repeated material takes the last row and the page lists the repeat).
+ * @typedef {{ readonly materialCode: string; readonly week: string }} LtpBatchRepeat
+ */
+
+/**
+ * PSC-3 BR-01 (BL-338) — the batch upload file: one row per material × week,
+ * `material,week,quantity` (`YYYY-MM-DD` Monday, a quantity from 0), comma,
+ * semicolon or tab, a header line optional. The one CSV per series.
+ *
+ * A material repeated for the same week keeps its LAST row (the last row wins,
+ * PSC-3 edge case) and the repeat is listed in `repeated`; a material's weeks
+ * are returned in the order the file first names them, one entry per material.
+ * A first line is a header only when its week cell is not a Monday AND its
+ * quantity cell is not a number — so a file with no header is read as data
+ * from its first line, and a data line with a bad week is refused, not skipped.
+ *
+ * [My call, listed in the report: the column order and these refusal tokens.]
+ * @param {string} text
+ * @returns {{ readonly materials: readonly LtpBatchMaterial[]; readonly repeated: readonly LtpBatchRepeat[] } | { readonly refusal: string }}
+ */
+export function parseLtpBatchCsv(text) {
+  /** @type {Map<string, Record<string, number>>} */
+  const byMaterial = new Map();
+  /** @type {LtpBatchRepeat[]} */
+  const repeated = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+  const lines = text
+    .replace(INVISIBLE_CHARS, '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l !== '');
+  for (let i = 0; i < lines.length; i++) {
+    const cells = lines[i].split(/[,;\t]/).map((c) => c.trim());
+    // A header names its columns (its quantity cell is not a number); a data
+    // line with a bad week is NOT a header and is refused below.
+    if (i === 0 && !isMonday(cells[1] ?? '') && Number.isNaN(Number(cells[2]))) continue;
+    if (cells.length !== 3)
+      return { refusal: `LTP_BATCH_ROW_INVALID: line ${i + 1} needs material, week and quantity` };
+    const [materialCode, week, qty] = cells;
+    if (materialCode === '')
+      return { refusal: `LTP_BATCH_MATERIAL_REQUIRED: line ${i + 1} names no material` };
+    if (!isMonday(week))
+      return { refusal: `LTP_WEEKS_INVALID: ${week} is not a Monday (YYYY-MM-DD)` };
+    const n = qty === '' ? Number.NaN : Number(qty);
+    if (!Number.isFinite(n) || n < 0)
+      return { refusal: `LTP_WEEKS_INVALID: the quantity of ${week} is not a number from 0` };
+    const key = `${materialCode}|${week}`;
+    if (seen.has(key)) repeated.push({ materialCode, week });
+    seen.add(key);
+    const weeks = byMaterial.get(materialCode) ?? {};
+    weeks[week] = n;
+    byMaterial.set(materialCode, weeks);
+  }
+  if (byMaterial.size === 0) return { refusal: 'LTP_BATCH_EMPTY: the file holds no row' };
+  return {
+    materials: [...byMaterial].map(([materialCode, weeks]) => ({ materialCode, weeks })),
+    repeated
+  };
+}
+
+/**
+ * One week's uploaded figure beside the computed total (PSC-3 BR-02, BR-04).
+ * `computed` null: the hub has no total for the week ("Not available"), and
+ * the difference is null with it; when both exist the difference is
+ * `uploaded − computed` and the upload wins (PSC-3 edge case).
+ * @typedef {{
+ *   readonly week: string;
+ *   readonly uploaded: number;
+ *   readonly computed: number | null;
+ *   readonly difference: number | null;
+ * }} LtpBatchComparison
+ */
+
+/**
+ * PSC-3 BR-02 / BR-04 — the uploaded figures against the computed totals,
+ * week by week, sorted by week. The page renders both and the difference;
+ * none of the arithmetic happens there.
+ * @param {Readonly<Record<string, number>>} uploaded
+ * @param {Readonly<Record<string, number | null | undefined>>} computed
+ * @returns {readonly LtpBatchComparison[]}
+ */
+export function compareLtpBatch(uploaded, computed) {
+  return Object.keys(uploaded)
+    .sort()
+    .map((week) => {
+      const c = computed[week] ?? null;
+      const up = uploaded[week];
+      return { week, uploaded: up, computed: c, difference: c === null ? null : up - c };
+    });
+}
+
+/**
+ * PSC-3 BR-04 — whether the hub holds a computed total for a material at all:
+ * false when the FG demand read is unavailable, or when every finished good
+ * that uses the material carries no plan row (so the total would be 0 only
+ * because the plan is missing). A material no finished good uses has no plan
+ * behind it either. The page reads this, never re-derives it.
+ * @param {{ readonly fgDemandAvailable?: boolean; readonly fgUsers?: readonly string[]; readonly noPlanFgs?: readonly string[] }} row
+ * @returns {boolean}
+ */
+export function ltpComputedAvailable(row) {
+  if (row.fgDemandAvailable === false) return false;
+  const users = row.fgUsers ?? [];
+  const noPlan = row.noPlanFgs ?? [];
+  return users.length > noPlan.length;
 }

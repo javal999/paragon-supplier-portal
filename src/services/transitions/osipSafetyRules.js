@@ -106,6 +106,10 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   null, its supply area's default.
  * `bottleneckLeadTimeDays`:  [Team B10] the supplier's bottleneck production
  *   lead time for the material, queueing included; ROP Supplier reads it.
+ * `ltpB` / `ltpFestive` / `coverWeeks` / `materialBufferOn`:  PSC-4 (BL-339) —
+ *   model A's buffer inputs: the LTP B and LTP Festive series over `ltp`'s
+ *   weeks (null where the series is not uploaded), the per-material cover
+ *   setting P, and whether the Material Buffer switch is on this week.
  *
  * @typedef {{
  *   readonly supplierId: string;
@@ -126,6 +130,13 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   readonly safetyOn?: boolean;
  *   readonly fDays?: number | null;
  *   readonly bottleneckLeadTimeDays?: number | null;
+ *   readonly ltpB?: readonly (number | null)[] | null;
+ *   readonly ltpFestive?: readonly (number | null)[] | null;
+ *   readonly coverWeeks?: number | null;
+ *   readonly coverageWeeks?: number | null;
+ *   readonly materialBufferOn?: boolean;
+ *   readonly materialBufferSource?: 'calendar' | 'override';
+ *   readonly eventWindow?: { readonly id: string; readonly kind: 'CNY' | 'Typhoon'; readonly startsOn: string; readonly endsOn: string } | null;
  * }} OsipSafetyInput
  */
 

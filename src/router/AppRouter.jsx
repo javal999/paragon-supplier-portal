@@ -41,6 +41,7 @@ import BuyerCompliance from '@pages-v2/BuyerCompliance';
 import ProcessFlows from '@pages-v2/ProcessFlows';
 import InterfaceMonitor from '@pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '@pages-v2/admin/AdminWorkingCalendar';
+import AdminEventCalendar from '@pages-v2/admin/AdminEventCalendar';
 import AdminThreePls from '@pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '@pages-v2/admin/AdminSuppliers';
 import AdminQualification from '@pages-v2/admin/AdminQualification';
@@ -233,6 +234,8 @@ const AppRouter = () => {
               element={<Navigate to="/buyer/admin/working-calendar" replace />}
             />
             <Route path="/buyer/admin/working-calendar" element={<AdminWorkingCalendar />} />
+            {/* PSC-4 BR-07 (BL-339) — the Material Buffer's CNY and Typhoon windows. */}
+            <Route path="/buyer/admin/event-calendar" element={<AdminEventCalendar />} />
             {/* BL-51 — administration (ADM): the 3PL list behind every ASN tracking link. */}
             <Route path="/buyer/admin/3pl-tracking" element={<AdminThreePls />} />
             {/* Material A1 — administration (ADM): each supplier's stock update mode. */}
