@@ -16,6 +16,15 @@ export const pexPlanTraceEn = {
     'Load the weekly LTP of a scenario into the editor: Baseline is LTP A, Festive is LTP Festive, Protection buffer is LTP B.',
   'pex.sandbox.presets.unavailable':
     'Festive and Protection buffer load once LTP Festive and LTP B are in the hub (PEX-5, BL-267). Nothing is estimated in their place.',
+  'pex.sandbox.demand.title': 'Demand shape',
+  'pex.sandbox.demand.note':
+    'Load a demand shape into the LTP row of this tab: SKU revamp ramps it {{revampPct}}% up over {{revampWeeks}} weeks, SKU off/retired declines it to 0 over {{retireWeeks}} weeks, one-shot uplift raises week {{oneShotWeek}} by {{oneShotPct}}%, material level transition steps it {{stepPct}}% up at week {{stepWeek}}.',
+  'pex.sandbox.demand.fgNote':
+    'The FG tab stays unscaled (PEX-D28): a demand preset changes the Material tab’s demand row only.',
+  'pex.sandbox.demand.skuRevamp': 'SKU revamp',
+  'pex.sandbox.demand.skuRetire': 'SKU off/retired',
+  'pex.sandbox.demand.oneShotUplift': 'One-shot material uplift',
+  'pex.sandbox.demand.levelTransition': 'Material level transition',
   'pex.sandbox.fg.note':
     'One finished good: the effect on every material in its BOM, from the forecast engine’s requirement. Analysis only.',
   'pex.sandbox.fg.pick': 'Finished good',
@@ -158,6 +167,15 @@ export const pexPlanTraceId = {
     'Muat LTP mingguan sebuah skenario ke editor: Baseline adalah LTP A, Festive adalah LTP Festive, Protection buffer adalah LTP B.',
   'pex.sandbox.presets.unavailable':
     'Festive dan Protection buffer dapat dimuat setelah LTP Festive dan LTP B ada di hub (PEX-5, BL-267). Tidak ada angka perkiraan sebagai penggantinya.',
+  'pex.sandbox.demand.title': 'Bentuk permintaan',
+  'pex.sandbox.demand.note':
+    'Muat bentuk permintaan ke baris LTP tab ini: revamp SKU menaikkannya {{revampPct}}% selama {{revampWeeks}} minggu, SKU nonaktif/pensiun menurunkannya ke 0 dalam {{retireWeeks}} minggu, kenaikan material sekali menaikkan minggu {{oneShotWeek}} sebesar {{oneShotPct}}%, transisi level material menaikkannya {{stepPct}}% pada minggu {{stepWeek}}.',
+  'pex.sandbox.demand.fgNote':
+    'Tab FG tetap tidak diskalakan (PEX-D28): preset permintaan hanya mengubah baris permintaan tab Material.',
+  'pex.sandbox.demand.skuRevamp': 'Revamp SKU',
+  'pex.sandbox.demand.skuRetire': 'SKU nonaktif/pensiun',
+  'pex.sandbox.demand.oneShotUplift': 'Kenaikan material sekali',
+  'pex.sandbox.demand.levelTransition': 'Transisi level material',
   'pex.sandbox.fg.note':
     'Satu barang jadi: dampaknya pada setiap material dalam BOM-nya, dari kebutuhan mesin forecast. Hanya analisis.',
   'pex.sandbox.fg.pick': 'Barang jadi',
