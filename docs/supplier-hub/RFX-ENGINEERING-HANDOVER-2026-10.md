@@ -177,7 +177,7 @@ Each rule is one pure function shared by the page (to explain) and the verb (to 
 
 | Rule | Where | What it decides |
 |---|---|---|
-| Compliance gate CR-23 | `services/sourcing/complianceGate.js:141` | Halal, BPOM, GMP/ISO 22716 per material, supplier status, minimum OTIF (placeholder 80%; "No history" passes). A failing supplier can be invited and can quote, but is listed, not ranked, and cannot be awarded |
+| Compliance gate CR-23 | `services/sourcing/complianceGate.js:141` | Halal, BPOM, GMP/ISO 22716 per material, supplier status, minimum OTIF (90% since 2026-11-20, BL-55; it was a placeholder at 80% when this handover was written; "No history" passes). A failing supplier can be invited and can quote, but is listed, not ranked, and cannot be awarded |
 | Qualification by sourcing type | `services/sourcing/sourcingType.js:229, 307` | Supplier level the sourcing type needs; warn-only while the lists are placeholders (MAT-D19) |
 | Score CR-15 | `services/sourcing/rfqComparison.js:298` | Price 40, lead time 20, reliability 40 over qualified suppliers; reliability is OTIF, 50 with no history |
 | Evaluation break | `rfqComparison.js` | Comparison per item at a chosen break; total cost = unit price × quantity (× variants for a per-variant break) + one-time costs; only current quote versions are ranked |
