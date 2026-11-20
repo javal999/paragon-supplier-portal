@@ -510,6 +510,7 @@ export const inventoryCapacityEn = {
   'inv.alerts.emptyClosed': 'No closed alerts.',
   'inv.alerts.count': 'Alerts: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'PTI stock is below the PTI reorder point',
+  'inv.alerts.rule.ptiAtOrAboveMax': 'PTI stock is at or above the maximum stock level',
   'inv.alerts.rule.supplierBelowRop':
     'Supplier stock is below the system-calculated supplier reorder point (ROP Supplier)',
   'inv.alerts.rule.projectedStockOut': 'PTI stock runs out before the next incoming delivery',
@@ -528,6 +529,7 @@ export const inventoryCapacityEn = {
   'inv.alerts.rule.demandAnticipationUnabsorbed':
     'Supply above demand anticipation (DA) is more than the last week of the horizon can absorb',
   'inv.alerts.openInventory': 'Open inventory',
+  'inv.alerts.openSafetyStock': 'Open safety stock targets',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open Foresight commitments',
   'inv.alerts.openBlanketPo': 'Open blanket PO',
@@ -557,6 +559,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.nextStep': 'Next step',
   'inv.alerts.next.ptiBelowRop':
     'PTI stock is under its reorder point; refill it before it runs out.',
+  'inv.alerts.next.ptiAtOrAboveMax':
+    'PTI stock has reached Max; hold the next call-offs or review the level.',
   'inv.alerts.next.projectedStockOut':
     'PTI stock runs out before the next delivery arrives; get material in sooner.',
   'inv.alerts.next.coverage':
@@ -585,6 +589,7 @@ export const inventoryCapacityEn = {
   'inv.alerts.ask.leadTime': 'What is your lead time for this material, in days?',
   // Inventory UX P-08 (INV-D1) — each rule's own basis.
   'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
+  'inv.alerts.basis.atMax': 'PTI {{pti}} / Max {{max}} {{uom}}',
   'inv.alerts.basis.ptiNone': 'No PTI stock figure',
   'inv.alerts.basis.short': 'Short by {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Supplier cover {{cover}} days · lead time {{lead}} days',
@@ -1233,6 +1238,7 @@ export const inventoryCapacityId = {
   'inv.alerts.emptyClosed': 'Tidak ada peringatan yang ditutup.',
   'inv.alerts.count': 'Peringatan: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
+  'inv.alerts.rule.ptiAtOrAboveMax': 'Stok PTI mencapai atau melebihi tingkat stok maksimum',
   'inv.alerts.rule.supplierBelowRop':
     'Stok pemasok di bawah titik pemesanan ulang pemasok hasil hitung sistem (ROP Supplier)',
   'inv.alerts.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
@@ -1253,6 +1259,7 @@ export const inventoryCapacityId = {
   'inv.alerts.rule.demandAnticipationUnabsorbed':
     'Pasokan di atas demand anticipation (DA) melebihi yang dapat diserap minggu terakhir horizon',
   'inv.alerts.openInventory': 'Buka stok',
+  'inv.alerts.openSafetyStock': 'Buka target stok pengaman',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka Komitmen foresight',
   'inv.alerts.openBlanketPo': 'Buka PO induk',
@@ -1283,6 +1290,8 @@ export const inventoryCapacityId = {
   'inv.alerts.nextStep': 'Langkah berikutnya',
   'inv.alerts.next.ptiBelowRop':
     'Stok PTI di bawah titik pemesanan ulang; isi kembali sebelum habis.',
+  'inv.alerts.next.ptiAtOrAboveMax':
+    'Stok PTI telah mencapai Max; tahan call-off berikutnya atau tinjau levelnya.',
   'inv.alerts.next.projectedStockOut':
     'Stok PTI habis sebelum pengiriman berikutnya tiba; datangkan material lebih cepat.',
   'inv.alerts.next.coverage':
@@ -1312,6 +1321,7 @@ export const inventoryCapacityId = {
   'inv.alerts.ask.leadTime': 'Berapa hari lead time Anda untuk material ini?',
   // Inventory UX P-08 (INV-D1) — dasar tiap aturan.
   'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
+  'inv.alerts.basis.atMax': 'PTI {{pti}} / Max {{max}} {{uom}}',
   'inv.alerts.basis.ptiNone': 'Tidak ada angka stok PTI',
   'inv.alerts.basis.short': 'Kurang {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Cakupan stok pemasok {{cover}} hari · lead time {{lead}} hari',

@@ -51,6 +51,14 @@
 // One alert per supplier × material; subject = the material; it carries the
 // remaining amount. PTI-only. Medium by rule (a surplus is stock PTI will not
 // need yet, not a shortage); impact at the end of the horizon's last week.
+//
+// PSC-5 BR-02 (BL-341) — `ptiAtOrAboveMax`: PTI SOH has reached the DRC-10 Max
+// (`osipRops`'s `max`, read as `systemMax` on the position). One alert per
+// supplier × material, subject = the material. PTI-only: the Max is PTI's own
+// figure, and a supplier cannot act on excess at PTI. Low by rule with no days
+// to impact — a surplus has no day it bites. The Safety stock targets page's
+// ROP-level view reads the same predicate (`isPtiAtOrAboveMax`) and the same
+// Max, so the view and the alert agree.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { CapacityPlan, ForecastCommitmentLine, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
@@ -68,6 +76,7 @@ import {
   dayOf,
   daysBetween,
   isProjectedStockOut,
+  isPtiAtOrAboveMax,
   isPtiBelowRop,
   isSupplierBelowRop,
   hasLeadTime,
@@ -80,6 +89,7 @@ import {
 /** @type {readonly InventoryAlertRule[]} */
 export const ALERT_RULES = [
   'ptiBelowRop',
+  'ptiAtOrAboveMax',
   'supplierBelowRop',
   'projectedStockOut',
   'capacityBelowDemand',
@@ -102,6 +112,8 @@ export const ALERT_RULES = [
  */
 export const PTI_ONLY_RULES = [
   'ptiBelowRop',
+  // PSC-5 BR-02 (BL-341) — the Max is PTI's own figure; a supplier cannot act on excess at PTI.
+  'ptiAtOrAboveMax',
   'projectedStockOut',
   'leadTimeMissing',
   'callOffNotCovered',
@@ -398,6 +410,10 @@ export function deriveAlertConditions(
     // MR-9 BR-03 — the stock rules: days of cover, or days to the projected stock-out.
     if (isPtiBelowRop(p))
       push('ptiBelowRop', p, p.materialCode, p.materialLabel, risk, coverDays(p));
+    // PSC-5 BR-02 (BL-341) — PTI SOH has reached the DRC-10 Max: excess stock,
+    // Low by rule, and no days to impact (a surplus has no day it bites).
+    if (isPtiAtOrAboveMax(p))
+      push('ptiAtOrAboveMax', p, p.materialCode, p.materialLabel, byRule('low'), NO_DAYS_TO_IMPACT);
     // REQ-E08-05 — supplier stock below the SYSTEM ROP Supplier (owner,
     // 2026-10-19; DRC-D15: the supplier-typed ROP is display only and no
     // calculation reads it). No system figure → no alert for the pair.
@@ -764,6 +780,11 @@ export function alertHref(a, persona) {
         supplier: a.supplierId,
         material: a.subject
       });
+    }
+    // PSC-5 BR-02 (BL-341) — the Max lives on Safety stock targets: the
+    // material's detail panel opens there, beside the level control.
+    if (a.rule === 'ptiAtOrAboveMax') {
+      return deepLink('/buyer/safety-stock', { material: a.subject });
     }
   }
   // A stale-reading position's RISK CLASS can be Medium or High on its own

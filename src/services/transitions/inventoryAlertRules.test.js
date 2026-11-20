@@ -2,13 +2,17 @@
 // MR-9 (SC Hub Material F1), pure: days to impact per rule (BR-03), the order
 // within a class and after grouping (BR-02, AC-01, AR-13), the close-reason
 // rule (BR-04, AC-02, AC-03) and the count per rule per reason (BR-06, AC-04).
+// PSC-5 BR-02 (BL-341) — `ptiAtOrAboveMax` at the DRC-10 Max.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
-/** @import { CapacityPlan, InventoryAlert, InventoryPosition } from '../data/types' */
+/** @import { CapacityPlan, InventoryAlert, InventoryPosition, QueryScope } from '../data/types' */
 /** @import { AlertLedgerEntry } from './inventoryAlertRules' */
+import { MockProcurementService } from '../data/mock/MockProcurementService';
 import {
+  ALERT_RULES,
   NO_DAYS_TO_IMPACT,
+  PTI_ONLY_RULES,
   alertCloseRefusal,
   alertsFromLedger,
   closeReasonCounts,
@@ -16,8 +20,10 @@ import {
   deriveAlertConditions,
   groupAlertsBySupplier
 } from './inventoryAlertRules';
+import { PERSONA_SYSTEM_ROLES } from './businessRoles';
 import { horizonWeeks } from './capacityRules';
 import { reasonCodeStore } from './reasonCodes';
+import { NO_PERSON } from '@context/noPerson';
 
 const NOW = '2026-08-31T12:00:00.000Z';
 const HORIZON = horizonWeeks(NOW);
@@ -416,5 +422,111 @@ describe('MR-9 BR-06 / AC-04 — count per reason per rule; a note-only closure 
       { rule: 'ptiBelowRop', reason: 'other', count: 1 }
     ]);
     expect(closeReasonCounts(alertsFromLedger(conditions, []))).toEqual([]);
+  });
+});
+
+describe('PSC-5 BR-02 (BL-341) — PTI stock at or above the DRC-10 Max', () => {
+  /**
+   * A position whose PTI SOH meets the system's Max unless `over` moves either.
+   * @param {Partial<InventoryPosition>} [over]
+   * @returns {InventoryPosition}
+   */
+  const atMax = (over = {}) =>
+    position({
+      ptiSoh: 2000,
+      ptiRop: 500,
+      systemMax: { value: 2000, unavailable: null },
+      ...over
+    });
+  /** @param {ReturnType<typeof deriveAlertConditions>} c */
+  const maxConditions = (c) => c.filter((x) => x.rule === 'ptiAtOrAboveMax');
+
+  it('fires at the Max and above it, not below it', () => {
+    const c = deriveAlertConditions(
+      [
+        atMax({ materialCode: 'MX-AT', ptiSoh: 2000 }),
+        atMax({ materialCode: 'MX-ABOVE', ptiSoh: 2600 }),
+        atMax({ materialCode: 'MX-BELOW', ptiSoh: 1999 })
+      ],
+      [],
+      NOW
+    );
+    expect(maxConditions(c).map((x) => x.subject)).toEqual(['MX-AT', 'MX-ABOVE']);
+  });
+
+  it('no Max (an input the level needs is missing) → no alert', () => {
+    const c = deriveAlertConditions(
+      [
+        atMax({ materialCode: 'MX-NONE', systemMax: { value: null, unavailable: 'NO_DEMAND' } }),
+        atMax({ materialCode: 'MX-ABSENT', systemMax: null })
+      ],
+      [],
+      NOW
+    );
+    expect(maxConditions(c)).toEqual([]);
+  });
+
+  it('class Low, basis by rule, the subject is the material, and no days to impact', () => {
+    const [c] = maxConditions(deriveAlertConditions([atMax({ materialCode: 'MX-ONE' })], [], NOW));
+    expect(c.riskClass).toBe('low');
+    expect(c.riskBasis).toEqual({ kind: 'rule' });
+    expect(c.subject).toBe('MX-ONE');
+    expect(c.supplierId).toBe('sup-007');
+    expect(c.daysToImpact).toBe(NO_DAYS_TO_IMPACT);
+  });
+
+  it('one alert per material however often it is read (BR-01 keying)', () => {
+    const positions = [atMax({ materialCode: 'MX-ONCE' })];
+    const first = alertsFromLedger(deriveAlertConditions(positions, [], NOW), []).filter(
+      (a) => a.rule === 'ptiAtOrAboveMax'
+    );
+    const again = alertsFromLedger(deriveAlertConditions(positions, [], NOW), []).filter(
+      (a) => a.rule === 'ptiAtOrAboveMax'
+    );
+    expect(first).toHaveLength(1);
+    expect(first[0].key).toBe('ptiAtOrAboveMax|MX-ONCE|sup-007');
+    expect(again.map((a) => a.key)).toEqual(['ptiAtOrAboveMax|MX-ONCE|sup-007']);
+  });
+
+  it('it is PTI-only: PTI’s alert list holds it, a supplier’s list does not', async () => {
+    expect(ALERT_RULES).toContain('ptiAtOrAboveMax');
+    expect(PTI_ONLY_RULES).toContain('ptiAtOrAboveMax');
+    // The effect through the real read (both ways): the seeded pair at its Max
+    // reaches PTI; the same supplier's own list never carries the rule.
+    const reads = new MockProcurementService();
+    /** @type {QueryScope} */
+    const buyer = {
+      personaType: 'buyer',
+      supplierId: null,
+      businessRoles: PERSONA_SYSTEM_ROLES.buyer,
+      actor: NO_PERSON
+    };
+    /** @type {QueryScope} */
+    const supplier = {
+      personaType: 'supplier',
+      supplierId: 'sup-007',
+      businessRoles: PERSONA_SYSTEM_ROLES.supplier,
+      actor: NO_PERSON
+    };
+    const key = 'ptiAtOrAboveMax|PK-PETB-8801|sup-007';
+    const ptiList = (await reads.getInventoryAlerts(buyer)).items;
+    expect(ptiList.map((a) => a.key)).toContain(key);
+    const supplierList = (await reads.getInventoryAlerts(supplier)).items;
+    expect(supplierList.some((a) => a.rule === 'ptiAtOrAboveMax')).toBe(false);
+  });
+
+  it('a closure with a reason holds: the alert reads closed with that reason', () => {
+    const conditions = deriveAlertConditions([atMax({ materialCode: 'MX-CLOSED' })], [], NOW);
+    const key = 'ptiAtOrAboveMax|MX-CLOSED|sup-007';
+    const closed = alertsFromLedger(conditions, [
+      { key, kind: 'closed', at: NOW, closeReason: 'risk-accepted' }
+    ]);
+    const a = /** @type {NonNullable<ReturnType<typeof closed.find>>} */ (
+      closed.find((x) => x.key === key)
+    );
+    expect(a.status).toBe('closed');
+    expect(closeReasonOf(a)).toBe('risk-accepted');
+    // The closure's reason comes from the `alertClose` list (MR-9 BR-04).
+    expect(alertCloseRefusal('risk-accepted', '')).toBeNull();
   });
 });

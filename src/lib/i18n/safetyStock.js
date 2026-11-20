@@ -212,6 +212,14 @@ export const safetyStockEn = {
     'The data carries no variant grouping, so each finished good is its own variant and is weighted separately.',
   'sst.osip.def.challenger':
     'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.',
+  // PSC-5 BR-02 (BL-341) — the ROP-level view.
+  'sst.ropLevel.title': 'ROP-level view',
+  'sst.ropLevel.intro':
+    'Materials grouped by their OSIP level, with PTI stock against the PTI reorder point and the Max Stock. A warning shows when PTI stock is below the reorder point or at or above Max.',
+  'sst.ropLevel.col.warning': 'Warning',
+  'sst.ropLevel.belowRop': 'Below ROP',
+  'sst.ropLevel.atMax': 'At or above Max',
+  'sst.ropLevel.noFigures': 'No PTI stock record',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
   'sst.rop.challenger': 'Challenger: engine reorder point',
   'sst.rop.level': 'Level {{level}}',
@@ -563,6 +571,14 @@ export const safetyStockId = {
     'Data tidak memuat pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri dan dibobot terpisah.',
   'sst.osip.def.challenger':
     'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.',
+  // PSC-5 BR-02 (BL-341) — tampilan tingkat ROP.
+  'sst.ropLevel.title': 'Tampilan tingkat ROP',
+  'sst.ropLevel.intro':
+    'Material dikelompokkan menurut level OSIP-nya, dengan stok PTI terhadap titik pemesanan ulang PTI dan Max Stock. Peringatan muncul bila stok PTI di bawah titik pemesanan ulang atau mencapai atau melampaui Max.',
+  'sst.ropLevel.col.warning': 'Peringatan',
+  'sst.ropLevel.belowRop': 'Di bawah ROP',
+  'sst.ropLevel.atMax': 'Mencapai atau di atas Max',
+  'sst.ropLevel.noFigures': 'Tidak ada catatan stok PTI',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
   'sst.rop.challenger': 'Pembanding: titik pemesanan ulang mesin',
   'sst.rop.level': 'Level {{level}}',

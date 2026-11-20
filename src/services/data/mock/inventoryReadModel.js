@@ -24,7 +24,7 @@ import { buildCapacityPlans } from '../../transitions/capacityRules';
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { blanketPoAlertSubjects, blanketPoRunOuts } from '../../transitions/blanketPoRules';
 import { demandAnticipationUnabsorbed } from './demandAnticipationReadModel';
-import { systemRopSuppliers } from './osipRopReadModel';
+import { systemRopFigures } from './osipRopReadModel';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
 import { allCommitmentLines } from './forecastReadModel';
 /** @import { AlertCondition } from '../../transitions/inventoryAlertRules' */
@@ -287,12 +287,17 @@ export function activeAlertConditions(nowIso = sdcClock.now()) {
   const plans = allCapacityPlans(nowIso);
   const lines = allCommitmentLines();
   // REQ-E08-05 / DRC-D15 — `supplierBelowRop` reads the system ROP Supplier (BL-196).
-  const system = systemRopSuppliers(nowIso);
+  // PSC-5 BR-02 (BL-341) — `ptiAtOrAboveMax` reads the DRC-10 Max of the same figures.
+  const system = systemRopFigures(nowIso);
   return deriveAlertConditions(
-    allPositions(nowIso).map((p) => ({
-      ...p,
-      systemRopSupplier: system.get(`${p.supplierId}|${p.materialCode}`) ?? null
-    })),
+    allPositions(nowIso).map((p) => {
+      const f = system.get(`${p.supplierId}|${p.materialCode}`) ?? null;
+      return {
+        ...p,
+        systemRopSupplier: f?.supplier.ropSupplier ?? null,
+        systemMax: f?.max ?? null
+      };
+    }),
     plans,
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).

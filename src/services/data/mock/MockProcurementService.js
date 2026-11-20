@@ -19,7 +19,7 @@ import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
-import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
+import { npdReviews, osipRopInputs, systemRopFigures } from './osipRopReadModel';
 import { whatIfPairs, whatIfSandbox } from './whatIfSandboxReadModel';
 import { protectionBufferInputs } from './protectionBufferReadModel';
 /** @import { ProtectionBufferInput } from '../../transitions/drcBufferRules' */
@@ -518,12 +518,18 @@ export class MockProcurementService {
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
     // DRC-D15 (BL-196) — PTI reads the system's ROP Supplier beside the
     // supplier's own reorder point, which is display only. A supplier reads none.
+    // PSC-5 BR-02 (BL-341) — the DRC-10 Max of the same figures goes with it:
+    // the ROP-level view and the `ptiAtOrAboveMax` alert's basis read it here.
     if (scope.personaType === 'buyer' && rows.length > 0) {
-      const system = systemRopSuppliers();
-      rows = rows.map((r) => ({
-        ...r,
-        systemRopSupplier: system.get(`${r.supplierId}|${r.materialCode}`) ?? null
-      }));
+      const system = systemRopFigures();
+      rows = rows.map((r) => {
+        const f = system.get(`${r.supplierId}|${r.materialCode}`) ?? null;
+        return {
+          ...r,
+          systemRopSupplier: f?.supplier.ropSupplier ?? null,
+          systemMax: f?.max ?? null
+        };
+      });
     }
     // Material C2 — the supplier's approved trade name beside PTI's description.
     // BL-194 (DRC-8) — the feedstock in force, as its own field beside SOH.

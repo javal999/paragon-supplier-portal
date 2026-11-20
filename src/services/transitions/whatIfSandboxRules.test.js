@@ -12,6 +12,7 @@ import { OSIP_RULES, RULES_VERSION } from './osipRules';
 import { npdLtpWeeks } from './osipRopRules';
 import {
   DEFAULT_SWITCHES,
+  DEMAND_PRESETS,
   HEADLINE_KEYS,
   PPT7_SUPPLIER_ID,
   PPT7_SWITCHES,
@@ -19,15 +20,20 @@ import {
   WHAT_IF_RULES,
   changedSwitches,
   compareRuns,
+  demandPresetLtp,
   headline,
   horizonOf,
   inputsProblem,
+  levelTransitionLtp,
   materialClassOf,
   mergeSwitches,
+  oneShotUpliftLtp,
   ppt7Inputs,
   rulesChangedSince,
   runWhatIf,
   scenarioRefusal,
+  skuRetireLtp,
+  skuRevampLtp,
   switchValue,
   withSwitch
 } from './whatIfSandboxRules';
@@ -516,5 +522,57 @@ describe('BL-210 · the live functions read every input the sandbox changes', ()
     expect(inputsProblem(varied({ sd: 12.5 }))).toBeNull();
     const { sd: _omit, ...old } = varied();
     expect(inputsProblem(old)).toBeNull();
+  });
+});
+
+describe('PSC-5 BR-05 · the four demand presets (BL-344)', () => {
+  // One known input for every shape: a flat 1,000 over 16 weeks, so a factor
+  // shows as itself and a rounding rule shows as the figure it produces.
+  const flat = Array.from({ length: 16 }, () => 1000);
+
+  it('SKU revamp: a ramp over 6 weeks to +50%, held from week 7', () => {
+    // 1,000 × (1 + 50% × k/6), k = 1..6, whole units; then 1,000 × 1.5.
+    expect(skuRevampLtp(flat)).toEqual([
+      1083, 1167, 1250, 1333, 1417, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500
+    ]);
+    // Week 1 moves: the ramp starts on the first week, not after it.
+    expect(skuRevampLtp(flat)[0]).toBeGreaterThan(flat[0]);
+  });
+
+  it('SKU off/retired: a decline to 0 over 4 weeks, 0 after', () => {
+    // 1,000 × 3/4, 2/4, 1/4, 0/4; every later week 0.
+    expect(skuRetireLtp(flat)).toEqual([750, 500, 250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(skuRetireLtp([100, 200, 300, 400, 500])).toEqual([75, 100, 75, 0, 0]);
+  });
+
+  it('one-shot material uplift: a single-week spike in week 5, the other weeks kept', () => {
+    expect(oneShotUpliftLtp(flat)).toEqual([
+      1000, 1000, 1000, 1000, 1500, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
+    ]);
+    // Only week 5 moves.
+    expect(oneShotUpliftLtp(flat)).toEqual(flat.map((_, i) => (i === 4 ? 1500 : 1000)));
+  });
+
+  it('material level transition: a step change at week 13, the weeks before kept', () => {
+    expect(levelTransitionLtp(flat)).toEqual([
+      1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1500, 1500, 1500, 1500
+    ]);
+    // A step, not a ramp: week 12 is still the base, week 13 is the new level.
+    expect(levelTransitionLtp(flat).slice(0, 12)).toEqual(flat.slice(0, 12));
+  });
+
+  it('demandPresetLtp returns a new row for every preset and mutates nothing', () => {
+    const row = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400];
+    const copy = [...row];
+    for (const preset of DEMAND_PRESETS) {
+      const out = demandPresetLtp(preset, row);
+      expect(out).not.toBe(row);
+      expect(out).toHaveLength(row.length);
+    }
+    expect(row).toEqual(copy);
+    expect(demandPresetLtp('skuRetire', row)).toEqual(skuRetireLtp(row));
+    expect(demandPresetLtp('skuRevamp', row)).toEqual(skuRevampLtp(row));
+    expect(demandPresetLtp('oneShotUplift', row)).toEqual(oneShotUpliftLtp(row));
+    expect(demandPresetLtp('levelTransition', row)).toEqual(levelTransitionLtp(row));
   });
 });

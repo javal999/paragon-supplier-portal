@@ -576,6 +576,9 @@ export class DataError extends Error {
  * `systemRopSupplier`:  DRC-D15 (BL-196) — the system's ROP Supplier for this pair (`osipRopRules`),
  *   shown beside `supplierRop` on PTI's read; a figure or why not. Absent on a supplier's read;
  *   null when the pair has no engine source.
+ * `systemMax`:  PSC-5 BR-02 (BL-341) — the DRC-10 Max Stock of this pair (`osipRopRules`), the figure
+ *   the `ptiAtOrAboveMax` alert and the ROP-level view compare PTI stock with; a figure or why not.
+ *   Absent on a supplier's read; null when the pair has no engine source.
  * `ptiSoh`:  PTI stock and reorder point from SAP. Null for a supplier without access.
  * `ptiStockShared`:  Whether PTI stock is shown on this row (always true for PTI users).
  * `consignment`:  Consignment material (MN-INV-10).
@@ -600,6 +603,7 @@ export class DataError extends Error {
  *   readonly supplierSoh: number | null;
  *   readonly supplierRop: number | null;
  *   readonly systemRopSupplier?: import('../transitions/osipRopRules').RopFigure | null;
+ *   readonly systemMax?: import('../transitions/osipRopRules').RopFigure | null;
  *   readonly ptiSoh: number | null;
  *   readonly ptiRop: number | null;
  *   readonly ptiStockShared: boolean;
@@ -1447,8 +1451,10 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *  CAP-4 BR-03 (CAP-D2) — the supplier gave Discontinued as a shortfall reason; PTI must find another source.
  *  CAP-9 BR-05 — a blanket PO's "new PO needed by" week is within 4 weeks (or passed); PTI raises the next PO.
  *  DRC-4 BR-02 / DRC-B7 (rewired from CAP-11 BR-04) — supply above the rolling demand anticipation is more than the horizon's last week can absorb.
+ *  PSC-5 BR-02 (BL-341) — PTI SOH has reached the DRC-10 Max: excess stock, class Low, no days to impact.
  *
  * @typedef {| 'ptiBelowRop'
+ *   | 'ptiAtOrAboveMax'
  *   | 'supplierBelowRop'
  *   | 'projectedStockOut'
  *   | 'capacityBelowDemand'
