@@ -91,8 +91,14 @@ describe('ONE inventory model (REQ-E08-01)', () => {
       channel: 'template'
     });
     expect(Object.keys(p).some((k) => /available|reserved/i.test(k))).toBe(false);
-    // In production from the submission; in transit from the call-off dispatch notices.
-    expect(p.incoming.map((i) => i.source).sort()).toEqual(['dispatch', 'dispatch', 'production']);
+    // In production from the submission's TWO runs (BL-358); in transit from the
+    // call-off dispatch notices.
+    expect(p.incoming.map((i) => i.source).sort()).toEqual([
+      'dispatch',
+      'dispatch',
+      'production',
+      'production'
+    ]);
   });
 
   it('a supplier reads only its own rows (scoping)', async () => {

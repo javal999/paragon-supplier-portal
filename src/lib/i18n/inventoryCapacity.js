@@ -253,6 +253,8 @@ export const inventoryCapacityEn = {
   'inv.upload.incoming.hint':
     'In-transit quantities come from your submitted ASNs and dispatched call-offs, so the template has no column for them.',
   'inv.upload.incoming.inProduction': 'In production (last submitted):',
+  'inv.upload.incoming.runsNote':
+    'The template records one production run per material. Saving a file replaces the runs on record with the one in columns E and F.',
   'inv.upload.error.unreadable':
     'This file could not be read. Upload the template as CSV or Excel.',
   'inv.upload.error.empty': 'The file has no rows to check.',
@@ -345,6 +347,8 @@ export const inventoryCapacityEn = {
   'inv.entry.error.inProductionRequired':
     'In production is required. Write 0 when nothing is in production.',
   'inv.entry.inProductionHint': 'In production is required. Write 0 when nothing is in production.',
+  'inv.entry.inProductionRuns':
+    '{{runs}} production runs are on record. This form records one run; saving replaces them.',
   'inv.entry.batchesRaw': 'Batches (required for raw material)',
   'inv.entry.rawHint':
     'Raw material: add every batch with its expiry date. The warehouse uses it to control near-expiry stock.',
@@ -988,6 +992,8 @@ export const inventoryCapacityId = {
   'inv.upload.incoming.hint':
     'Kuantitas dalam perjalanan berasal dari ASN yang Anda kirim dan call-off yang sudah dikirim, jadi templat tidak memiliki kolom untuknya.',
   'inv.upload.incoming.inProduction': 'Dalam produksi (terakhir dikirim):',
+  'inv.upload.incoming.runsNote':
+    'Templat mencatat satu run produksi per material. Menyimpan berkas akan menggantikan run yang tercatat dengan satu run di kolom E dan F.',
   'inv.upload.error.unreadable':
     'Berkas ini tidak dapat dibaca. Unggah templat sebagai CSV atau Excel.',
   'inv.upload.error.empty': 'Berkas tidak memiliki baris untuk diperiksa.',
@@ -1078,6 +1084,8 @@ export const inventoryCapacityId = {
     'Dalam produksi wajib diisi. Tulis 0 bila tidak ada yang diproduksi.',
   'inv.entry.inProductionHint':
     'Dalam produksi wajib diisi. Tulis 0 bila tidak ada yang diproduksi.',
+  'inv.entry.inProductionRuns':
+    '{{runs}} run produksi tercatat. Formulir ini mencatat satu run; menyimpan akan menggantikannya.',
   'inv.entry.batchesRaw': 'Batch (wajib untuk bahan baku)',
   'inv.entry.rawHint':
     'Bahan baku: tambahkan setiap batch dengan tanggal kedaluwarsanya. Gudang memakainya untuk mengontrol stok yang mendekati ED.',

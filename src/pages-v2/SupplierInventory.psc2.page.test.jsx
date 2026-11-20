@@ -18,9 +18,12 @@ import { stockTemplateCsv } from '@services/transitions/inventoryRules';
 import { groupTasksByLane } from './home/TaskList';
 import { entryFigures, stockEntriesCsv } from './inventory/SupplierStockDrawer';
 import SupplierInventory from './SupplierInventory';
-import { formatNumber } from '@lib/format';
+import { mockInventory } from '@data/mockInventory';
+import { formatDate, formatNumber } from '@lib/format';
 
 const CODE = 'PK-PETB-8802';
+// BL-358 — the seeded sup-007 record with two production runs (no override).
+const REAL = 'PK-PETB-8801';
 const ROUTE = '/supplier/inventory';
 const SUPPLIER_ID = SUPPLIER.supplierId ?? 'sup-007';
 
@@ -137,6 +140,43 @@ describe('PSC-2 AC-02 / AC-03 · totals in the columns, child rows in the drawer
     expect(within(drawer).getByTestId('sup-stock-shipment-0')).toBeInTheDocument();
     expect(within(drawer).getByTestId('sup-stock-shipment-1')).toBeInTheDocument();
     expect(within(drawer).queryByTestId('sup-stock-shipment-2')).toBeNull();
+  });
+
+  it('BL-358 — the REAL mock read carries two runs: the drawer shows both rows', async () => {
+    // The follow-up this batch closes: no test-only override. PK-PETB-8801 is
+    // seeded with two declared runs (20,000 + 40,000, latest unchanged).
+    const seed = mockInventory.find((r) => r.materialCode === REAL);
+    const runs = seed?.inProductionRuns ?? [];
+    expect(runs).toHaveLength(2);
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: ROUTE });
+    const cell = await screen.findByTestId(`sup-stock-production-${REAL}`);
+    // The column total and the LATEST ETA follow the runs.
+    expect(cell.textContent).toContain(formatNumber(60000));
+    expect(cell.textContent).toContain(formatDate(/** @type {string} */ (runs[1].completionDate)));
+    fireEvent.click(cell);
+    const drawer = await screen.findByTestId('sup-stock-drawer');
+    const first = within(drawer).getByTestId('sup-stock-run-0');
+    expect(first.textContent).toContain(formatDate(/** @type {string} */ (runs[0].completionDate)));
+    expect(first.textContent).toContain(formatNumber(/** @type {number} */ (runs[0].quantity)));
+    const second = within(drawer).getByTestId('sup-stock-run-1');
+    expect(second.textContent).toContain(
+      formatDate(/** @type {string} */ (runs[1].completionDate))
+    );
+    expect(second.textContent).toContain(formatNumber(/** @type {number} */ (runs[1].quantity)));
+    expect(within(drawer).queryByTestId('sup-stock-run-2')).toBeNull();
+  });
+
+  it('BL-358 — the entry form names the runs one figure would replace', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: ROUTE });
+    fireEvent.click(await screen.findByTestId('stock-entry-open'));
+    const panel = within(
+      /** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]'))
+    );
+    fireEvent.change(panel.getByLabelText('Material'), { target: { value: REAL } });
+    const note = await panel.findByTestId('stock-entry-production-runs');
+    expect(note.textContent).toContain('2 production runs');
+    expect(within(note).getByTestId('stock-entry-production-run-0')).toBeInTheDocument();
+    expect(within(note).getByTestId('stock-entry-production-run-1')).toBeInTheDocument();
   });
 
   it('BR-11 — the download flattens every In Transit and In Production entry', () => {

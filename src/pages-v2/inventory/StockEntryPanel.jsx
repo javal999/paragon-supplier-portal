@@ -5,6 +5,8 @@ import { Plus, X } from 'lucide-react';
 import SidePanel from '@components/ui-v2/SidePanel';
 import Button from '@components/ui-v2/Button';
 import MaterialSearch from '@components/ui-v2/MaterialSearch';
+import Data from '@components/ui-v2/Data';
+import { formatDate } from '@lib/format';
 /** @import { CommandResult, InventoryPosition } from '@services/data/types' */
 import {
   batchDatesProblem,
@@ -18,8 +20,10 @@ import {
   inputClass,
   inventoryNow,
   labelClass,
+  qty,
   useInventoryRunner
 } from './inventoryDisplay';
+import { productionEntries } from './SupplierStockDrawer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Stock entry on screen (REQ-E08-02 BR-04, BR-09) — the same fields as the
@@ -128,6 +132,10 @@ const StockEntryPanel = ({
   );
   const materials = positions.filter((p) => p.supplierId === form.supplierId);
   const selected = materials.find((p) => p.materialCode === form.materialCode) ?? null;
+  // BL-358 — the runs the pair above would replace. The form records ONE run
+  // (MAT-D4's quantity + date pair); when the material has more than one on
+  // record, they are shown here so the replacement is never silent.
+  const productionRuns = selected ? productionEntries(selected) : [];
 
   const soh = readStockNumber(form.soh);
   const rop = readStockNumber(form.rop);
@@ -360,6 +368,26 @@ const StockEntryPanel = ({
             >
               {t('inv.entry.error.invalidDate')}
             </p>
+          ) : null}
+          {productionRuns.length > 1 ? (
+            <div className="col-span-2" data-testid="stock-entry-production-runs">
+              <p className="text-xs text-text-secondary">
+                {t('inv.entry.inProductionRuns', { runs: productionRuns.length })}
+              </p>
+              <ul className="mt-1">
+                {productionRuns.map((run, i) => (
+                  <li
+                    key={`run-${run.date ?? 'no-date'}-${run.quantity}`}
+                    className="text-xs text-text-secondary"
+                    data-testid={`stock-entry-production-run-${i}`}
+                  >
+                    {run.date ? formatDate(run.date) : t('inv.incoming.noDate')}
+                    {' · '}
+                    <Data>{`${qty(run.quantity)} ${uom}`}</Data>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
           {selected && (
             <div className="col-span-2">

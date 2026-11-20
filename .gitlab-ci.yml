@@ -5,7 +5,9 @@
 # Same contract as `.github/workflows/gates.yml`, which this replaces as the
 # merge gate:
 #   · MERGE REQUEST — every MR runs the full floor (`npm run gates`) before it
-#     can merge, whatever its target branch.
+#     can merge, whatever its target branch — except a docs-only MR whose diff
+#     stays inside `docs/supplier-hub/` and touches no file a gate parses,
+#     which skips the app gate (see below).
 #   · SCHEDULE — main is re-run daily with no commit involved, plus the clock
 #     drift reader, which goes red on a calendar day with nobody touching a
 #     file. Create the schedule once in GitLab: Build → Pipeline schedules →
@@ -14,7 +16,11 @@
 #   · WEB — a manual run from Build → Pipelines → Run pipeline.
 # No push-to-main run, deliberately (as on GitHub since 2026-09-29): a merged
 # MR was already gated, and the daily run re-tests main.
-# No path filters, deliberately: the C9 contract pin reads docs/contracts/*.md.
+# No `rules:changes` path filters, deliberately: the C9 contract pin reads
+# docs/contracts/*.md. The one fast path is decided INSIDE the job from the MR
+# diff, so a mixed MR (docs + code) cannot skip the gate: only a diff whose
+# every path is under `docs/supplier-hub/` skips it, and `docs/contracts/` is
+# never in the fast path.
 # ────────────────────────────────────────────────────────────────────────────
 
 workflow:
@@ -30,6 +36,11 @@ gates:
   # Node 24, pinned to `.nvmrc` and the GitHub job: CI must run the runtime the
   # gates are green on locally (Node 26 breaks the jsdom localStorage specs).
   image: node:24
+  variables:
+    # The fast-path check diffs against the MR base SHA, which can sit outside a
+    # shallow clone. A full clone of this repository costs seconds; the gate it
+    # can save costs tens of minutes.
+    GIT_DEPTH: "0"
   # 60 minutes (raised from 35 on 2026-10-22). On GitLab's small shared runner
   # (saas-linux-small-amd64, 2 vCPU) the suite outgrew 35: pipeline #2974445313
   # at ~9,900 tests was stopped at 35:02 with "exceeded the maximum execution
@@ -43,7 +54,39 @@ gates:
         - package-lock.json
     paths:
       - .npm/
+  artifacts:
+    # The mode marker is evidence of what the green check means: a skipped gate
+    # is not a passed gate, and the check list alone cannot say which.
+    when: always
+    paths:
+      - gate-mode.txt
+    expire_in: 1 week
   script:
+    - 'echo "gate mode: full" > gate-mode.txt'
+    # Fast path: a diff that stays entirely inside `docs/supplier-hub/` AND
+    # touches no file a gate parses cannot affect the suite, lint or the
+    # contract pins, so skip the app gate. `--no-renames` is load-bearing:
+    # without it a rename from src/ into the docs tree prints only the
+    # destination. The extension guard is load-bearing too: `eslint .` parses
+    # the .cjs files under docs/supplier-hub/user-guide/build/. A mixed MR, an
+    # empty diff, a missing base SHA, or any path outside that tree runs the
+    # full gate. Probe both ways when editing this: a docs-only diff must skip,
+    # and a docs+src diff must NOT skip.
+    - |
+      if [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] && [ -n "$CI_MERGE_REQUEST_DIFF_BASE_SHA" ]; then
+        changed=$(git diff --name-only --no-renames "${CI_MERGE_REQUEST_DIFF_BASE_SHA}...HEAD" 2>/dev/null || true)
+        outside=$(printf '%s\n' "$changed" | grep -v '^docs/supplier-hub/' | grep -v '^$' || true)
+        parsed=$(printf '%s\n' "$changed" | grep -E '\.(js|jsx|cjs|mjs|ts|tsx|mts|cts|css)$' || true)
+        if [ -n "$changed" ] && [ -z "$outside" ] && [ -z "$parsed" ]; then
+          {
+            echo "gate mode: skipped (docs-only under docs/supplier-hub/)"
+            printf '%s\n' "$changed"
+          } > gate-mode.txt
+          echo "Docs-only MR under docs/supplier-hub/ — app gate skipped."
+          printf '%s\n' "$changed"
+          exit 0
+        fi
+      fi
     # `npm ci`, not `npm install`: it fails on a lockfile that drifted from
     # package.json instead of quietly resolving something else.
     - npm ci --cache .npm --prefer-offline
