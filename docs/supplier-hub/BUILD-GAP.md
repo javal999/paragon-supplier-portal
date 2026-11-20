@@ -157,7 +157,7 @@ The requirements are `SC-HUB-PLANNING-STOCK-CONFIRMATION-REQUIREMENTS-2026-11.md
 | PSC/AIB | Status | Built in | What exists today |
 |---|---|---|---|
 | PSC-1 Weekly confirmation (BL-336) | Built; the DA view is off | MR !165 | The DA confirmation panel: Friday publication, Wednesday 23:59 WIB, Thursday stock cutoff, first explicit, later carried forward, change-only submit, SOH pre-fills the stock page. `SUPPLIER_DA_VIEW_ENABLED` stays off (DRC-D10). |
-| PSC-2 Stock table (BL-337) | Built; the multi-run record is BL-358 | MR !165 | 1 row per material, In Transit and In Production drawers, flattened download, PIC removed, Incoming renamed In Production, 3 filters, To-Do order. The stock record still carries one production entry. |
+| PSC-2 Stock table (BL-337) | Built; the multi-run stock record is BL-358 | MR !165, MR !188 | 1 row per material, In Transit and In Production drawers, flattened download, PIC removed, Incoming renamed In Production, 3 filters, To-Do order. The stock record carries `inProductionRuns`, one drawer row per run with its own date, and the row total and latest date follow; the entry form and the upload template stay single-run and say that saving replaces the runs (BL-358). |
 | PSC-3 LTP batch upload (BL-338) | Built | MR !170 | Three batch screens (LTP A, LTP Festive, LTP B) in the LTP inputs section: one CSV of many materials (`material,week,quantity`), the computed total from the FG plan and the BOM beside the upload with the difference and an FG drill-in, the last row of a repeated material × week wins and the repeat is listed, per-material stamps, and the DA out-of-date cause. |
 | PSC-4 Buffers model A (BL-339) | Built; the buffer tips are TL-D41 and TL-D42 (BL-340, MR !176) | MR !170 | DA reads LTP A and the choice marker is retired. Protection = max(0, AVG(LTP B) − AVG(LTP A)) × P (default 4). Material Buffer = its own coverage weeks (default 2) × the average weekly LTP A over them; both settings are editable and each writes a DRC-D16 row. The Strategic total is added once to ROP Order; there is no per-week B − A adder. A CNY and Typhoon event calendar with an ADM page; a material's switch overrides with a reason. DRC-9a and DRC-9c are labelled fallback displays. |
 | PSC-5 CV (BL-342) | Built | MR !165 | The CV guide in the Safety Stock detail panel. |
@@ -363,7 +363,7 @@ Sample data (BL-64) so a buyer can see every CR-23 outcome on the RFQ pages (`/b
 | Material needing no certificate (packaging); no certificates and no OTIF history | RFQ-2026-019 | sup-011 Sample Salicylics & Niacinamide Ltd. | Passes |
 | Every bidder fails; award impossible, and the page says so | RFQ-2026-020 (Closed) | sup-011, sup-004, sup-009 | No award possible |
 
-Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-008 OTIF 0%, sup-013 no history; sup-007 passes at 83% since BL-94), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
+Earlier demo rows still hold: RFQ-2026-003 (sup-010 halal expired), RFQ-2026-014 (sup-008 OTIF 0%, sup-013 no history; sup-007 passes since BL-94), RFQ-2026-004 (sup-004 halal and BPOM). The OTIF figures are calculated from sample call-offs and goods receipts (PO-2026-00191, PO-2026-00192), not typed in. Suspended and blacklisted suppliers cannot be invited; sup-021 and sup-022 represent a status change after the quote.
 
 ### 3.2 3PL tracking link and supplier filter demo cases (BL-51, BL-52)
 
@@ -399,7 +399,7 @@ Sample events shaped like Paragon's real RFQs and RFPs; the supplier names are t
 | RFP-2026-002 Tundra (open spec) | 2 options × 10K / 50K / 100K, a reference image, custom terms, sup-007's proposal with an option of its own | `/buyer/rfp` |
 | RFP-2026-003 ICY (full service) | Formula and pack options at 25K / 50K per variant, samples, timeline, confidential, with a T&C document | `/buyer/rfp` |
 
-**Oslo and the supplier persona (BL-94, fixed).** sup-007, the main supplier persona, passes the compliance gate on Oslo: its measured OTIF is 83% (5 of 6 call-offs on time and in full in the last 90 days), above the 80% placeholder minimum. Once it quotes, it is ranked in the buyer's comparison and can be given an award share, so the main walkthrough can end with the persona winning part of Oslo.
+**Oslo and the supplier persona (BL-94, fixed).** sup-007, the main supplier persona, passes the compliance gate on Oslo: its measured 90-day OTIF is above the 80% placeholder minimum, with each seeded call-off counted once (BL-359). Once it quotes, it is ranked in the buyer's comparison and can be given an award share, so the main walkthrough can end with the persona winning part of Oslo.
 
 ---
 
