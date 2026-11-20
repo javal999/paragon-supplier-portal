@@ -64,6 +64,11 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     expect(sites).toContain(
       'pages-v2/SupplierForecasts/components/ShipmentReportPanel.jsx <aria-describedby literal>'
     );
+    // …and a known CONDITIONAL one (`refused ? 'id…' : …`), which BL-326 makes
+    // decidable: the same-file check alone never examined this shape.
+    expect(sites).toContain(
+      'pages-v2/SupplierForecasts/components/ConfirmPanel.jsx <aria-describedby conditional>'
+    );
   });
 });
 
@@ -246,6 +251,108 @@ describe('BL-31 a11y gate · PROBE — fires on the defect, accepts the fix', ()
     ]);
   });
 
+  it('✅ BL-326: a CONDITIONAL description is decided too — a missing id fails', () => {
+    const good = `const F = ({ refused }) => (
+      <>
+        <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal' : undefined} />
+        {refused && <p id="qty-refusal">That is not a quantity.</p>}
+      </>
+    );`;
+    expect(scanSource('good.tsx', good)).toEqual([]);
+    const bad = `const F = ({ refused }) => (
+      <>
+        <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal' : undefined} />
+        <p>That is not a quantity.</p>
+      </>
+    );`;
+    expect(scanSource('bad.tsx', bad).map((f) => f.what)).toEqual([
+      'aria-describedby names "qty-refusal", which this file never renders'
+    ]);
+    // BOTH branches are read: the always-present hint alone does not acquit.
+    const pair = `const F = ({ refused }) => (
+      <>
+        <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal qty-hint' : 'qty-hint'} />
+        <p id="qty-hint">Digits only.</p>
+      </>
+    );`;
+    expect(scanSource('pair.tsx', pair).map((f) => f.what)).toEqual([
+      'aria-describedby names "qty-refusal", which this file never renders'
+    ]);
+    // An identifier or a template is not decided, and is said to be.
+    expect(
+      scanSource(
+        'undecided.tsx',
+        `const F = ({ refused, id }) => <input aria-invalid={refused} aria-describedby={refused ? id : undefined} />;`
+      )
+    ).toEqual([]);
+  });
+
+  it('✅ BL-326: the id must render in the SAME TREE as the field, not merely the file', () => {
+    // KNOWN-GOOD: one tree — the field and its message co-render.
+    const sameTree = `const F = ({ refused }) => (
+      <div>
+        <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal' : undefined} />
+        {refused && <p id="qty-refusal">That is not a quantity.</p>}
+      </div>
+    );`;
+    expect(scanSource('same.tsx', sameTree)).toEqual([]);
+    // KNOWN-BAD: two exclusive returns of ONE component can never co-render.
+    const otherTree = `const F = ({ refused }) => {
+      if (refused) return <input aria-invalid aria-describedby="qty-refusal" />;
+      return <p id="qty-refusal">That is not a quantity.</p>;
+    };`;
+    expect(scanSource('other.tsx', otherTree).map((f) => f.what)).toEqual([
+      'aria-describedby names "qty-refusal", which does not render in the same tree'
+    ]);
+    // An id rendered ONLY by another component of the file is acquitted: a
+    // parent this scan cannot see may render both (the stated limit).
+    const across = `const Field = ({ refused }) => <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal' : undefined} />;
+      const Refusal = () => <p id="qty-refusal">That is not a quantity.</p>;
+      const Form = () => <div><Field refused /><Refusal /></div>;`;
+    expect(scanSource('across.tsx', across)).toEqual([]);
+    // A LOCAL component invoked in the field's tree, given the id as a literal
+    // prop, is rendering it there — the FieldRefusal shape.
+    const forwarded = `const Refusal = ({ testId, text }) => <div id={testId}>{text}</div>;
+      const Field = ({ refused }) => (
+        <div>
+          <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal' : undefined} />
+          <Refusal testId="qty-refusal" text="That is not a quantity." />
+        </div>
+      );`;
+    expect(scanSource('forwarded.tsx', forwarded)).toEqual([]);
+    // An id held in a const is acquitted: where the const is spliced is not
+    // followed here, and the site may well be in this very tree.
+    const held = `const Field = ({ refused }) => {
+      const hint = <p id="qty-refusal">That is not a quantity.</p>;
+      return (
+        <div>
+          <input aria-invalid={refused} aria-describedby={refused ? 'qty-refusal' : undefined} />
+          {hint}
+        </div>
+      );
+    };`;
+    expect(scanSource('held.tsx', held)).toEqual([]);
+  });
+
+  it('✅ BL-326 FIRES AT THE REAL DEFECT: the shipped ConfirmPanel binding, refusal id deleted', () => {
+    // The conditional pair ConfirmPanel really carries on `main`.
+    const shipped = `const F = ({ qtyRefused }) => (
+      <>
+        <input aria-invalid={qtyRefused} aria-describedby={qtyRefused ? 'sdcsup-qty-refusal sdcsup-qty-hint' : 'sdcsup-qty-hint'} />
+        {qtyRefused && <div id="sdcsup-qty-refusal" role="alert">{t('sdcSup.panel.qty.refused.empty')}</div>}
+        <div id="sdcsup-qty-hint">{t('sdcSup.panel.qty.hint')}</div>
+      </>
+    );`;
+    // The defect MR !151 shipped, reached by deleting the id from that pair:
+    // the attribute stays, the description stops rendering.
+    const mutant = shipped.replace(' id="sdcsup-qty-refusal"', '');
+    expect(mutant).not.toBe(shipped);
+    expect(scanSource('shipped.tsx', shipped)).toEqual([]);
+    expect(scanSource('mutant.tsx', mutant).map((f) => f.what)).toEqual([
+      'aria-describedby names "sdcsup-qty-refusal", which this file never renders'
+    ]);
+  });
+
   it('✅ BL-326 FIRES AT THE REAL DEFECT: the shipped ConfirmPanel pairing, id deleted', () => {
     // The literal pair ConfirmPanel @ 399bdc91 really carries.
     const shipped = `const F = () => (
@@ -306,8 +413,12 @@ describe('BL-31 a11y gate · THE TREE', () => {
     expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
   });
 
-  it('every literal aria-describedby in src/ names an id its own file renders (BL-326)', () => {
-    const f = findings.filter((x) => x.what.includes('which this file never renders'));
+  it('every decidable aria-describedby in src/ names an id rendered in the same tree (BL-326)', () => {
+    const f = findings.filter(
+      (x) =>
+        x.what.includes('which this file never renders') ||
+        x.what.includes('which does not render in the same tree')
+    );
     expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
   });
 });

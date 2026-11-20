@@ -72,6 +72,9 @@ export const fulfilmentCollaborationEn = {
   'fc.asn.shelfLife.left': 'Expiry {{expiry}} · {{months}} months left at ETA',
   'fc.asn.shelfLife.short': 'Below the minimum of {{min}} months at ETA.',
   'fc.asn.shelfLife.expiryRequired': 'Expiry is required for this material.',
+  // BL-326 — an unreadable expiry has its own note; the shelf-life note above
+  // only renders once both dates are real.
+  'fc.asn.expiry.invalid': 'Enter a valid expiry date. The date cannot be read.',
   'fc.asn.shelfLife.request.title': 'Shelf-life exception needed',
   'fc.asn.shelfLife.request.body':
     'At least one line arrives with less than its minimum remaining shelf life, so this ASN cannot be submitted. You can ask Quality for an exception. If Quality approves, the goods are received into blocked stock.',
@@ -337,6 +340,8 @@ export const fulfilmentCollaborationId = {
   'fc.asn.shelfLife.left': 'Kedaluwarsa {{expiry}} · sisa {{months}} bulan saat ETA',
   'fc.asn.shelfLife.short': 'Di bawah minimum {{min}} bulan saat ETA.',
   'fc.asn.shelfLife.expiryRequired': 'Tanggal kedaluwarsa wajib untuk material ini.',
+  // BL-326 — tanggal yang tidak terbaca punya catatannya sendiri.
+  'fc.asn.expiry.invalid': 'Masukkan tanggal kedaluwarsa yang valid. Tanggal tidak dapat dibaca.',
   'fc.asn.shelfLife.request.title': 'Perlu pengecualian umur simpan',
   'fc.asn.shelfLife.request.body':
     'Setidaknya satu baris tiba dengan sisa umur simpan di bawah minimumnya, sehingga ASN ini tidak dapat diajukan. Anda dapat meminta pengecualian kepada Mutu. Jika Mutu menyetujui, barang diterima ke stok terblokir.',

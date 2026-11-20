@@ -36,16 +36,34 @@ const RfqQuestionField = ({
   const set = (v) => onChange({ ...answer, questionId: question.id, value: v });
   const prompt = t(question.promptKey, { defaultValue: question.promptKey });
   const options = question.type === 'yesNo' ? ['yes', 'no'] : (question.options ?? []);
+  // BL-326 — a multiple-choice answer is a GROUP of checkboxes, and the note
+  // is about the answer as a whole. The old markup pointed a <label htmlFor> at
+  // a <div>, which labels nothing, and left the invalid mark and the
+  // description on that div, where no control carries them.
+  const isMulti = question.type === 'multipleChoice';
+  const promptContent = (
+    <>
+      {prompt}
+      {question.required && <span className="text-danger ml-1">*</span>}
+      {question.unitKey && <span className="text-text-tertiary ml-1">({t(question.unitKey)})</span>}
+    </>
+  );
 
   return (
     <div data-testid={`rfq-question-${question.id}`}>
-      <label className="block text-sm text-text-primary mb-1" htmlFor={id}>
-        {prompt}
-        {question.required && <span className="text-danger ml-1">*</span>}
-        {question.unitKey && (
-          <span className="text-text-tertiary ml-1">({t(question.unitKey)})</span>
-        )}
-      </label>
+      {isMulti ? (
+        <span
+          id={`${id}-prompt`}
+          className="block text-sm text-text-primary mb-1"
+          data-testid={`rfq-question-${question.id}-prompt`}
+        >
+          {promptContent}
+        </span>
+      ) : (
+        <label className="block text-sm text-text-primary mb-1" htmlFor={id}>
+          {promptContent}
+        </label>
+      )}
 
       {(question.type === 'yesNo' || question.type === 'singleChoice') && (
         <select
@@ -67,12 +85,7 @@ const RfqQuestionField = ({
       )}
 
       {question.type === 'multipleChoice' && (
-        <div
-          className="flex flex-wrap gap-3"
-          id={id}
-          aria-invalid={ariaInvalid || undefined}
-          aria-describedby={ariaDescribedBy}
-        >
+        <div className="flex flex-wrap gap-3" id={id} role="group" aria-labelledby={`${id}-prompt`}>
           {options.map((o) => {
             const list = Array.isArray(value) ? /** @type {string[]} */ (value) : [];
             const chosen = list.includes(o);
@@ -82,6 +95,10 @@ const RfqQuestionField = ({
                   type="checkbox"
                   className="accent-action"
                   checked={chosen}
+                  // BL-326 — every checkbox is a control, so the mark and the
+                  // description sit on each of them, never on the group div.
+                  aria-invalid={ariaInvalid || undefined}
+                  aria-describedby={ariaDescribedBy}
                   onChange={() => set(chosen ? list.filter((v) => v !== o) : [...list, o])}
                 />
                 {t(`rfx.opt.${o}`, { defaultValue: o })}

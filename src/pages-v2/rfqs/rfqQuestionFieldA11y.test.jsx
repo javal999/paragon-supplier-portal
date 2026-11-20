@@ -49,3 +49,55 @@ describe('BL-326 · an attachment answer carries the refusal that explains it', 
     expect(file).not.toHaveAttribute('aria-describedby');
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────────
+// BL-326 — a multiple-choice answer is a GROUP of checkboxes. The old markup
+// put `aria-invalid` and `aria-describedby` on the wrapping <div> and pointed
+// a `<label htmlFor>` at that div, which labels nothing: no checkbox carried
+// the mark or the description, and the prompt named no control.
+// ────────────────────────────────────────────────────────────────────────────
+/** @type {import('@services/sourcing/types').RfiQuestion} */
+const MULTI_QUESTION = {
+  id: 'q-multi',
+  sectionId: 'compliance',
+  type: 'multipleChoice',
+  required: true,
+  promptKey: 'Pick the certificates you hold',
+  options: ['halal', 'bpom', 'iso']
+};
+
+describe('BL-326 · a multiple-choice answer carries the refusal on its controls', () => {
+  it('every checkbox is invalid and describes the caller’s note', () => {
+    renderWithProviders(
+      <>
+        <RfqQuestionField
+          question={MULTI_QUESTION}
+          answer={undefined}
+          onChange={() => {}}
+          aria-invalid
+          aria-describedby="q-multi-note"
+        />
+        <p id="q-multi-note">Pick at least one certificate.</p>
+      </>
+    );
+    const boxes = screen.getAllByRole('checkbox');
+    expect(boxes).toHaveLength(3);
+    for (const box of boxes) {
+      expect(box).toHaveAttribute('aria-invalid', 'true');
+      expect(box).toHaveAttribute('aria-describedby', 'q-multi-note');
+    }
+    // The prompt names the group (htmlFor pointed at a div before BL-326).
+    const group = screen.getByRole('group', { name: 'Pick the certificates you hold *' });
+    expect(group).toBeInTheDocument();
+  });
+
+  it('KNOWN-GOOD: with no refusal no checkbox is marked or described', () => {
+    renderWithProviders(
+      <RfqQuestionField question={MULTI_QUESTION} answer={undefined} onChange={() => {}} />
+    );
+    for (const box of screen.getAllByRole('checkbox')) {
+      expect(box).not.toHaveAttribute('aria-invalid');
+      expect(box).not.toHaveAttribute('aria-describedby');
+    }
+  });
+});
