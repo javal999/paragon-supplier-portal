@@ -1,13 +1,17 @@
 // ────────────────────────────────────────────────────────────────────────────
-// BL-326 — the refusals on the ASN line editor, at the surface.
+// BL-326 — the described element on the ASN line editor, at the surface.
 //
 // MR !151 pointed the quantity input at an id rendered only for the `bad`
 // case, so an over-open line was invalid with a describedby that resolved to
-// nothing; !155 fixed that half. This spec covers the second half: a line that
-// is BOTH bad and over names both messages, and the expiry — which carried an
-// invalid mark for an unreadable date and for a short shelf life while its
-// describedby pointed at a note that only renders when the shelf-life view
-// exists — now names the note that is actually on screen (the BL-326 defect).
+// nothing. Two passes fixed it: this branch binds the mark and the note to one
+// reading and names EVERY message on screen, and the bl233/bl84 lane (main)
+// pinned the expiry's own gap — a date the rule cannot read (`refusal:
+// 'expiry'`) set `aria-invalid` while every description it could name was
+// rendered on a different condition. The merged spec keeps both passes'
+// assertions: each case asserts the reference RESOLVES and carries the message
+// about THAT control, each has a known-good twin so the pass cannot be bought
+// by pointing every control at one note, and a line that is both bad and
+// over-open names both ids rather than only the first.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { screen } from '@testing-library/react';
@@ -19,16 +23,16 @@ const OPEN = [{ materialCode: 'MAT-1', description: 'Bottle', uom: 'PCS', open: 
 
 /**
  * One line as `readLines` would return it.
- * @param {{ qtyOk?: boolean, over?: boolean, refusal?: string | null, shelfLife?: { minMonths: number, monthsLeft: number | null, ok: boolean } | null }} flags
+ * @param {{ qtyOk?: boolean; over?: boolean; refusal?: import('@services/transitions/fulfilmentRules').AsnLineRefusal | null; shelfLife?: import('@services/transitions/fulfilmentRules').ShelfLifeLineView | null }} [flags]
  * @returns {import('../../shipments/asnLines').AsnLinesRead}
  */
-const readOf = ({ qtyOk = true, over = false, refusal = null, shelfLife = null }) =>
+const readOf = ({ qtyOk = true, over = false, refusal = null, shelfLife = null } = {}) =>
   /** @type {import('../../shipments/asnLines').AsnLinesRead} */ ({
     lines: [
       {
         line: OPEN[0],
         input: { materialCode: 'MAT-1', shippedQty: 20 },
-        refusal: refusal ?? (over ? 'overOpen' : null),
+        refusal,
         qtyOk,
         over,
         batchSource: 'declared',
@@ -51,13 +55,22 @@ const readOf = ({ qtyOk = true, over = false, refusal = null, shelfLife = null }
   });
 
 /**
- * @param {{ qtyOk?: boolean, over?: boolean, refusal?: string | null, shelfLife?: { minMonths: number, monthsLeft: number | null, ok: boolean } | null }} flags
+ * @param {string} [expiry]
+ * @returns {Record<string, import('../../shipments/asnLines').LineEntry>}
  */
-const renderEditor = (flags) =>
+const entryWith = (expiry = '') => ({
+  'MAT-1': { qty: '20', batch: '', expiry, batchSource: 'declared' }
+});
+
+/**
+ * @param {{ qtyOk?: boolean; over?: boolean; refusal?: import('@services/transitions/fulfilmentRules').AsnLineRefusal | null; shelfLife?: import('@services/transitions/fulfilmentRules').ShelfLifeLineView | null }} [flags]
+ * @param {string} [expiry]
+ */
+const renderEditor = (flags = {}, expiry = '') =>
   renderWithProviders(
     <AsnLinesEditor
       open={OPEN}
-      entries={{ 'MAT-1': { qty: '20', batch: '', expiry: '', batchSource: 'declared' } }}
+      entries={entryWith(expiry)}
       read={readOf(flags)}
       batches={{}}
       onChange={() => {}}
@@ -70,25 +83,34 @@ const renderEditor = (flags) =>
 const describedIds = (el) =>
   (el.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
 
+/**
+ * The element a control's `aria-describedby` names, read back the way a screen
+ * reader would: the attribute must name at least one id, and that id must be on
+ * screen. A control with the attribute absent fails here, which is the defect.
+ * @param {HTMLElement} control
+ * @returns {HTMLElement}
+ */
+const describedElementOf = (control) => {
+  const ids = describedIds(control);
+  expect(ids.length).toBeGreaterThan(0);
+  const described = document.getElementById(ids[0]);
+  expect(described).not.toBeNull();
+  return /** @type {HTMLElement} */ (described);
+};
+
 describe('BL-326 · the ASN quantity describes every refusal that is on screen', () => {
   it('an over-open line (qtyOk, not bad) describes the form-level over-open alert', () => {
     renderEditor({ qtyOk: true, over: true });
     const qty = screen.getByLabelText('Shipped quantity for MAT-1');
     expect(qty).toHaveAttribute('aria-invalid', 'true');
-    const ids = describedIds(qty);
-    expect(ids.length).toBeGreaterThan(0);
-    // The referenced element exists and carries the over-open message.
-    const described = document.getElementById(ids[0]);
-    expect(described).not.toBeNull();
-    expect(described?.textContent).toContain('above the open quantity');
+    expect(describedElementOf(qty).textContent).toContain('above the open quantity');
   });
 
   it('KNOWN-GOOD: a line with a bad quantity still describes its own line note', () => {
     renderEditor({ qtyOk: false, over: false });
     const qty = screen.getByLabelText('Shipped quantity for MAT-1');
     expect(qty).toHaveAttribute('aria-invalid', 'true');
-    const described = document.getElementById(describedIds(qty)[0]);
-    expect(described?.textContent).toContain('Enter a quantity greater than zero');
+    expect(describedElementOf(qty).textContent).toContain('Enter a quantity greater than zero');
   });
 
   it('a line that is BOTH bad and over names both messages, not only the first', () => {
@@ -103,43 +125,48 @@ describe('BL-326 · the ASN quantity describes every refusal that is on screen',
   });
 });
 
-describe('BL-326 · the ASN expiry names the note it actually renders', () => {
-  it('an unreadable date is invalid and describes its own note', () => {
-    renderEditor({ refusal: 'expiry' });
+describe('BL-326 · the ASN expiry describes the refusal that is on screen', () => {
+  it('fires: a date the rule cannot read is invalid AND names a message that renders', () => {
+    // The old wiring: `aria-invalid` was true for `expiry`, and every id the
+    // field could name was rendered only for `expiryRequired` or a shelf-life
+    // figure — so the reader heard "invalid" and nothing else.
+    renderEditor({ refusal: 'expiry' }, 'not-a-date');
     const expiry = screen.getByLabelText('Expiry date for MAT-1');
     expect(expiry).toHaveAttribute('aria-invalid', 'true');
+    // The exact id is pinned as well: it is the unreadable-date note, never the
+    // shelf-life note that cannot render on this path.
     expect(expiry).toHaveAttribute('aria-describedby', 'asn-expiry-MAT-1-invalid');
-    expect(document.getElementById('asn-expiry-MAT-1-invalid')).toHaveTextContent(
-      'Enter a valid expiry date'
-    );
+    expect(describedElementOf(expiry).textContent).toContain('Enter a real expiry date');
   });
 
-  it('a required expiry describes the shelf-life note', () => {
+  it('KNOWN-GOOD: an expiry-required line describes the required message', () => {
     renderEditor({ refusal: 'expiryRequired' });
     const expiry = screen.getByLabelText('Expiry date for MAT-1');
     expect(expiry).toHaveAttribute('aria-invalid', 'true');
-    expect(expiry).toHaveAttribute('aria-describedby', 'asn-expiry-MAT-1-note');
-    expect(document.getElementById('asn-expiry-MAT-1-note')).toHaveTextContent(
-      'Expiry is required for this material'
-    );
+    expect(describedElementOf(expiry).textContent).toContain('Expiry is required');
   });
 
-  it('a short shelf life describes the months-left note', () => {
-    renderEditor({
-      refusal: 'shelfLife',
-      shelfLife: { minMonths: 6, monthsLeft: 2.4, ok: false }
-    });
+  it('KNOWN-GOOD: a shelf-life failure describes the figure it failed against', () => {
+    renderEditor(
+      {
+        refusal: 'shelfLife',
+        shelfLife: { minMonths: 6, monthsLeft: 2, ok: false }
+      },
+      '2026-12-31'
+    );
     const expiry = screen.getByLabelText('Expiry date for MAT-1');
     expect(expiry).toHaveAttribute('aria-invalid', 'true');
-    expect(expiry).toHaveAttribute('aria-describedby', 'asn-expiry-MAT-1-note');
-    expect(document.getElementById('asn-expiry-MAT-1-note')).toHaveTextContent(
-      'months left at ETA'
-    );
+    const described = describedElementOf(expiry);
+    expect(described.textContent).toContain('months left at ETA');
+    expect(described.textContent).toContain('Below the minimum of 6 months');
   });
 
-  it('KNOWN-GOOD: a readable expiry that meets the rule is not invalid', () => {
-    renderEditor({ shelfLife: { minMonths: 6, monthsLeft: 8.2, ok: true } });
+  it('KNOWN-GOOD: a clean line is not invalid and names nothing', () => {
+    renderEditor({}, '2027-12-31');
     const expiry = screen.getByLabelText('Expiry date for MAT-1');
+    // The component omits the attribute when valid (`|| undefined`), so the
+    // assertion is absence rather than the string "false".
     expect(expiry).not.toHaveAttribute('aria-invalid');
+    expect(expiry.getAttribute('aria-describedby')).toBeNull();
   });
 });

@@ -7,9 +7,11 @@ import MaterialSearch, {
   MaterialMatchReason,
   useMaterialSearch
 } from '@components/ui-v2/MaterialSearch';
+import { formatIDR } from '@lib/format';
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
-import { sequenceErrorFor } from '@services/transitions/fulfilmentRules';
+import { sequenceErrorFor, valueLimitLocked } from '@services/transitions/fulfilmentRules';
 /** @import { AsnLinesRead, LineEntry, OpenLine } from '../../shipments/asnLines' */
+/** @import { CallOff } from '@services/data/types' */
 import { EMPTY_LINE } from '../../shipments/asnLines';
 import { ShelfLifeLineNote } from '../../shipments/ShelfLifeParts';
 import { inputClass, labelClass } from '../const';
@@ -20,8 +22,9 @@ import BatchCell from './BatchCell';
  * The shared line editor: shipped quantity, batch and expiry per PO line.
  * Used by the wizard's details step and by the Submit drawer; `read` is the
  * caller's pass of the one line rule over `entries`, so both paths flag the
- * same lines.
- * @type {React.FC<{ open: readonly OpenLine[]; entries: Record<string, LineEntry>; read: AsnLinesRead; batches: Readonly<Record<string, readonly AvailableBatch[]>>; onChange: (materialCode: string, patch: Partial<LineEntry>) => void; overShipReason: string; onReasonChange: (v: string) => void; }>}
+ * same lines. `callOff`:  BL-140 — the released call-off the ASN names; a
+ * value-limit line is not offered unless it covers the line.
+ * @type {React.FC<{ open: readonly OpenLine[]; entries: Record<string, LineEntry>; read: AsnLinesRead; batches: Readonly<Record<string, readonly AvailableBatch[]>>; onChange: (materialCode: string, patch: Partial<LineEntry>) => void; overShipReason: string; onReasonChange: (v: string) => void; callOff?: Pick<CallOff, 'materialCode' | 'quantity'>; }>}
  */
 const AsnLinesEditor = ({
   open,
@@ -30,7 +33,8 @@ const AsnLinesEditor = ({
   batches,
   onChange,
   overShipReason,
-  onReasonChange
+  onReasonChange,
+  callOff
 }) => {
   const { t } = useTranslation();
   // Material C3 — the one material search over the PO's lines (MR-3 BR-04):
@@ -73,6 +77,23 @@ const AsnLinesEditor = ({
               const r = read.lines.find((x) => x.line.materialCode === l.materialCode);
               const bad = !!r && !r.qtyOk;
               const over = !!r && r.over;
+              // BL-140 — a value-limit line carries no quantity: it is raised
+              // against the released call-off that covers it, and it is not
+              // offered as a standalone line until that call-off is named.
+              const locked = valueLimitLocked(l, callOff?.materialCode);
+              const valueRefusal =
+                r?.refusal === 'overCallOff' || r?.refusal === 'overValueLimit' ? r.refusal : null;
+              // BL-326 — every quantity message on screen is named: the
+              // value-limit note (the lock when no call-off covers the line,
+              // else the bound it broke), the row's own bad-quantity note, and
+              // the form-level over-open alert. A line can carry more than one,
+              // and naming only the first left the others unannounced. Each id
+              // belongs to an element this row renders on the same condition.
+              const qtyNoteIds = [
+                locked || valueRefusal ? `asn-qty-${l.materialCode}-value-limit` : null,
+                bad ? `asn-qty-${l.materialCode}-invalid` : null,
+                over ? 'asn-over-open-alert' : null
+              ].filter(Boolean);
               // AIB-1 BR-05 (BL-348) — each failed line shows its sequence
               // error, naming both values where two differ (AC-02: both POs).
               const seqError = read.sequenceRead
@@ -119,31 +140,53 @@ const AsnLinesEditor = ({
                     )}
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                    <Data>{`${qty(l.open)} ${l.uom}`}</Data>
+                    {l.valueLimit !== undefined ? (
+                      <Data>{t('fc.asn.valueLimit.open', { value: formatIDR(l.valueLimit) })}</Data>
+                    ) : (
+                      <Data>{`${qty(l.open)} ${l.uom}`}</Data>
+                    )}
                   </td>
                   <td className="py-1.5 pr-2">
                     <input
                       type="text"
                       inputMode="decimal"
                       aria-label={t('fc.asn.shippedFor', { material: l.materialCode })}
-                      aria-invalid={bad || over}
-                      // BL-326 — every message on screen is named: a bad
-                      // quantity shows the row note, an over-open line shows
-                      // the form-level alert, and a line that is both names
-                      // both rather than only the first.
-                      aria-describedby={
-                        bad && over
-                          ? `asn-qty-${l.materialCode}-invalid asn-over-open-alert`
-                          : bad
-                            ? `asn-qty-${l.materialCode}-invalid`
-                            : over
-                              ? 'asn-over-open-alert'
-                              : undefined
-                      }
+                      aria-invalid={!locked && (bad || over || valueRefusal !== null)}
+                      // BL-326 / BL-140 — a value-limit line describes its own
+                      // reason (the lock, or the bound it broke); an over-open
+                      // line describes the form-level alert; a bad quantity
+                      // describes its row note. The list above names every one
+                      // that is on screen.
+                      aria-describedby={qtyNoteIds.length ? qtyNoteIds.join(' ') : undefined}
+                      disabled={locked}
                       value={e.qty}
                       onChange={(ev) => onChange(l.materialCode, { qty: ev.target.value })}
-                      className={`${inputClass} min-w-[96px]`}
+                      className={`${inputClass} min-w-[96px] ${locked ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
+                    {locked && (
+                      <div
+                        id={`asn-qty-${l.materialCode}-value-limit`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
+                      >
+                        {t('fc.asn.valueLimit.callOffRequired')}
+                      </div>
+                    )}
+                    {!locked && valueRefusal === 'overCallOff' && (
+                      <div
+                        id={`asn-qty-${l.materialCode}-value-limit`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
+                        {t('fc.asn.valueLimit.overCallOff')}
+                      </div>
+                    )}
+                    {!locked && valueRefusal === 'overValueLimit' && (
+                      <div
+                        id={`asn-qty-${l.materialCode}-value-limit`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
+                        {t('fc.asn.valueLimit.overValue')}
+                      </div>
+                    )}
                     {bad && (
                       <div
                         id={`asn-qty-${l.materialCode}-invalid`}

@@ -70,9 +70,18 @@ describe('BL-233 on the Demand anticipation grid', () => {
     expect(bare.map((r) => r.textContent)).toEqual([]);
     const corner = within(grid).getAllByRole('columnheader')[0];
     expect(corner.querySelector('[data-testid^="term-tip-"]')).toBeNull();
-    // TL-D8, and the TL-D9 label kept.
+    // TL-D8, and the TL-D9 label kept — TL-D44 approves both as final wording,
+    // and each carries its own (i) beside the row label.
     expect(within(grid).getByText('Carry-over')).toBeInTheDocument();
-    expect(within(grid).getByText('Would be')).toBeInTheDocument();
+    for (const [label, slug] of [
+      ['Would be', 'would-be'],
+      ['Surplus absorbed', 'surplus-absorbed']
+    ]) {
+      const cell = within(grid).getByText(label);
+      const tip = /** @type {HTMLElement | null} */ (cell.closest('[data-testid^="term-tip-"]'));
+      expect(tip, label).not.toBeNull();
+      expect(tip).toHaveAttribute('data-testid', `term-tip-${slug}`);
+    }
   });
 
   it('AC-01 in Indonesian: the row and Carry-over keep the team’s words', async () => {
@@ -88,6 +97,19 @@ describe('BL-233 on the Demand anticipation grid', () => {
       expect(within(tip).getByRole('tooltip')).toHaveTextContent(
         'Bukan: Delivery Agreement (juga DA, di halaman kontrak).'
       );
+      // TL-D44: the two labels with no team word keep their ID wording too,
+      // each beside its own (i).
+      for (const [label, slug] of [
+        ['Jika dihitung ulang', 'would-be'],
+        ['Kelebihan diserap', 'surplus-absorbed']
+      ]) {
+        const cell = within(grid).getByText(label);
+        const rowTip = /** @type {HTMLElement | null} */ (
+          cell.closest('[data-testid^="term-tip-"]')
+        );
+        expect(rowTip, label).not.toBeNull();
+        expect(rowTip).toHaveAttribute('data-testid', `term-tip-${slug}`);
+      }
     } finally {
       await i18n.changeLanguage('en');
     }

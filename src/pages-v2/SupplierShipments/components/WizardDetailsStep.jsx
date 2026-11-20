@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
 /** @import { AsnLinesRead, LineEntry, OpenLine } from '../../shipments/asnLines' */
+/** @import { CallOff } from '@services/data/types' */
 /** @import { AsnForm } from '../const' */
 import CarrierPicker from '../../shipments/CarrierPicker';
 import { inputClass, labelClass } from '../const';
@@ -13,7 +14,7 @@ import AsnLinesEditor from './AsnLinesEditor';
 /**
  * Wizard step 2 — logistics (carrier, tracking, ship date, ETA), the shipped
  * lines through the shared line editor, packaging, and documents and notes.
- * @type {React.FC<{ form: AsnForm; updateForm: (patch: Partial<AsnForm>) => void; onLineChange: (materialCode: string, patch: Partial<LineEntry>) => void; wizardOpenLines: readonly OpenLine[]; wizardRead: AsnLinesRead; declaredBatches: Readonly<Record<string, readonly AvailableBatch[]>> }>}
+ * @type {React.FC<{ form: AsnForm; updateForm: (patch: Partial<AsnForm>) => void; onLineChange: (materialCode: string, patch: Partial<LineEntry>) => void; wizardOpenLines: readonly OpenLine[]; wizardRead: AsnLinesRead; declaredBatches: Readonly<Record<string, readonly AvailableBatch[]>>; callOff?: Pick<CallOff, 'materialCode' | 'quantity'> }>}
  */
 const WizardDetailsStep = ({
   form,
@@ -21,7 +22,8 @@ const WizardDetailsStep = ({
   onLineChange,
   wizardOpenLines,
   wizardRead,
-  declaredBatches
+  declaredBatches,
+  callOff
 }) => {
   const { t } = useTranslation();
   const missing = missingLogistics(form);
@@ -174,6 +176,7 @@ const WizardDetailsStep = ({
           onChange={onLineChange}
           overShipReason={form.overShipReason}
           onReasonChange={(v) => updateForm({ overShipReason: v })}
+          callOff={callOff}
         />
       </FormSection>
 

@@ -3,7 +3,7 @@
 
 /** @import { AsnForCallOffCheck, CallOffView } from '@services/transitions/callOffRules' */
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
-/** @import { ASN, CallOffWarning, PurchaseOrder } from '@services/data/types' */
+/** @import { ASN, CallOff, CallOffWarning, PurchaseOrder } from '@services/data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { AsnLinesRead, OpenLine } from '../shipments/asnLines' */
 /** @import { AsnForm } from './const' */
@@ -125,6 +125,7 @@ export function submitLinesFor(asn, shippablePos, asns, receipts = []) {
 /**
  * @typedef {object} WizardRead
  * @property {PurchaseOrder | undefined} selectedPO  The PO picked at step 1.
+ * @property {CallOff | undefined} selectedCallOff  BL-140 — the released call-off the form names, when one is picked.
  * @property {OpenLine[]} wizardOpenLines  That PO's open lines.
  * @property {AsnLinesRead} wizardRead  Every line through the one line rule (AR-11).
  * @property {CallOffWarning[]} wizardWarnings  What the confirm step warns about.
@@ -152,6 +153,11 @@ export function readWizard({
   receipts = []
 }) {
   const selectedPO = shippablePos.find((p) => p.id === form.poId);
+  // BL-140 — the released call-off the form names. A value-limit line is raised
+  // against it; the form and the verbs read the same call-off (AR-11).
+  const selectedCallOff = form.callOffId
+    ? callOffViewList.find((v) => v.callOff.id === form.callOffId)?.callOff
+    : undefined;
   const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns, undefined, receipts) : [];
   // AR-11 — every line through the one line rule the verbs call.
   const wizardRead = readLines(form.lines, wizardOpenLines, {
@@ -162,7 +168,8 @@ export function readWizard({
     externalId: form.externalId,
     overShipReason: form.overShipReason,
     batches: declaredBatches,
-    receipts
+    receipts,
+    callOff: selectedCallOff
   });
   // MR-6 BR-10 / BR-11 — what the confirm step warns about; never a block.
   const wizardWarnings = selectedPO
@@ -202,5 +209,12 @@ export function readWizard({
    * @returns {boolean}
    */
   const isStepValid = (s) => (s === 0 ? step1Valid : s === 1 ? step2Valid : step3Valid);
-  return { selectedPO, wizardOpenLines, wizardRead, wizardWarnings, isStepValid };
+  return {
+    selectedPO,
+    selectedCallOff,
+    wizardOpenLines,
+    wizardRead,
+    wizardWarnings,
+    isStepValid
+  };
 }
