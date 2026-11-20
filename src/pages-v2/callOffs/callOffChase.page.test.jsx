@@ -4,11 +4,12 @@
 // The list is the DERIVED chase: co-0006 (confirmed, sent 7 days ago, no ASN)
 // and co-0002 (a dispatch notice is not an ASN) are on it; co-0001 (received)
 // and co-0007 (missed) are not. (The ASN-covering rule is pinned in
-// `callOffChaseCommand.test.js`, where the stores are built for it. The
-// walkthrough fixture's CO-2026-0043/0044 reuse the base seed's ids, so a
-// seed-based assertion on those two would be ambiguous.) The planner closes one
-// with a reason and the row leaves; a seat without `calloffchase:close` reads
-// the list but is told whose act the close is.
+// `callOffChaseCommand.test.js`, where the stores are built for it.) The
+// walkthrough pair carries its own ids (BL-359) and its open call-off is
+// `covered` by its in-transit ASN, so it stays off the open list; its own spec
+// pins that row. The planner closes one with a reason and the row leaves; a
+// seat without `calloffchase:close` reads the list but is told whose act the
+// close is.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

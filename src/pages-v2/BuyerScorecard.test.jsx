@@ -41,10 +41,11 @@ describe('BuyerScorecard — four honest states', () => {
 // ────────────────────────────────────────────────────────────────────────────
 // REQ-E10-01 — the figures on this page are CALCULATED now.
 //
-// The default supplier (sup-007) has six measured deliveries in the window,
-// five met and one late, so the page must read 83% — a number that exists
+// The default supplier (sup-007) has seven measured deliveries in the window,
+// six met and one late, so the page must read 86% — a number that exists
 // nowhere in any fixture and can only come from the rule. (It read 50% on two
-// deliveries until BL-94 gave sup-007 four earlier on-time call-offs.)
+// deliveries until BL-94 gave sup-007 four earlier on-time call-offs; the
+// walkthrough pair's received call-off counts on its own id since BL-359.)
 //
 // ⚠️ **CFOT AND THE REJECTION COUNT WERE BOTH UNREACHABLE HERE AND ARE NOT ANY
 // MORE, SO TWO LITERALS IN THIS BLOCK MOVED.** Until the purchase-order family
@@ -62,9 +63,9 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
       await screen.findByRole('heading', { name: 'Supplier performance' })
     ).toBeInTheDocument();
     expect(await screen.findByTestId('scorecard-otif')).toHaveTextContent(
-      'From 6 deliveries due in this period'
+      'From 7 deliveries due in this period'
     );
-    expect(await screen.findByText('83%')).toBeInTheDocument();
+    expect(await screen.findByText('86%')).toBeInTheDocument();
     // CFOT is measured now — over the orders whose confirmed date falls in the
     // period, which is the half of the assessment that had no reachable member.
     expect(await screen.findByTestId('scorecard-cfot')).toHaveTextContent(
@@ -82,7 +83,7 @@ describe('BuyerScorecard — calculated performance (REQ-E10-01)', () => {
     expect(await screen.findByTestId('scorecard-update-compliance-value')).toHaveTextContent(
       'Update compliance 92%'
     );
-    const delivery = Math.round((83 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    const delivery = Math.round((86 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
     const expected = Math.round(0.9 * delivery + 0.1 * 92);
     expect(await screen.findByTestId('scorecard-grade')).toHaveTextContent(`${expected}/100`);
   });

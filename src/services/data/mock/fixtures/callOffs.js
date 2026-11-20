@@ -23,8 +23,8 @@
 //   (delivery drift) · 0009 Escalated · 0010 partial Awaiting Approval · 0011
 //   Rejected · 0012 Draft · 0013 Delivered on time and in full · 0043, 0044,
 //   0045 and 0046 Delivered on time and in full, 80, 60, 40 and 25 days ago —
-//   sup-007's delivery history (BL-94), which puts its 90-day OTIF at 83% (5 of
-//   6) so it passes the compliance gate on the Oslo RFQ.
+//   sup-007's delivery history (BL-94), which with 0013 met and 0001 late lifts
+//   its 90-day OTIF above the compliance gate's minimum on the Oslo RFQ.
 //
 // And the CR-05 / CR-04 cases (BL-47, BL-49):
 //   exactly +5% accepted: 0005 (JIT) and 0017 (forecast) · +5.1% awaiting
@@ -529,9 +529,9 @@ export const CALL_OFF_SEED = [
   // ── BL-94 · sup-007's delivery history ─────────────────────────────────────
   // Four past call-offs on the 100ml PET line, each received ON its date and IN
   // FULL (GR-2026-018..021 in `mockGoodsReceipts.js`), so the main supplier
-  // persona has a real OTIF record: 5 met of 6 decided in the 90-day window
-  // (these four, 0013, and the late 0001) = 83%, which clears the compliance
-  // gate's 80% and lets sup-007 take a share of the Oslo award (rfq-021).
+  // persona has a real OTIF record: these four are met in the 90-day window,
+  // with 0013 met and the late 0001 missed, which clears the compliance gate's
+  // 80% and lets sup-007 take a share of the Oslo award (rfq-021).
   //
   // ⚠️ THE LINE IS NOT FREE. li-007a has exactly 15,000 left (draft 0012's
   // remainder) and li-024a exactly 37,000 (draft 0019's), so any release on
