@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, Upload } from 'lucide-react';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
+import { formatDate } from '@lib/format';
 import { parseWorkbook } from '@services/sdc';
 import { useFeedstockConfirm } from '@services/query/commandHooks';
 /** @import { InventoryPosition } from '@services/data/types' */
@@ -24,6 +25,7 @@ import {
   readFileText,
   useInventoryRunner
 } from './inventoryDisplay';
+import { productionEntries } from './SupplierStockDrawer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Spreadsheet template ("EDI" to business users) — REQ-E08-02 BR-02, BR-05.
@@ -451,6 +453,10 @@ export const StockTemplateDownloadButton = ({ supplierId, positions, testId }) =
  */
 const StockUploadPanel = ({ supplierId, positions }) => {
   const { t } = useTranslation();
+  // BL-358 — a material with more than one production run on record cannot have
+  // them all expressed in the template's one E/F pair; say so once, above the
+  // cards that list them.
+  const multiRun = positions.some((p) => productionEntries(p).length > 1);
 
   return (
     <section
@@ -476,11 +482,17 @@ const StockUploadPanel = ({ supplierId, positions }) => {
           {t('inv.upload.incoming.toggle')}
         </summary>
         <p className="mt-2 text-xs text-text-tertiary">{t('inv.upload.incoming.hint')}</p>
+        {multiRun ? (
+          <p className="mt-2 text-xs text-text-secondary" data-testid="stock-upload-runs-note">
+            {t('inv.upload.incoming.runsNote')}
+          </p>
+        ) : null}
         <div className="mt-2 grid gap-3 sm:grid-cols-2">
           {positions.map((p) => {
-            const inProduction = p.incoming
-              .filter((i) => i.source === 'production')
-              .reduce((s, i) => s + i.quantity, 0);
+            // BL-358 — the runs behind the total, so a supplier can see that a
+            // file carrying one E/F pair replaces more than one run.
+            const runs = productionEntries(p);
+            const inProduction = runs.reduce((s, i) => s + i.quantity, 0);
             return (
               <div
                 key={p.materialCode}
@@ -491,6 +503,23 @@ const StockUploadPanel = ({ supplierId, positions }) => {
                 <div className="mt-1 text-xs text-text-secondary">
                   {t('inv.upload.incoming.inProduction')} <Data>{qty(inProduction)}</Data> {p.uom}
                 </div>
+                {runs.length > 1 ? (
+                  <div className="mt-1" data-testid={`stock-upload-runs-${p.materialCode}`}>
+                    <ul>
+                      {runs.map((run, i) => (
+                        <li
+                          key={`run-${run.date ?? 'no-date'}-${run.quantity}`}
+                          className="text-xs text-text-secondary"
+                          data-testid={`stock-upload-run-${p.materialCode}-${i}`}
+                        >
+                          {run.date ? formatDate(run.date) : t('inv.incoming.noDate')}
+                          {' · '}
+                          <Data>{`${qty(run.quantity)} ${p.uom}`}</Data>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div className="mt-2">
                   <InTransitReadOnly
                     position={p}

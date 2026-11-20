@@ -3374,6 +3374,7 @@ export function useConsumptionRecordCommand() {
  *       supplierRop?: number;
  *       inProductionQty?: number;
  *       productionCompletionDate?: string;
+ *       inProductionRuns?: readonly { quantity: number; completionDate?: string }[];
  *       batches?: readonly { batchNumber: string; qty: number; manufacturingDate?: string; expiryDate?: string }[];
  *     }
  *   | {
@@ -3385,6 +3386,7 @@ export function useConsumptionRecordCommand() {
  *       supplierRop?: number;
  *       inProductionQty?: number;
  *       productionCompletionDate?: string;
+ *       inProductionRuns?: readonly { quantity: number; completionDate?: string }[];
  *       batches?: readonly { batchNumber: string; qty: number; manufacturingDate?: string; expiryDate?: string }[];
  *     }
  *   | { verb: 'sync'; supplierId: string }
