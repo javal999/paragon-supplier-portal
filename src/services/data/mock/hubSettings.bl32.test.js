@@ -307,9 +307,8 @@ describe('BL32-POP · the population of rule values is derived from the config m
       ])
     );
     expect(ph).toEqual({
-      'invoice.standardCapIdr': 'BL-54',
-      'gate.minOtifPct': 'BL-55',
-      'gate.noHistoryPasses': 'BL-55',
+      // BL-54 and BL-55 were decided by the owner on 2026-11-20, so those
+      // three values carry no placeholder any more.
       // ENG-D6 — Finance's cost rates; REQ-E14-05 BR-03 — the Material Planner's penalty.
       'engine.holdingCostPctPerYear': 'ENG-D6',
       'engine.orderCostIdr': 'ENG-D6',
@@ -1171,7 +1170,7 @@ describe('BL32-GOV · t_setting_set — the recorded act and who may perform it'
     expect(r.status).toBe('done');
     expect(commandAuditSink.byEvent('t_setting_set')).toHaveLength(1);
     const [c] = hubSettingsStore.changes();
-    expect(c).toMatchObject({ key: 'gate.minOtifPct', value: 75, previous: 80, setBy: NOBODY });
+    expect(c).toMatchObject({ key: 'gate.minOtifPct', value: 75, previous: 90, setBy: NOBODY });
     expect(c.setAt).not.toBe('1999-01-01T00:00:00.000Z');
   });
 });

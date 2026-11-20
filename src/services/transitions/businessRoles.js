@@ -282,14 +282,11 @@ const LANE_BUNDLES = Object.freeze({
     'application:decide',
     // ── BL-50 · THE HUB'S WORKING CALENDAR (§3.4, Q-18 decided) ──────────
     // Ruling a day working or non-working moves EVERY deadline the hub
-    // measures people by — PO responses, call-off confirmations, forecast
-    // commitments, the planner's own escalations. So the lanes those
-    // deadlines measure (planning, procurement, every supplier lane) cannot
-    // hold it: a party may not set the clock it is timed on. It sits beside
-    // `role:grant` with the platform's other governance acts, and `admin`
-    // (the Hub administrator, ADM) holds it by derivation. Unlike `role:grant`
-    // it is NOT subtracted from `buyer_all`: it grants no authority, it moves
-    // dates — the `enforcement:set` shape, which `buyer_all` also holds.
+    // measures people by. The owner overruled the original "the measured lanes
+    // cannot hold it" argument on 2026-11-20 (BL-70): the super admin (`admin`)
+    // and the planner set the calendar. `admin` still holds it by derivation.
+    // Unlike `role:grant` it is NOT subtracted from `buyer_all`: it grants no
+    // authority, it moves dates — the `enforcement:set` shape.
     'calendar:set',
     // ── PSC-4 BR-07 · THE MATERIAL BUFFER'S EVENT CALENDAR (CNY, Typhoon) ──
     // A window switches the Material Buffer on, which moves ROP Order for
@@ -298,14 +295,14 @@ const LANE_BUNDLES = Object.freeze({
     // platform's governance acts and `admin` (ADM) holds it by derivation.
     // It writes no DA version; the change is audited with DRC-D16 (BR-10, Q2).
     'eventcalendar:set',
-    // ── BL-51 · THE 3PL LIST (REQ-E07-04 BR-05, maintained by ADM) ────────
+    // ── BL-51 · THE 3PL LIST (REQ-E07-04 BR-05) ────────────────────────────
     // Which public tracking page an ASN's number opens is what a planner
-    // checks a supplier's "it is on the way" against. A supplier lane cannot
-    // hold it (it would choose the page that vouches for its own shipment),
-    // nor `planning` / `receiving`, whose deliveries it is read against. It
-    // sits with the platform's other governance acts, and `admin` (the Hub
-    // administrator) holds it by derivation. Like `enforcement:set`, and
-    // unlike `role:grant`, it grants no authority, so `buyer_all` keeps it.
+    // checks a supplier's "it is on the way" against. A supplier lane still
+    // cannot hold it (it would choose the page that vouches for its own
+    // shipment). Owner ruling 2026-11-20 (BL-70): the super admin (`admin`,
+    // held by derivation) and the planner maintain the list, overriding the
+    // original "not `planning`" argument. Like `enforcement:set`, and unlike
+    // `role:grant`, it grants no authority, so `buyer_all` keeps it.
     'threepl:maintain',
     // ── BL-32 · THE HUB'S RULE VALUES (REQ-E08-05 BR-03, §3.6, ADM) ───────
     // Tolerances, deadlines, alert thresholds and stale periods decide what
@@ -316,9 +313,8 @@ const LANE_BUNDLES = Object.freeze({
     // receiving, finance — cannot hold it: a party may not set the bar it is
     // measured against or decides under. Beside `calendar:set` and
     // `threepl:maintain`; `admin` holds it by derivation. `buyer_all` keeps
-    // it on the same precedent, and BL-70 is the open question for all
-    // three: a combined buyer who can move the gate's OTIF minimum or the
-    // invoice cap is a sharper version of the question than the calendar.
+    // it on the same precedent. BL-70 (owner ruling 2026-11-20) decided the
+    // calendar and the 3PL list only; this value is still open.
     'setting:set',
     // ── BL-32 · THE REASON LISTS (§3.6 starter lists, ADM) ─────────────────
     // What a supplier must choose from when it adjusts or rejects a PO or
@@ -428,7 +424,13 @@ const LANE_BUNDLES = Object.freeze({
     // PEX-8 — the planner suggests what happens to a PO On Hold line.
     'poonhold:suggest',
     // PEX-12 [Proposed] — the planner asks to cancel a PO (a request only, not sent to SAP).
-    'pocancel:request'
+    'pocancel:request',
+    // ── BL-70 · OWNER RULING 2026-11-20 ─────────────────────────────────────
+    // The super admin (`admin`) and the planner set the working calendar and
+    // the 3PL list. Both atoms stay in `compliance`; this ADDS the planner and
+    // subtracts nobody.
+    'calendar:set',
+    'threepl:maintain'
   ]),
   // Raising and revising a requisition — split from approving one, which is
   // the segregation `pr:approve` living in `procurement` expresses.

@@ -238,7 +238,11 @@ describe('MAT-R4 — a supplier reads only its own compliance at award', () => {
   });
 });
 
-// ── The RFP: rfp-002, a closed firm-offer round, sup-007 and sup-015 ─────────
+// ── The RFP: rfp-002, a closed firm-offer round, sup-013 and sup-015 ─────────
+// ⚠️ sup-013, not sup-007: the owner ruling of 2026-11-20 (BL-55) raised the
+// OTIF minimum to 90%, and sup-007 measures 86%, so it cannot join a round.
+// sup-013 has no OTIF history (which passes); its compliance figure is pinned
+// below, as sup-007's 92% used to be the sample's non-null one.
 
 const DAY_MS = 86_400_000;
 /** @param {number} offset */
@@ -248,6 +252,15 @@ const FULL_SET = 'opt-full-set';
 
 /** @returns {Promise<Record<string, string>>} */
 async function rfpWithOffers() {
+  rfpResponseStore.add({
+    id: 'rfp-resp-b4-sup-013',
+    rfpId: 'rfp-002',
+    supplierId: 'sup-013',
+    status: 'Submitted',
+    updatedAt: rfxNow(),
+    submittedAt: rfxNow(),
+    answers: []
+  });
   rfpResponseStore.add({
     id: 'rfp-resp-b4-sup-015',
     rfpId: 'rfp-002',
@@ -270,7 +283,7 @@ async function rfpWithOffers() {
       rfpId: 'rfp-002',
       optionRefs: [FULL_SET],
       quantityPoints: [10_000, 50_000],
-      invitedSupplierIds: ['sup-007', 'sup-015'],
+      invitedSupplierIds: ['sup-013', 'sup-015'],
       deadline: dayFromNow(5)
     }
   });
@@ -278,7 +291,7 @@ async function rfpWithOffers() {
   /** @type {Record<string, string>} */
   const offers = {};
   for (const [supplierId, unitPrice] of /** @type {const} */ ([
-    ['sup-007', 4_100],
+    ['sup-013', 4_100],
     ['sup-015', 4_180]
   ])) {
     const res = await svc.dispatch(supplier(supplierId), {
@@ -312,9 +325,9 @@ async function rfpWithOffers() {
  */
 const rfpSplit = (offers) => [
   {
-    supplierId: 'sup-007',
+    supplierId: 'sup-013',
     optionRef: FULL_SET,
-    firmOfferId: /** @type {NonNullable<(typeof offers)['sup-007']>} */ (offers['sup-007']),
+    firmOfferId: /** @type {NonNullable<(typeof offers)['sup-013']>} */ (offers['sup-013']),
     sharePct: 60,
     quantity: 30_000,
     awardTierQty: 50_000
@@ -341,7 +354,8 @@ const awardRfp = (awardLines, awardReason) =>
   });
 
 describe("MR-2 BR-06 on an RFP — the snapshot; the reason rule is the RFP's own", () => {
-  it('an RFP award stores the compliance each awarded supplier had (sup-007 92% on the sample, sup-015 No history)', async () => {
+  it('an RFP award stores the compliance each awarded supplier had (sup-013 pinned at 92%, sup-015 No history)', async () => {
+    PCT.set('sup-013', 92);
     const offers = await rfpWithOffers();
     const res = await awardRfp(rfpSplit(offers), 'Dual source on the full set.');
     expect(res.status, res.reason).toBe('done');
@@ -352,7 +366,7 @@ describe("MR-2 BR-06 on an RFP — the snapshot; the reason rule is the RFP's ow
         .find((a) => a.eventId === 'rfp-002')
     );
     expect(rec.complianceAtAward).toEqual([
-      { supplierId: 'sup-007', pct: 92 },
+      { supplierId: 'sup-013', pct: 92 },
       { supplierId: 'sup-015', pct: null }
     ]);
     expect(

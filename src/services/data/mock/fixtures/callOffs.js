@@ -530,8 +530,10 @@ export const CALL_OFF_SEED = [
   // Four past call-offs on the 100ml PET line, each received ON its date and IN
   // FULL (GR-2026-018..021 in `mockGoodsReceipts.js`), so the main supplier
   // persona has a real OTIF record: these four are met in the 90-day window,
-  // with 0013 met and the late 0001 missed, which clears the compliance gate's
-  // 80% and lets sup-007 take a share of the Oslo award (rfq-021).
+  // with 0013 met and the late 0001 missed — 86%. ⚠️ That cleared the 80%
+  // minimum in force at BL-94, but the owner raised the minimum to 90% on
+  // 2026-11-20 (BL-55), so sup-007 no longer passes the compliance gate and
+  // can no longer take a share of the Oslo award (rfq-021).
   //
   // ⚠️ THE LINE IS NOT FREE. li-007a has exactly 15,000 left (draft 0012's
   // remainder) and li-024a exactly 37,000 (draft 0019's), so any release on

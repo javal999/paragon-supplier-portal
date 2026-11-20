@@ -169,6 +169,10 @@ export const CERT_TYPE_GLOSSARY = /** @satisfies {GlossaryOf<CertType>} */ ({
     en: 'An ISO management-system certificate. It says how a supplier works, not what any particular lot contains.',
     id: 'Sertifikat sistem manajemen ISO. Menyatakan bagaimana pemasok bekerja, bukan apa isi lot tertentu.'
   },
+  TAX_LEGAL: {
+    en: 'A tax or legal document — a business licence (NIB) or a tax ID (NPWP). A registration of the company, not a certificate about a product.',
+    id: 'Dokumen pajak atau hukum — izin usaha (NIB) atau nomor pokok wajib pajak (NPWP). Registrasi perusahaan, bukan sertifikat tentang produk.'
+  },
   OTHER: {
     en: 'A certificate the portal holds but does not model. Deliberately not folded into a neighbouring type — a wrong type is worse than an unclassified one.',
     id: 'Sertifikat yang disimpan portal tetapi tidak dimodelkan. Sengaja tidak digabungkan ke jenis terdekat — jenis yang salah lebih buruk daripada yang tidak terklasifikasi.'

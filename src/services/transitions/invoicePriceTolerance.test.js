@@ -50,7 +50,7 @@ describe('CR-12 · which rule applies', () => {
     expect(linePriceRule(smallLine())).toBe('standard');
   });
 
-  it('the placeholder cap is the BL-54 value and the percentages are the owner decision', () => {
+  it('the cap is the owner-approved BL-54 value and the percentages are the owner decision', () => {
     // The numbers live in ONE place; this pins what that place holds today, so
     // changing the cap (BL-54's one-line change) is a visible, deliberate act.
     // BL-32: the ONE place is now the registry `hubSettings.js`, changed on the
