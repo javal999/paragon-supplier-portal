@@ -69,7 +69,10 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   ASN_CREATE_PO_APPROVED: 'asn_create_po_approved',
   /** ASN create / submit (BR-02): every line names a material of the PO and a
    *  positive shipped quantity no larger than the line's open quantity, unless
-   *  the supplier gives a reason. */
+   *  the supplier gives a reason. BL-140 — a value-limit line has no open
+   *  quantity: it is raised against the released call-off that covers it, the
+   *  quantity is bounded by that call-off and the value by what the line has
+   *  left (CR-04), and a standalone line on it is refused. */
   ASN_LINES_WITHIN_OPEN: 'asn_lines_within_open',
   /** ASN submit (BR-04): ship date, expected arrival (not before the ship
    *  date) and a batch number on every line. */

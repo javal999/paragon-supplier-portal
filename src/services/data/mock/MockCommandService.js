@@ -827,6 +827,10 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
   const asn = entityId ? asnStore.get(entityId) : undefined;
   const po = findPoByNumber(asn ? asn.poReference : String(payload.poReference));
   if (!po) return { ok: false, reason: 'parent PO not found' };
+  // BL-140 — the released call-off this ASN names, from the payload on a create
+  // and from the record on a submit: a value-limit line is raised against it.
+  const callOffId = nonBlank(payload.callOffId) ?? asn?.callOffId;
+  const callOff = callOffId ? callOffStore.get(callOffId) : undefined;
   const entered = payloadAsnLines(payload);
   const overShipReason = payload.overShipReason ?? asn?.overShipReason;
   // A create without lines proposes open quantities by construction.
@@ -858,12 +862,35 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
       overShipReason,
       requireBatch: false,
       // GR-1 / BL-71 — a kept-open receipt's missing quantity is open again.
-      receipts: goodsReceiptStore.all()
+      receipts: goodsReceiptStore.all(),
+      // BL-140 — a value-limit line is bounded by this call-off (CR-04).
+      callOff
     });
     if (refusal === 'overOpen') {
       return {
         ok: false,
         reason: `OVER_OPEN_QUANTITY: line ${i + 1} (${line.materialCode}) ships more than the open quantity — give a reason`
+      };
+    }
+    // BL-140 (owner ruling 2026-11-20) — a value-limit line has no quantity to
+    // ship against: the ASN is raised against the released call-off, and each
+    // bound refuses by name. CR-04 is the source of both figures.
+    if (refusal === 'valueLimitNoCallOff') {
+      return {
+        ok: false,
+        reason: `VALUE_LIMIT_CALL_OFF_REQUIRED: line ${i + 1} (${line.materialCode}) commits a value, not a quantity — raise this ASN against a released call-off`
+      };
+    }
+    if (refusal === 'overCallOff') {
+      return {
+        ok: false,
+        reason: `OVER_CALL_OFF_QUANTITY: line ${i + 1} (${line.materialCode}) ships more than its call-off released`
+      };
+    }
+    if (refusal === 'overValueLimit') {
+      return {
+        ok: false,
+        reason: `OVER_VALUE_LIMIT: line ${i + 1} (${line.materialCode}) ships more value than the PO line has left`
       };
     }
     if (refusal) return { ok: false, reason: `line ${i + 1}: ${refusal}` };
@@ -896,6 +923,9 @@ const asnSubmissionRead = (asn, payload, waive) => {
     eta
   });
   const po = findPoByNumber(asn.poReference) ?? { poNumber: asn.poReference, lineItems: [] };
+  // BL-140 — the released call-off the record names, so the form and the verbs
+  // read the value-limit line's bound the same way (AR-11).
+  const callOff = asn.callOffId ? callOffStore.get(asn.callOffId) : undefined;
   /** @type {(AsnLineRefusal | null)[]} */
   const refusals = lines.map((l) => {
     const check = asnLineCheckOf(l, eta);
@@ -905,7 +935,8 @@ const asnSubmissionRead = (asn, payload, waive) => {
       requireBatch: true,
       waiveShelfLife: waive && shelfLifeWaivedFor(asn, check),
       // GR-1 / BL-71 — a kept-open receipt's missing quantity is open again.
-      receipts: goodsReceiptStore.all()
+      receipts: goodsReceiptStore.all(),
+      callOff
     });
   });
   return { lines, eta, incomplete, refusals };

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { refusalDetailOf } from '@services/transitions/refusalMessage';
-/** @import { ASN, PurchaseOrder } from '@services/data/types' */
+/** @import { ASN, CallOff, PurchaseOrder } from '@services/data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
 /** @import { useAdvanceShipNoticeRequestException, useAdvanceShipNoticeSubmit } from '@services/query/commandHooks' */
@@ -24,6 +24,7 @@ import { submitLinesFor } from '../utils';
  * @param {readonly PurchaseOrder[]} args.shippablePos  The POs an ASN may ship against.
  * @param {Readonly<Record<string, readonly AvailableBatch[]>>} args.declaredBatches  Batch picker options by material.
  * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [args.receipts]  GR-1 / BL-71 — kept-open receipts.
+ * @param {readonly CallOff[]} [args.callOffs]  BL-140 — every call-off, so the drawer reads the one the draft names.
  * @param {ReturnType<typeof useAdvanceShipNoticeSubmit>} args.submitAsnMutation
  * @param {ReturnType<typeof useAdvanceShipNoticeRequestException>} args.requestExceptionMutation
  */
@@ -32,6 +33,7 @@ export function useAsnSubmitDrawer({
   shippablePos,
   declaredBatches,
   receipts = [],
+  callOffs = [],
   submitAsnMutation,
   requestExceptionMutation
 }) {
@@ -105,7 +107,8 @@ export function useAsnSubmitDrawer({
   };
 
   // The drawer's lines read by the one line rule (AR-11), leaving the draft
-  // out of its own open quantity.
+  // out of its own open quantity. BL-140 — the call-off the draft names bounds
+  // a value-limit line, the same rule the verb reads.
   /** @param {ASN} asn */
   const readSubmitLines = (asn) =>
     readLines(submitForm.lines, submitLinesForAsn(asn), {
@@ -117,7 +120,8 @@ export function useAsnSubmitDrawer({
       externalId: submitForm.externalId,
       overShipReason: submitForm.overShipReason,
       batches: declaredBatches,
-      receipts
+      receipts,
+      callOff: asn.callOffId ? callOffs.find((c) => c.id === asn.callOffId) : undefined
     });
 
   // t_asn_submit (Draft → Submitted) with the collected fields. The dispatcher
