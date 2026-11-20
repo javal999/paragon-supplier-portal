@@ -1,5 +1,5 @@
 /** @import { StockChannel } from '@services/sdc/types' */
-import { shiftFields } from '@services/data/fixturePresent';
+import { shiftFields, shiftIso } from '@services/data/fixturePresent';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER STOCK SUBMISSIONS — the seed of the ONE inventory model (REQ-E08-01,
@@ -34,6 +34,7 @@ import { shiftFields } from '@services/data/fixturePresent';
  * @property {number} [supplierRop]
  * @property {number} [inProductionQty]
  * @property {string} [productionCompletionDate]
+ * @property {{ quantity: number; completionDate?: string }[]} [inProductionRuns]
  */
 
 /** @type {SupplierStockSeed[]} */
@@ -119,6 +120,10 @@ const items = [
     channel: 'manual'
   },
   {
+    // BL-358 — TWO production runs, so the real mock read (not only a seeded
+    // test read) carries N runs through the drawer and the download. They sum to
+    // the 60,000 the single pair carried, and the later date is unchanged, so
+    // every total and "latest ETA" that read the pair stays true.
     id: 'inv-0110',
     supplierId: 'sup-007',
     materialCode: 'PK-PETB-8801',
@@ -126,8 +131,10 @@ const items = [
     lastUpdated: '2025-04-06',
     channel: 'template',
     supplierRop: 60000,
-    inProductionQty: 60000,
-    productionCompletionDate: '2025-04-16'
+    inProductionRuns: [
+      { quantity: 20000, completionDate: '2025-04-10' },
+      { quantity: 40000, completionDate: '2025-04-16' }
+    ]
   },
   {
     id: 'inv-0111',
@@ -185,8 +192,22 @@ const items = [
 // past it never had. The production completion dates ride the same anchor, so
 // they stay the same number of days after each submission.
 // ─────────────────────────────────────────────────────────────────────────────
+const shifted = shiftFields(items, 'inventory', ['lastUpdated', 'productionCompletionDate']);
+
+// BL-358 — each run's own completion date shifts with the family, like every
+// other date in it. `shiftFields` moves top-level fields only, so the nested
+// list is shifted here with the same `shiftIso` rather than hand-computed.
 /** @type {SupplierStockSeed[]} */
-export const mockInventory = shiftFields(items, 'inventory', [
-  'lastUpdated',
-  'productionCompletionDate'
-]);
+export const mockInventory = shifted.map((row) =>
+  row.inProductionRuns
+    ? {
+        ...row,
+        inProductionRuns: row.inProductionRuns.map((run) => ({
+          ...run,
+          ...(run.completionDate
+            ? { completionDate: shiftIso(run.completionDate, 'inventory') }
+            : {})
+        }))
+      }
+    : row
+);
