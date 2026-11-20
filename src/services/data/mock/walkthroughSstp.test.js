@@ -11,6 +11,7 @@ import { leadTimeBreakdown } from '../../engine/leadTimeSteps';
 import { generateEngineDataset } from '../../engine/synthetic/generate';
 import { zoneLengthsFor } from '../../transitions/forecastConfig';
 import { blanketBalances } from '../../transitions/supplyBelowDemandRules';
+import { callOffChaseRows } from '../../transitions/callOffChase';
 import { NO_PERSON } from '@context/noPerson';
 import {
   SSTP,
@@ -99,8 +100,8 @@ describe('the pair exists, with the sheet’s figures', () => {
     expect(po.lineItems.map((l) => [l.materialCode, l.quantity])).toEqual([[CODE, 440_208]]);
     const offs = callOffStore.all().filter(isPair);
     expect(offs.map((c) => [c.callOffNumber, c.quantity, c.needDate])).toEqual([
-      ['CO-2026-0043', 21_168, '2026-08-26'],
-      ['CO-2026-0044', 32_256, '2026-09-07']
+      ['CO-2026-0047', 21_168, '2026-08-26'],
+      ['CO-2026-0048', 32_256, '2026-09-07']
     ]);
     const balance = blanketBalances(purchaseOrderStore.all(), callOffStore.all(), 'sup-007', CODE);
     expect(balance.reduce((n, l) => n + l.balance, 0)).toBe(SSTP_FIGURES.ospo);
@@ -111,8 +112,8 @@ describe('the pair exists, with the sheet’s figures', () => {
         .filter((a) => a.lineItems.some((l) => l.materialCode === CODE))
         .map((a) => [a.asnNumber, a.status, a.callOffId])
     ).toEqual([
-      ['ASN-2026-01910', 'Delivered', 'co-0043'],
-      ['ASN-2026-01911', 'In Transit', 'co-0044']
+      ['ASN-2026-01910', 'Delivered', 'co-0047'],
+      ['ASN-2026-01911', 'In Transit', 'co-0048']
     ]);
     expect(
       goodsReceiptStore
@@ -120,6 +121,41 @@ describe('the pair exists, with the sheet’s figures', () => {
         .filter((g) => g.inspectionResults.some((r) => r.materialCode === CODE))
         .map((g) => [g.grNumber, g.receivedDate, g.inspectionResults[0].qtyAccepted])
     ).toEqual([['GR-2026-1910', '2026-08-26', 21_168]]);
+  });
+
+  it('the pair’s rows are distinct entities: the chase lists the open one, not the BL-94 row', () => {
+    // BL-359 — the pair once reused the base seed's co-0043/co-0044, beside the
+    // BL-94 delivery history. The chase's first-wins guard then hid the
+    // walkthrough's open call-off behind the received BL-94 row with the same id.
+    const base = /** @type {import('../types').CallOff} */ (callOffStore.get('co-0044'));
+    expect(base).toMatchObject({ supplierId: 'sup-007', materialCode: 'PK-PETB-8802' });
+    const open = /** @type {import('../types').CallOff} */ (callOffStore.get('co-0048'));
+    expect(open).toMatchObject({
+      callOffNumber: 'CO-2026-0048',
+      supplierId: SSTP.supplierId,
+      materialCode: CODE,
+      quantity: SSTP_FIGURES.openCallOff
+    });
+    const rows = callOffChaseRows(
+      callOffStore.all(),
+      asnStore.all(),
+      goodsReceiptStore.all(),
+      [],
+      sdcClock.now()
+    );
+    // Its own chase row, covered by its own in-transit ASN — not deduped away.
+    expect(rows.filter((r) => r.callOffId === 'co-0048')).toEqual([
+      expect.objectContaining({
+        callOffNumber: 'CO-2026-0048',
+        supplierId: SSTP.supplierId,
+        materialCode: CODE,
+        quantity: SSTP_FIGURES.openCallOff,
+        coverage: SSTP_FIGURES.openCallOff,
+        state: 'covered'
+      })
+    ]);
+    // The received BL-94 row raises no chase and no longer shadows the pair's.
+    expect(rows.some((r) => r.callOffId === 'co-0044')).toBe(false);
   });
 
   it('the supplier declared 30,096 finished stock today', () => {

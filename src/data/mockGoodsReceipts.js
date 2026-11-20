@@ -626,9 +626,9 @@ const mockGoodsReceiptsRaw = [
   // ⚠️ BL-94 — sup-007's DELIVERY HISTORY: one receipt per past call-off
   // CO-2026-0043..0046 (`callOffs.js`), each received ON the approved date and
   // IN FULL (12,000 of 12,000), so four more call-offs read on time in full and
-  // sup-007's 90-day OTIF is 83% (5 of 6). Authored dates, shifted +103 days
-  // like every row here: 2026-03-01 / 03-21 / 04-10 / 04-25 land 80, 60, 40 and
-  // 25 days before the declared present.
+  // sup-007 clears the compliance gate on the Oslo RFQ (BL-94). Authored dates,
+  // shifted +103 days like every row here: 2026-03-01 / 03-21 / 04-10 / 04-25
+  // land 80, 60, 40 and 25 days before the declared present.
   //
   // ⚠️ They are on `PO-2025-00108`, the call-offs' umbrella, whose confirmed
   // delivery date is empty — so CFOT (which reads receipts by PO number for

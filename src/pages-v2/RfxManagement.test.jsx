@@ -160,7 +160,7 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
   it('CR-23 / BR-06 — a supplier failing the compliance gate is still listed and selectable, and marked with why', async () => {
     await openInviteStep();
     // ⚠️ PREMISE CHANGE (BL-94): this named sup-007, whose OTIF was 50%. BL-94
-    // gave sup-007 a real delivery history (83%), so it passes now; the failing
+    // gave sup-007 a real delivery history (86%), so it passes now; the failing
     // supplier is sup-008, whose measured OTIF is 0%, under the 80% gate
     // minimum (BL-55 placeholder). The rule under test is unchanged.
     const row = await screen.findByTestId('invitee-row-sup-008');
@@ -185,9 +185,10 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
     expect(within(row).queryByText('0%')).not.toBeInTheDocument();
     // POSITIVE TWIN — a measured supplier still shows its number.
     // PREMISE CHANGED (REQ-E10-01): the positive twin's figure is CALCULATED
-    // from sup-007's own deliveries (six measured, five met since BL-94) rather
-    // than read off the master, so it is 83% where the authored master said 82%.
-    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('83%')).toBeInTheDocument();
+    // from sup-007's own deliveries (seven measured, six met since BL-94 and
+    // BL-359) rather than read off the master, so it is 86% where the authored
+    // master said 82%.
+    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('86%')).toBeInTheDocument();
   });
 
   it('the purchasing-group filter narrows the result, and the empty state names the filters', async () => {
@@ -225,7 +226,7 @@ describe('REQ-E03-02 — the information request', () => {
     // RFx UX 2G — the invitee table is on the Overview tab, the answers on Compare.
     await selectEventTab('Overview');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
-    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('83%');
+    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('86%');
     // ⚠️ the new supplier's OTIF is a sentence, not a zero.
     expect(within(detail).getByTestId('rfi-otif-sup-013')).toHaveTextContent('No history');
     // BR-10 shape — the DRAFT author is listed as an invitee but its answers
@@ -529,7 +530,7 @@ describe('REQ-E03-05 — the bid comparison', () => {
     const row = await screen.findByTestId('cmp-row-reliability');
     expect(within(row).getByTestId('cmp-otif-sup-013')).toHaveTextContent('No history');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
-    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('83%');
+    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('86%');
   });
 
   it('AC-03 — every quote version is kept and readable, rounds and all', async () => {
@@ -571,7 +572,7 @@ describe('REQ-E03-05 — the bid comparison', () => {
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     // POSITIVE TWIN — completing the split to 100% enables it. ⚠️ PREMISE
     // CHANGE (BL-43): the second share used to go to sup-007, which then failed
-    // the compliance gate (OTIF 50% < 80%; it passes at 83% since BL-94);
+    // the compliance gate (OTIF 50% < 80%; it passes at 86% since BL-94);
     // sup-013 passes.
     const second = within(screen.getByTestId('award-input-PK-PETB-8802-sup-013')).getByLabelText(
       /Share/i
@@ -611,7 +612,7 @@ describe('REQ-E03-05 — the bid comparison', () => {
 
 describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
   // ⚠️ PREMISE CHANGE (BL-94): the three specs below named sup-007 as rfq-014's
-  // failing bidder (OTIF 50%). sup-007 now passes at 83%, so they name sup-008
+  // failing bidder (OTIF 50%). sup-007 now passes at 86%, so they name sup-008
   // (OTIF 0%), rfq-014's other failing bidder; each rule is unchanged.
   it('BR-06 — the invitee list marks a failing supplier and names why; a passing one is unmarked', async () => {
     openEvent();
