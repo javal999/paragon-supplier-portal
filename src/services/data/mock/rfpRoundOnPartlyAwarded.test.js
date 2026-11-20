@@ -15,7 +15,11 @@
 //
 // The sample RFP is rfp-002 (Tundra): PTI's options `opt-full-set` and
 // `opt-pump-cap` at 10K/50K/100K. sup-007 proposed on it in the seed; the setup
-// adds a submitted response for sup-015 (passes CR-23).
+// adds submitted responses for sup-013 and sup-015.
+//
+// ⚠️ THE ROUNDS NAME sup-013, NOT sup-007: the owner ruling of 2026-11-20
+// (BL-55) raised the OTIF minimum to 90% and sup-007 measures 86%. sup-013 has
+// no OTIF history, which passes.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -77,19 +81,21 @@ const REASON = 'Dual source on the full set; the pump and cap go to the lowest f
 /** @typedef {Record<string, readonly { optionRef: string; qty: number; unitPrice: number }[]>} Prices */
 
 /**
- * sup-015 answered rfp-002 too: the FIXTURE, not an act under test.
+ * sup-013 and sup-015 answered rfp-002 too: the FIXTURE, not an act under test.
  * @returns {void}
  */
 function seedResponses() {
-  rfpResponseStore.add({
-    id: 'rfp-resp-d15-sup-015',
-    rfpId: 'rfp-002',
-    supplierId: 'sup-015',
-    status: 'Submitted',
-    updatedAt: rfxNow(),
-    submittedAt: rfxNow(),
-    answers: []
-  });
+  for (const supplierId of ['sup-013', 'sup-015']) {
+    rfpResponseStore.add({
+      id: `rfp-resp-d15-${supplierId}`,
+      rfpId: 'rfp-002',
+      supplierId,
+      status: 'Submitted',
+      updatedAt: rfxNow(),
+      submittedAt: rfxNow(),
+      answers: []
+    });
+  }
 }
 
 beforeEach(() => {
@@ -123,7 +129,7 @@ const openRound = (optionRefs, quantityPoints = [50_000]) =>
       rfpId: 'rfp-002',
       optionRefs,
       quantityPoints,
-      invitedSupplierIds: ['sup-007', 'sup-015'],
+      invitedSupplierIds: ['sup-013', 'sup-015'],
       deadline: dayFromNow(5)
     }
   });
@@ -167,7 +173,7 @@ async function firstRound() {
   const closed = await dispatch('t_rfp_close');
   expect(closed.status, closed.reason).toBe('done');
   return runRound([FULL_SET, PUMP_CAP], {
-    'sup-007': [
+    'sup-013': [
       { optionRef: FULL_SET, qty: 50_000, unitPrice: 4_100 },
       { optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_250 }
     ],
@@ -182,9 +188,9 @@ async function firstRound() {
  */
 const fullSet6040 = (offers) => [
   {
-    supplierId: 'sup-007',
+    supplierId: 'sup-013',
     optionRef: FULL_SET,
-    firmOfferId: /** @type {NonNullable<(typeof offers)['sup-007']>} */ (offers['sup-007']),
+    firmOfferId: /** @type {NonNullable<(typeof offers)['sup-013']>} */ (offers['sup-013']),
     sharePct: 60,
     quantity: 30_000,
     awardTierQty: 50_000
@@ -242,7 +248,7 @@ const rfqFromRfp = (sourceRfpOptionRefs) =>
     payload: {
       title: 'Tundra — firm prices by RFQ',
       materialCategory: 'Packaging',
-      invitedSupplierIds: ['sup-007'],
+      invitedSupplierIds: ['sup-013'],
       responseDeadline: dayFromNow(10),
       awardDeadline: dayFromNow(20),
       totalQty: 50_000,
@@ -305,7 +311,7 @@ describe('RFX-D15 — a firm-offer round on a Partly awarded RFP', () => {
   it('(c) new firm offers on the pump and cap in round 2 → the final t_rfp_award on it → Awarded', async () => {
     await partlyAwarded();
     const second = await runRound([PUMP_CAP], {
-      'sup-007': [{ optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_150 }],
+      'sup-013': [{ optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_150 }],
       'sup-015': [{ optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_120 }]
     });
     // The partial award is the wrong verb now: it would settle every option.
@@ -336,7 +342,7 @@ describe('RFX-D15 — a firm-offer round on a Partly awarded RFP', () => {
       expect.arrayContaining([
         [[PUMP_CAP, 'sup-015', second['sup-015']]],
         [
-          [FULL_SET, 'sup-007', expect.any(String)],
+          [FULL_SET, 'sup-013', expect.any(String)],
           [FULL_SET, 'sup-015', expect.any(String)]
         ]
       ])
@@ -346,21 +352,21 @@ describe('RFX-D15 — a firm-offer round on a Partly awarded RFP', () => {
   it('(d) the newer round’s firm price supersedes the older one for the same supplier and option', async () => {
     const first = await partlyAwarded();
     const second = await runRound([PUMP_CAP], {
-      'sup-007': [{ optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_150 }]
+      'sup-013': [{ optionRef: PUMP_CAP, qty: 50_000, unitPrice: 2_150 }]
     });
-    // The award read: sup-007's price in force on the pump and cap is round 2's.
+    // The award read: sup-013's price in force on the pump and cap is round 2's.
     const round2 = /** @type {import('../../sourcing/views').RfpOfferRoundView} */ (
       (await reads.getRfpOfferRounds(buyer)).items.find((r) => r.roundNumber === 2)
     );
     const inForce = round2.firmPrices.filter(
-      (p) => p.supplierId === 'sup-007' && p.optionRef === PUMP_CAP
+      (p) => p.supplierId === 'sup-013' && p.optionRef === PUMP_CAP
     );
     expect(inForce.map((p) => [p.roundNumber, p.qty, p.unitPrice])).toEqual([[2, 50_000, 2_150]]);
     // The award path: the round-1 offer no longer holds the supplier's price.
     const stale = await dispatch('t_rfp_award', {
       awardLines: pumpTo(
-        'sup-007',
-        /** @type {NonNullable<(typeof first)['sup-007']>} */ (first['sup-007'])
+        'sup-013',
+        /** @type {NonNullable<(typeof first)['sup-013']>} */ (first['sup-013'])
       ),
       awardReason: REASON
     });
@@ -368,8 +374,8 @@ describe('RFX-D15 — a firm-offer round on a Partly awarded RFP', () => {
     expect(codeOf(stale.reason)).toBe('AWARD_ITEM_NOT_QUOTED');
     const fresh = await dispatch('t_rfp_award', {
       awardLines: pumpTo(
-        'sup-007',
-        /** @type {NonNullable<(typeof second)['sup-007']>} */ (second['sup-007'])
+        'sup-013',
+        /** @type {NonNullable<(typeof second)['sup-013']>} */ (second['sup-013'])
       ),
       awardReason: REASON
     });
@@ -439,8 +445,8 @@ describe('RFX-D15 (f) — any other RFP status still refuses a round', () => {
       awardLines: [
         ...fullSet6040(offers),
         ...pumpTo(
-          'sup-007',
-          /** @type {NonNullable<(typeof offers)['sup-007']>} */ (offers['sup-007'])
+          'sup-013',
+          /** @type {NonNullable<(typeof offers)['sup-013']>} */ (offers['sup-013'])
         )
       ],
       awardReason: REASON

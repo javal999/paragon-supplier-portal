@@ -743,7 +743,7 @@ describe('REQ-E03-01 — the invitee read', () => {
   it('AC-01 — the purchasing-group filter narrows, and combines with the category', async () => {
     const group = (await reads.getInviteeCandidates(buyer, { purchasingGroup: '101' })).items;
     // BL-64 — the gate demo adds four packaging suppliers to group 101: the two
-    // ACTIVE ones (sup-019, OTIF 90%; sup-020, OTIF 79%) are candidates; the
+    // ACTIVE ones (sup-019, OTIF 80%; sup-020, OTIF 79%) are candidates; the
     // SUSPENDED sup-021 and BLACKLISTED sup-022 are not, like sup-012 and sup-014.
     expect(group.map((c) => c.supplierId).sort()).toEqual([
       'sup-007',

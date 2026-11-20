@@ -168,7 +168,9 @@ describe('§82 · the supplier declares — and the surface says what it is', ()
 });
 
 describe('BL-145 · a Tax & Legal document can be declared', () => {
-  const TAX_NUMBER = 'NPWP-01.234.567.8-091.000';
+  // A SAMPLE token, never a real NPWP format — `thirdPartyIdentifiers.test.js`
+  // refuses identifiers that look like a real registry number.
+  const TAX_NUMBER = 'SAMPLE-NPWP-0001';
 
   it('offers the certificate type, files under Tax & Legal, and the qualification rule counts it', async () => {
     renderWithProviders(<SupplierDocuments />, { identity: BACK_OFFICE });

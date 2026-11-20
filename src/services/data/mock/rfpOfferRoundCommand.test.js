@@ -59,7 +59,7 @@ const buyer = {
   businessRoles: PERSONA_SYSTEM_ROLES.buyer,
   actor: NO_PERSON
 };
-const sup007 = supplier('sup-007');
+const sup013 = supplier('sup-013');
 const sup015 = supplier('sup-015');
 
 /**
@@ -74,18 +74,23 @@ const dayFromNow = (offset) =>
   new Date(Date.parse(rfxNow()) + offset * DAY_MS).toISOString().slice(0, 10);
 
 /**
- * sup-015 (passes CR-23) and sup-008 (fails it on OTIF) also proposed on
- * rfp-002, so a round can invite a passing second supplier and a failing one.
- * Added to the stores directly: this is the FIXTURE the rule is probed against,
- * not an act under test (the RFP response verbs are covered in rfxCommand.test).
+ * sup-013, sup-015 (both pass CR-23) and sup-008 (fails it on OTIF) also
+ * proposed on rfp-002, so a round can invite a passing second supplier and a
+ * failing one. Added to the stores directly: this is the FIXTURE the rule is
+ * probed against, not an act under test (the RFP response verbs are covered in
+ * rfxCommand.test).
+ *
+ * ⚠️ sup-013 carries the round, not sup-007: the owner ruling of 2026-11-20
+ * (BL-55) raised the OTIF minimum to 90% and sup-007 measures 86%, so it can no
+ * longer be invited. sup-013 has no OTIF history, which passes.
  * @returns {void}
  */
 function seedSecondResponses() {
   rfpEventStore.update('rfp-002', (e) => ({
     ...e,
-    invitees: [...e.invitees, { supplierId: 'sup-008' }]
+    invitees: [...e.invitees, { supplierId: 'sup-013' }, { supplierId: 'sup-008' }]
   }));
-  for (const supplierId of ['sup-015', 'sup-008']) {
+  for (const supplierId of ['sup-013', 'sup-015', 'sup-008']) {
     rfpResponseStore.add({
       id: `rfp-resp-probe-${supplierId}`,
       rfpId: 'rfp-002',
@@ -103,6 +108,19 @@ beforeEach(async () => {
   rfqStore.reset();
   quotationStore.reset();
   sdcClock.reset();
+  // The known-good round invites sup-013, and a round may only name a supplier
+  // that responded. The fixture's own responder is sup-007, which can no longer
+  // be invited at the raised 90% minimum (BL-55, 2026-11-20), so sup-013 is
+  // seeded here as the passing participant.
+  rfpResponseStore.add({
+    id: 'rfp-resp-probe-sup-013-base',
+    rfpId: 'rfp-002',
+    supplierId: 'sup-013',
+    status: 'Submitted',
+    updatedAt: rfxNow(),
+    submittedAt: rfxNow(),
+    answers: []
+  });
 });
 
 const closeRfp002 = async () => {
@@ -114,12 +132,12 @@ const closeRfp002 = async () => {
   expect(res.status, res.reason).toBe('done');
 };
 
-/** The known-good round: two options (one supplier-proposed) at 50K, sup-007 asked. */
+/** The known-good round: two options (one supplier-proposed) at 50K, sup-013 asked. */
 const goodRound = () => ({
   rfpId: 'rfp-002',
   optionRefs: ['opt-full-set', 'sup-007:sup-opt-1'],
   quantityPoints: [50_000],
-  invitedSupplierIds: ['sup-007'],
+  invitedSupplierIds: ['sup-013'],
   deadline: dayFromNow(5),
   message: 'Firm prices for the full set and your stock bottle, please.'
 });
@@ -141,12 +159,12 @@ async function openGoodRound(overrides = {}) {
 }
 
 /**
- * The known-good offer from sup-007 on the known-good round.
+ * The known-good offer from sup-013 on the known-good round.
  * @param {string} roundId
  */
 const goodOffer = (roundId) => ({
   roundId,
-  supplierId: 'sup-007',
+  supplierId: 'sup-013',
   prices: [
     { optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_150 },
     { optionRef: 'sup-007:sup-opt-1', qty: 50_000, unitPrice: 3_550 }
@@ -179,8 +197,10 @@ describe('NR-2 — the fixture the round is probed against exists', () => {
     expect(proposal.pricing?.proposedOptions.map((o) => o.id)).toEqual(['sup-opt-1']);
     expect(rfpOfferRoundStore.all()).toEqual([]);
     expect(rfpFirmOfferStore.all()).toEqual([]);
-    // CR-23 on an RFP judges status and OTIF: sup-007 passes, sup-008 fails on OTIF.
-    expect(rfpSupplierGate('sup-007', rfxNow()).passes).toBe(true);
+    // CR-23 on an RFP judges status and OTIF: sup-013 passes (no history, which
+    // passes), sup-007 now fails on OTIF at 86% under the 90% minimum (BL-55),
+    // and sup-008 fails on OTIF at 0%.
+    expect(rfpSupplierGate('sup-013', rfxNow()).passes).toBe(true);
     expect(rfpSupplierGate('sup-008', rfxNow()).failed).toEqual(['otif']);
   });
 });
@@ -207,7 +227,7 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
       roundNumber: 1,
       optionRefs: ['opt-full-set', 'sup-007:sup-opt-1'],
       quantityPoints: [50_000],
-      invitedSupplierIds: ['sup-007'],
+      invitedSupplierIds: ['sup-013'],
       message: 'Firm prices for the full set and your stock bottle, please.'
     });
     expect(round.closedAt).toBeUndefined();
@@ -219,7 +239,7 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
   it('KNOWN-BAD — a round inviting a supplier that failed CR-23 is refused, naming it', async () => {
     seedSecondResponses();
     await closeRfp002();
-    const res = await openRound({ ...goodRound(), invitedSupplierIds: ['sup-007', 'sup-008'] });
+    const res = await openRound({ ...goodRound(), invitedSupplierIds: ['sup-013', 'sup-008'] });
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/:COMPLIANCE_GATE_FAILED: sup-008 .*otif/);
     expect(rfpOfferRoundStore.all()).toEqual([]);
@@ -228,19 +248,19 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
   it('KNOWN-GOOD — the same round with a passing second supplier opens', async () => {
     seedSecondResponses();
     await closeRfp002();
-    const res = await openRound({ ...goodRound(), invitedSupplierIds: ['sup-007', 'sup-015'] });
+    const res = await openRound({ ...goodRound(), invitedSupplierIds: ['sup-013', 'sup-015'] });
     expect(res.status, res.reason).toBe('done');
     expect(
       /** @type {import('../../sourcing/types').RfpOfferRound} */ (
         rfpOfferRoundStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).invitedSupplierIds
-    ).toEqual(['sup-007', 'sup-015']);
+    ).toEqual(['sup-013', 'sup-015']);
   });
 
   // Each row changes ONE field of the known-good round; the known-good above opens.
   it.each(
     /** @type {const} */ ([
-      ['ROUND_NOT_RESPONDED', { invitedSupplierIds: ['sup-007', 'sup-015'] }],
+      ['ROUND_NOT_RESPONDED', { invitedSupplierIds: ['sup-013', 'sup-015'] }],
       ['ROUND_OPTION_UNKNOWN', { optionRefs: ['opt-full-set', 'opt-nobody-asked'] }],
       ['ROUND_QTY_INVALID', { quantityPoints: [50_000, 0] }],
       ['BAD_DEADLINE', { deadline: 'next week' }],
@@ -256,7 +276,7 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
 
   it('a supplier seat cannot open a round: the round names no supplier owner', async () => {
     await closeRfp002();
-    const attempt = svc.dispatch(sup007, {
+    const attempt = svc.dispatch(sup013, {
       transitionId: 't_rfp_round_open',
       entity: 'rfpOfferRound',
       payload: goodRound()
@@ -295,12 +315,12 @@ describe('NR-2 BR-02 — t_rfp_round_open', () => {
 describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise', () => {
   it('an invited supplier submits and revises a firm offer, and both versions are kept', async () => {
     const roundId = await openGoodRound();
-    const sent = await submit(sup007, goodOffer(roundId));
+    const sent = await submit(sup013, goodOffer(roundId));
     expect(sent.status, sent.reason).toBe('done');
     const offerId = /** @type {NonNullable<typeof sent.entityId>} */ (sent.entityId);
 
     sdcClock.set(new Date(Date.parse(rfxNow()) + DAY_MS).toISOString());
-    const revised = await svc.dispatch(sup007, {
+    const revised = await svc.dispatch(sup013, {
       transitionId: 't_rfpfirmoffer_revise',
       entity: 'rfpFirmOffer',
       entityId: offerId,
@@ -355,8 +375,8 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
 
   it('sending again in the same round appends a version to the one offer, never a second row', async () => {
     const roundId = await openGoodRound();
-    const first = await submit(sup007, goodOffer(roundId));
-    const again = await submit(sup007, { ...goodOffer(roundId), validUntil: dayFromNow(70) });
+    const first = await submit(sup013, goodOffer(roundId));
+    const again = await submit(sup013, { ...goodOffer(roundId), validUntil: dayFromNow(70) });
     expect(again.status, again.reason).toBe('done');
     expect(again.entityId).toBe(first.entityId);
     expect(
@@ -369,7 +389,7 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
   it('KNOWN-BAD — an offer after the round deadline is refused ROUND_CLOSED', async () => {
     const roundId = await openGoodRound({ deadline: dayFromNow(2) });
     sdcClock.set(new Date(Date.parse(rfxNow()) + 3 * DAY_MS).toISOString());
-    const res = await submit(sup007, goodOffer(roundId));
+    const res = await submit(sup013, goodOffer(roundId));
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/:ROUND_CLOSED/);
     expect(rfpFirmOfferStore.all()).toEqual([]);
@@ -382,16 +402,16 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
       entity: 'rfpOfferRound',
       entityId: roundId
     });
-    const res = await submit(sup007, goodOffer(roundId));
+    const res = await submit(sup013, goodOffer(roundId));
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/:ROUND_CLOSED/);
   });
 
   it('KNOWN-BAD — a revise after the deadline is refused ROUND_CLOSED, and the offer keeps one version', async () => {
     const roundId = await openGoodRound({ deadline: dayFromNow(2) });
-    const sent = await submit(sup007, goodOffer(roundId));
+    const sent = await submit(sup013, goodOffer(roundId));
     sdcClock.set(new Date(Date.parse(rfxNow()) + 3 * DAY_MS).toISOString());
-    const res = await svc.dispatch(sup007, {
+    const res = await svc.dispatch(sup013, {
       transitionId: 't_rfpfirmoffer_revise',
       entity: 'rfpFirmOffer',
       entityId: /** @type {NonNullable<typeof sent.entityId>} */ (sent.entityId),
@@ -409,7 +429,7 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
   it('KNOWN-BAD — an offer for an option outside the round is refused OFFER_OUTSIDE_ROUND', async () => {
     const roundId = await openGoodRound();
     // `opt-pump-cap` is on the RFP but not asked in THIS round.
-    const res = await submit(sup007, {
+    const res = await submit(sup013, {
       ...goodOffer(roundId),
       prices: [
         ...goodOffer(roundId).prices,
@@ -424,7 +444,7 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
   it('KNOWN-BAD — a missing validity is refused OFFER_VALIDITY_MISSING', async () => {
     const roundId = await openGoodRound();
     const { validUntil: _dropped, ...noValidity } = goodOffer(roundId);
-    const res = await submit(sup007, noValidity);
+    const res = await submit(sup013, noValidity);
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/:OFFER_VALIDITY_MISSING/);
     expect(rfpFirmOfferStore.all()).toEqual([]);
@@ -432,11 +452,11 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
 
   it('KNOWN-BAD — a validity ending before the round deadline is refused OFFER_VALIDITY_MISSING (edge case 2)', async () => {
     const roundId = await openGoodRound({ deadline: dayFromNow(5) });
-    const res = await submit(sup007, { ...goodOffer(roundId), validUntil: dayFromNow(4) });
+    const res = await submit(sup013, { ...goodOffer(roundId), validUntil: dayFromNow(4) });
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/:OFFER_VALIDITY_MISSING/);
     // KNOWN-GOOD at the boundary: valid until the deadline day itself.
-    const onDeadline = await submit(sup007, { ...goodOffer(roundId), validUntil: dayFromNow(5) });
+    const onDeadline = await submit(sup013, { ...goodOffer(roundId), validUntil: dayFromNow(5) });
     expect(onDeadline.status, onDeadline.reason).toBe('done');
   });
 
@@ -464,7 +484,7 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
     ])
   )('KNOWN-BAD — %s is refused by name', async (code, change) => {
     const roundId = await openGoodRound();
-    const res = await submit(sup007, { ...goodOffer(roundId), ...change });
+    const res = await submit(sup013, { ...goodOffer(roundId), ...change });
     expect(res.status).toBe('failed');
     expect(codeOf(res.reason)).toBe(code);
     expect(rfpFirmOfferStore.all()).toEqual([]);
@@ -490,7 +510,7 @@ describe('NR-2 BR-03 / BR-04 — t_rfpfirmoffer_submit and t_rfpfirmoffer_revise
 
   it('supplier B cannot revise supplier A’s offer (scope)', async () => {
     const roundId = await openGoodRound();
-    const sent = await submit(sup007, goodOffer(roundId));
+    const sent = await submit(sup013, goodOffer(roundId));
     const attempt = svc.dispatch(sup015, {
       transitionId: 't_rfpfirmoffer_revise',
       entity: 'rfpFirmOffer',
@@ -515,8 +535,8 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
   /** @returns {Promise<string>} */
   async function twoOffers() {
     seedSecondResponses();
-    const roundId = await openGoodRound({ invitedSupplierIds: ['sup-007', 'sup-015'] });
-    expect((await submit(sup007, goodOffer(roundId))).status).toBe('done');
+    const roundId = await openGoodRound({ invitedSupplierIds: ['sup-013', 'sup-015'] });
+    expect((await submit(sup013, goodOffer(roundId))).status).toBe('done');
     const b = await submit(sup015, {
       ...goodOffer(roundId),
       supplierId: 'sup-015',
@@ -531,12 +551,12 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
     const [round] = (await reads.getRfpOfferRounds(buyer)).items.filter((r) => r.id === roundId);
     expect(
       /** @type {import('../../sourcing/views').RfpOfferRoundView} */ (round).invitedSupplierIds
-    ).toEqual(['sup-007', 'sup-015']);
+    ).toEqual(['sup-013', 'sup-015']);
     expect(
       /** @type {import('../../sourcing/views').RfpOfferRoundView} */ (round).offers
         .map((o) => o.supplierId)
         .sort()
-    ).toEqual(['sup-007', 'sup-015']);
+    ).toEqual(['sup-013', 'sup-015']);
     expect(/** @type {import('../../sourcing/views').RfpOfferRoundView} */ (round).awaiting).toBe(
       0
     );
@@ -557,15 +577,15 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
 
   it('AC-01 — supplier A cannot read supplier B’s offer, and sees only itself as invitee', async () => {
     const roundId = await twoOffers();
-    const [asA] = (await reads.getRfpOfferRounds(sup007)).items.filter((r) => r.id === roundId);
+    const [asA] = (await reads.getRfpOfferRounds(sup013)).items.filter((r) => r.id === roundId);
     expect(
       /** @type {import('../../sourcing/views').RfpOfferRoundView} */ (asA).offers.map(
         (o) => o.supplierId
       )
-    ).toEqual(['sup-007']);
+    ).toEqual(['sup-013']);
     expect(
       /** @type {import('../../sourcing/views').RfpOfferRoundView} */ (asA).invitedSupplierIds
-    ).toEqual(['sup-007']);
+    ).toEqual(['sup-013']);
     expect(
       /** @type {import('../../sourcing/views').RfpOfferRoundView} */ (asA).firmPrices.map(
         (p) => p.supplierId
@@ -588,7 +608,7 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
 
   it('BR-04 — the last firm offer per supplier and option counts, across rounds', async () => {
     const first = await openGoodRound();
-    await submit(sup007, goodOffer(first));
+    await submit(sup013, goodOffer(first));
     await svc.dispatch(buyer, {
       transitionId: 't_rfp_round_close',
       entity: 'rfpOfferRound',
@@ -596,9 +616,9 @@ describe('NR-2 — getRfpOfferRounds narrows the supplier read', () => {
     });
     // Round 2 asks for opt-full-set only; sup-opt-1's price from round 1 stays in force.
     const second = await openRound({ ...goodRound(), optionRefs: ['opt-full-set'] });
-    await submit(sup007, {
+    await submit(sup013, {
       roundId: /** @type {NonNullable<typeof second.entityId>} */ (second.entityId),
-      supplierId: 'sup-007',
+      supplierId: 'sup-013',
       prices: [{ optionRef: 'opt-full-set', qty: 50_000, unitPrice: 3_980 }],
       validUntil: dayFromNow(60)
     });
@@ -645,7 +665,7 @@ describe('NR-2 — two suppliers proposing the same sup-opt id stay two options'
     sup015ProposesSupOpt1();
     const roundId = await openGoodRound({
       optionRefs: bothRefs,
-      invitedSupplierIds: ['sup-007', 'sup-015']
+      invitedSupplierIds: ['sup-013', 'sup-015']
     });
     expect(
       /** @type {import('../../sourcing/types').RfpOfferRound} */ (rfpOfferRoundStore.get(roundId))
@@ -669,11 +689,11 @@ describe('NR-2 — two suppliers proposing the same sup-opt id stay two options'
     sup015ProposesSupOpt1();
     const roundId = await openGoodRound({
       optionRefs: bothRefs,
-      invitedSupplierIds: ['sup-007', 'sup-015']
+      invitedSupplierIds: ['sup-013', 'sup-015']
     });
-    const a = await submit(sup007, {
+    const a = await submit(sup013, {
       roundId,
-      supplierId: 'sup-007',
+      supplierId: 'sup-013',
       prices: [
         { optionRef: 'sup-007:sup-opt-1', qty: 50_000, unitPrice: 3_550 },
         { optionRef: 'sup-015:sup-opt-1', qty: 50_000, unitPrice: 3_800 }
@@ -695,8 +715,8 @@ describe('NR-2 — two suppliers proposing the same sup-opt id stay two options'
       .map((p) => `${p.supplierId}|${p.optionRef}=${p.unitPrice}`)
       .sort();
     expect(inForce).toEqual([
-      'sup-007|sup-007:sup-opt-1=3550',
-      'sup-007|sup-015:sup-opt-1=3800',
+      'sup-013|sup-007:sup-opt-1=3550',
+      'sup-013|sup-015:sup-opt-1=3800',
       'sup-015|sup-015:sup-opt-1=3650'
     ]);
   });
@@ -712,7 +732,7 @@ describe('NR-2 — two suppliers proposing the same sup-opt id stay two options'
 
   it('KNOWN-BAD — a bare sup-opt-1 in a firm price is refused OFFER_OUTSIDE_ROUND', async () => {
     const roundId = await openGoodRound();
-    const res = await submit(sup007, {
+    const res = await submit(sup013, {
       ...goodOffer(roundId),
       prices: [{ optionRef: 'sup-opt-1', qty: 50_000, unitPrice: 3_550 }]
     });
