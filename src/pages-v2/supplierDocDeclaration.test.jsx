@@ -21,9 +21,11 @@ import { renderWithProviders } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { NO_PERSON } from '@context/noPerson';
 import { supplierDocumentStore } from '@services/data/mock/stores/supplierDocumentStore';
+import { qualificationFromDocuments } from '@services/transitions/qualificationRules';
 import i18n from '@lib/i18n';
 import SupplierDocuments from './SupplierDocuments';
 import BuyerCompliance from './BuyerCompliance';
+/** @import { QualificationRule, SupplierDocument } from '@services/data/types' */
 
 /**
  * The supplier's back office — the lane the operator ruled owns the act.
@@ -162,6 +164,66 @@ describe('§82 · the supplier declares — and the surface says what it is', ()
     fireEvent.click(await screen.findByRole('button', { name: /declare a certificate/i }));
     expect(screen.getByTestId('handoff-supplierdoc-supply')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /record declaration/i })).toBeNull();
+  });
+});
+
+describe('BL-145 · a Tax & Legal document can be declared', () => {
+  // A SAMPLE token, never a real NPWP format — `thirdPartyIdentifiers.test.js`
+  // refuses identifiers that look like a real registry number.
+  const TAX_NUMBER = 'SAMPLE-NPWP-0001';
+
+  it('offers the certificate type, files under Tax & Legal, and the qualification rule counts it', async () => {
+    renderWithProviders(<SupplierDocuments />, { identity: BACK_OFFICE });
+    fireEvent.click(await screen.findByRole('button', { name: /declare a certificate/i }));
+
+    const select = /** @type {HTMLSelectElement} */ (screen.getByTestId('declare-certType'));
+    const option = within(select).getByRole('option', { name: 'Tax & legal' });
+    expect(/** @type {HTMLOptionElement} */ (option).value).toBe('TAX_LEGAL');
+
+    fireEvent.change(select, { target: { value: 'TAX_LEGAL' } });
+    fireEvent.change(screen.getByTestId('declare-certNumber'), { target: { value: TAX_NUMBER } });
+    fireEvent.change(screen.getByTestId('declare-issuer'), {
+      target: { value: 'Direktorat Jenderal Pajak' }
+    });
+    fireEvent.change(screen.getByTestId('declare-issuedOn'), {
+      target: { value: '2026-02-01' }
+    });
+    fireEvent.change(screen.getByTestId('declare-scopeText'), {
+      target: { value: 'Company tax registration for all purchases' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: /record declaration/i }));
+    expect(await screen.findByTestId('declaration-recorded')).toBeInTheDocument();
+
+    const row = /** @type {SupplierDocument} */ (
+      supplierDocumentStore.all().find((d) => d.declaration?.certNumber === TAX_NUMBER)
+    );
+    // The declaration FILES under the category its type maps to — the half of
+    // the path that was unreachable before BL-145.
+    expect(row.category).toBe('Tax & Legal');
+    expect(row.declaration?.certType).toBe('TAX_LEGAL');
+
+    // A Valid Tax & Legal document meets a requirement naming that category;
+    // the level computation is the same one the qualification panel reads.
+    /** @type {readonly QualificationRule[]} */
+    const rules = [
+      {
+        level: 'approved',
+        placeholder: true,
+        requiredDocs: [
+          { category: 'Tax & Legal', label: 'Business licence (NIB) and tax ID (NPWP)' }
+        ]
+      },
+      // A Preferred list the document does not meet, so the level lands on
+      // Approved rather than Preferred-by-absence.
+      {
+        level: 'preferred',
+        placeholder: true,
+        requiredDocs: [{ category: 'Quality', label: 'ISO 9001' }]
+      }
+    ];
+    const counted = qualificationFromDocuments([{ ...row, status: 'Valid' }], rules, '2026-03-01');
+    expect(counted.level).toBe('approved');
+    expect(counted.missingFor.approved).toEqual([]);
   });
 });
 

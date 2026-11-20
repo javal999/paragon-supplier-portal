@@ -4,7 +4,15 @@ import { complianceEn, complianceId } from './i18n/compliance';
 /** @import { CertType, ComplianceDisplayStatus } from '@services/data/types' */
 
 /** @type {CertType[]} */
-const ALL_CERT_TYPES = ['HALAL_BPJPH', 'HALAL_MUI_LEGACY', 'HALAL_FOREIGN', 'BPOM', 'ISO', 'OTHER'];
+const ALL_CERT_TYPES = [
+  'HALAL_BPJPH',
+  'HALAL_MUI_LEGACY',
+  'HALAL_FOREIGN',
+  'BPOM',
+  'ISO',
+  'TAX_LEGAL',
+  'OTHER'
+];
 /** @type {ComplianceDisplayStatus[]} */
 const ALL_STATUSES = ['Missing', 'Under Review', 'Valid', 'Expiring', 'Expired'];
 
@@ -15,9 +23,10 @@ describe('complianceView — certCategory (derived from the certificate scheme)'
     expect(certCategory('HALAL_FOREIGN')).toBe('Halal');
   });
 
-  it('maps BPOM → Regulatory, ISO → Quality, OTHER → Other', () => {
+  it('maps BPOM → Regulatory, ISO → Quality, TAX_LEGAL and OTHER → Other', () => {
     expect(certCategory('BPOM')).toBe('Regulatory');
     expect(certCategory('ISO')).toBe('Quality');
+    expect(certCategory('TAX_LEGAL')).toBe('Other');
     expect(certCategory('OTHER')).toBe('Other');
   });
 

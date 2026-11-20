@@ -32,13 +32,13 @@ describe('BL-32 · Tolerances and rule values', () => {
     expect(screen.getByTestId('admin-set-value-invoice.standardCapIdr').textContent).toBe(
       'Rp 500.000'
     );
-    expect(screen.getByTestId('admin-set-placeholder-invoice.standardCapIdr').textContent).toBe(
-      'Placeholder until Finance decides (BL-54)'
-    );
-    expect(screen.getByTestId('admin-set-placeholder-gate.minOtifPct').textContent).toBe(
-      'Placeholder until Procurement decides (BL-55)'
-    );
-    // Known-false: a decided value carries no placeholder (BL-56 decided 2026-11-02).
+    // BL-55 decided 2026-11-20: the OTIF minimum is 90% and is no placeholder.
+    expect(screen.getByTestId('admin-set-value-gate.minOtifPct').textContent).toBe('90%');
+    // Known-false: a decided value carries no placeholder — BL-54 and BL-55
+    // decided 2026-11-20, BL-56 decided 2026-11-02.
+    expect(screen.queryByTestId('admin-set-placeholder-invoice.standardCapIdr')).toBeNull();
+    expect(screen.queryByTestId('admin-set-placeholder-gate.minOtifPct')).toBeNull();
+    expect(screen.queryByTestId('admin-set-placeholder-gate.noHistoryPasses')).toBeNull();
     expect(screen.queryByTestId('admin-set-placeholder-callOff.overPct')).toBeNull();
     expect(screen.queryByTestId('admin-set-placeholder-callOff.earlyAllowanceDays')).toBeNull();
     // The alert thresholds are on their own page, not here.

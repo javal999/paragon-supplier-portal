@@ -6,9 +6,9 @@
 // of values the Hub administrator may change, with, for each:
 //
 //   · its DEFAULT — the value the owner decided on 2026-09-21, or the named
-//     placeholder while a decision is open (BL-54, BL-55, BL-56). This is the
-//     only place a default is written; "reset to default" writes it back
-//     through the same verb as any other change;
+//     placeholder while a decision is open. This is the only place a default is
+//     written; "reset to default" writes it back through the same verb as any
+//     other change;
 //   · its UNIT and its bounds, and the ORDER RULES that tie values together
 //     (a band that would come out empty or inverted is refused by name);
 //   · the RULE it belongs to (`CR-nn`) and the page section it is shown in.
@@ -144,8 +144,9 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       integer: true,
       min: 0,
       max: 1_000_000_000_000,
-      defaultValue: 500_000,
-      placeholder: { owner: 'finance', backlogId: 'BL-54' }
+      // Owner-approved starting value 2026-11-20 (BL-54); Finance may change it
+      // on Administration → Tolerances and rule values.
+      defaultValue: 500_000
     },
     // CR-25 — goods receipt quantity tolerance (REQ-E07-06, BL-45). The default
     // for every material; per-material values stay in `fulfilmentConfig.js`.
@@ -220,7 +221,9 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       max: 200,
       defaultValue: 80
     },
-    // CR-23 — the compliance gate's open values (A-05).
+    // CR-23 — the compliance gate's values. Owner ruling 2026-11-20 (BL-55):
+    // the minimum is 90%, matching the OTIF target in CR-17, and "No history"
+    // passes. Neither is a placeholder any more.
     {
       key: 'gate.minOtifPct',
       section: 'tolerances',
@@ -228,16 +231,14 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       unit: 'pct',
       min: 0,
       max: 100,
-      defaultValue: 80,
-      placeholder: { owner: 'procurement', backlogId: 'BL-55' }
+      defaultValue: 90
     },
     {
       key: 'gate.noHistoryPasses',
       section: 'tolerances',
       rule: 'CR-23',
       unit: 'boolean',
-      defaultValue: true,
-      placeholder: { owner: 'procurement', backlogId: 'BL-55' }
+      defaultValue: true
     },
 
     // CR-24 — risk class against the supplier lead time (REQ-E08-05 BR-02).

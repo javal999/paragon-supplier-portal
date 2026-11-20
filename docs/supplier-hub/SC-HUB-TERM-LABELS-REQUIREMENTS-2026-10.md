@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D35 on 2026-11-02; TL-D36 to TL-D39 on 2026-11-09; TL-D40 on 2026-11-12.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`). **Amended 2026-11-18:** TL-D41 to TL-D43 added; TL-D40 superseded by TL-D41 |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D35 on 2026-11-02; TL-D36 to TL-D39 on 2026-11-09; TL-D40 on 2026-11-12.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`). **Amended 2026-11-18:** TL-D41 to TL-D43 added; TL-D40 superseded by TL-D41. **Amended 2026-11-20:** TL-D44 added; the four labels without a team word are approved as final wording. |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -55,8 +55,8 @@ The hub has one place that already explains terms at the point of use: `TermTip`
 | LTP | LTP | LTP | Unchanged; gets a tooltip |
 | Safety order | Safety order | safety order | Unchanged; gets a tooltip. Not "safety stock": the team's safety order is the ROP Order component, 1.65 × √LT × SD |
 | Carried in | Sisa dibawa masuk | carry-over, sisa DA | **Carry-over** in EN and ID (TL-D8). Tooltip: "Also called: sisa DA (Material Planning team)". Same on the history page column, its CSV header and the "Published …" sentence |
-| Would be | Jika dihitung ulang | none found | Unchanged for now; gets a tooltip. Asked of the team (TL-D9) |
-| Surplus absorbed | Kelebihan diserap | none found | Unchanged for now; gets a tooltip. Asked of the team (TL-D9) |
+| Would be | Jika dihitung ulang | none found | Kept; final wording approved 2026-11-20 (TL-D44). Gets a tooltip |
+| Surplus absorbed | Kelebihan diserap | none found | Kept; final wording approved 2026-11-20 (TL-D44). Gets a tooltip |
 | FG demand, LTP − FG demand, Consumption 13-week average, Recorded consumption, Open supply, Gap | as EN | from the hub's own documents (DRC-18, CAP-11, CAP-12) | Unchanged; each gets a tooltip |
 
 Everywhere else "Demand anticipation" appears as a label (the history page, publish button, What to order section "Below demand anticipation", alerts), it follows TL-D1. Running sentences may keep "demand anticipation" after the label has introduced "(DA)" once on the page.
@@ -150,6 +150,7 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D41 | Protection buffer tip after model A | "A buffer against a jump in demand. It is LTP B minus LTP A over the lead time, averaged, multiplied by the material's cover setting (4 weeks by default), and added once to ROP Order." ID wording to match | Accepted, owner, 2026-11-18 |
 | TL-D42 | Material Buffer tip (new term) | "Additional stock cover for an event such as CNY or a typhoon: the coverage weeks × the average weekly LTP A." | Accepted, owner, 2026-11-18 |
 | TL-D43 | Incoming becomes In Production | The supplier Stock table, its column, labels and tips use In Production; the combined Incoming group label is retired on the supplier view; the term-label inventory row is updated | Accepted, owner, 2026-11-18 |
+| TL-D44 | The four labels with no team word | "Would be", "Surplus absorbed", "After the check" and "Called off, not yet shipped" are approved as final wording; the Material Planning question-list item is closed. The tips and the remaining page coverage stay open in BL-233 | Accepted, owner, 2026-11-20 |
 
 ---
 

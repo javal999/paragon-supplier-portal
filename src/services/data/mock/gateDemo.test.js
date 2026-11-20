@@ -138,7 +138,8 @@ describe('BL-64 — each sample RFQ, every invitee and bidder by name', () => {
 
   it('rfq-019 (Closed, packaging): OTIF boundary, status alone, and a supplier with no certificate', () => {
     expect(gatesOf('rfq-019')).toEqual({
-      'sup-019': [],
+      // BL-55 (2026-11-20): 80% is below the raised 90% minimum.
+      'sup-019': ['otif'],
       'sup-020': ['otif'],
       'sup-021': ['status'],
       'sup-022': ['status'],
@@ -165,10 +166,12 @@ const SCENARIOS = [
   ['GMP / ISO 22716 missing alone on a raw material', 'rfq-016', 'sup-013', ['gmp']],
   ['SUSPENDED alone', 'rfq-019', 'sup-021', ['status']],
   ['BLACKLISTED alone', 'rfq-019', 'sup-022', ['status']],
+  ['OTIF below the minimum alone (80%)', 'rfq-019', 'sup-019', ['otif']],
   ['OTIF below the minimum alone (79%)', 'rfq-019', 'sup-020', ['otif']],
   ['several criteria at once (halal + BPOM + GMP)', 'rfq-020', 'sup-011', ['halal', 'bpom', 'gmp']],
   ['several criteria at once (halal + BPOM)', 'rfq-020', 'sup-004', ['halal', 'bpom']],
-  ['OTIF EXACTLY at the minimum (80%) passes', 'rfq-019', 'sup-019', []],
+  // The exact-boundary PASS at the raised minimum is a unit case in
+  // `complianceGate.test.js`: no sample supplier measures exactly 90% now.
   ['"No history" passes', 'rfq-019', 'sup-011', []],
   ['registry VALID overrides a master holding no halal cert — passes', 'rfq-017', 'sup-005', []],
   ['registry EXPIRED overrides a master saying valid — fails', 'rfq-018', 'sup-002', ['halal']],
@@ -194,15 +197,15 @@ describe('BL-64 — every gate scenario, by named supplier on a named RFQ', () =
 
 // ── The mechanisms behind the boundary scenarios ────────────────────────────
 
-describe('BL-64 — the OTIF boundary is a real delivery history, not a typed number', () => {
-  it('sup-019 measures 4 met of 5 = 80%, and the minimum is 80', () => {
+describe('BL-64 — the OTIF figures are real delivery histories, not typed numbers', () => {
+  it('sup-019 measures 4 met of 5 = 80%, below the raised 90% minimum (BL-55)', () => {
     const m = masterMeasure('sup-019').otif;
     expect({ met: m.met, measured: m.measured, pct: m.pct }).toEqual({
       met: 4,
       measured: 5,
       pct: 80
     });
-    expect(gateMinOtifPct()).toBe(80);
+    expect(gateMinOtifPct()).toBe(90);
   });
 
   it('sup-020 measures 11 met of 14 = 78.6%, shown 79% — one point under', () => {

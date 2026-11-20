@@ -110,14 +110,14 @@ describe('CR-23 — complianceGate', () => {
     expect(gate({ status: SupplierStatus.ONBOARDING }).passes).toBe(true);
   });
 
-  it('fails otif alone below the minimum; the minimum itself passes (80% boundary)', () => {
-    expect(gateMinOtifPct()).toBe(80);
-    expect(gate({}, 79.9).failed).toEqual(['otif']);
-    expect(gate({}, 80).passes).toBe(true);
+  it('fails otif alone below the minimum; the minimum itself passes (90% boundary, BL-55)', () => {
+    expect(gateMinOtifPct()).toBe(90);
+    expect(gate({}, 89.9).failed).toEqual(['otif']);
+    expect(gate({}, 90).passes).toBe(true);
     expect(gate({}, 0).failed).toEqual(['otif']);
   });
 
-  it('"No history" passes (BL-55 placeholder)', () => {
+  it('"No history" passes (owner ruling 2026-11-20, BL-55)', () => {
     expect(gateNoHistoryPasses()).toBe(true);
     expect(otifPassesGate(null)).toBe(true);
     expect(otifPassesGate(undefined)).toBe(true);

@@ -23,7 +23,8 @@
 //       valid, because the registry row for this material (creg-0017) expired ·
 //       sup-017 invited and has not quoted yet.
 //   · rfq-019 (Closed) PET bottle and cap, packaging (no certificate applies):
-//       sup-019 passes at OTIF exactly 80% · sup-020 fails OTIF alone at 79% ·
+//       sup-019 fails OTIF alone at 80% — the owner raised the minimum to 90%
+//       on 2026-11-20 (BL-55) · sup-020 fails OTIF alone at 79% ·
 //       sup-021 (Suspended) and sup-022 (Blacklisted) fail on status alone ·
 //       sup-011 holds no certificate and no delivery history and passes.
 //   · rfq-020 (Closed) Salicylic acid: EVERY bidder fails — sup-011 on halal,
@@ -237,7 +238,9 @@ const callOff = (n, poId, lineId, quantity, needOffset) => {
  * store's next assigned number (seed length + 1) never collides.
  *
  * sup-019 — 5 measured: bottle + cap received on their date at −70 and −42 days
- *   (4 met); the bottle due at −14 never arrived (missed). 4 / 5 = 80%.
+ *   (4 met); the bottle due at −14 never arrived (missed). 4 / 5 = 80%, below
+ *   the owner's raised 90% minimum (BL-55, 2026-11-20). The exact-boundary
+ *   pass at 90 is covered by `complianceGate.test.js`, not by this fixture.
  * sup-020 — 14 measured: 100ml bottle + cap received on their date at −84, −70,
  *   −56, −42 and −28 days and a bottle alone at −14 (11 met); the 200ml bottle
  *   due at −77, −49 and −21 never arrived (3 missed). 11 / 14 = 78.6%, shown 79%.

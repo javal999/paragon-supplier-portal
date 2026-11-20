@@ -73,6 +73,7 @@ export const CERT_TYPES = Object.freeze(
       'HALAL_FOREIGN',
       'BPOM',
       'ISO',
+      'TAX_LEGAL',
       'OTHER'
     ])
   )

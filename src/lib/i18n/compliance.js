@@ -128,6 +128,7 @@ export const complianceEn = {
   'compliance.certType.HALAL_FOREIGN': 'Halal (foreign scheme)',
   'compliance.certType.BPOM': 'BPOM',
   'compliance.certType.ISO': 'ISO',
+  'compliance.certType.TAX_LEGAL': 'Tax & legal',
   'compliance.certType.OTHER': 'Other',
   // — Descriptive action labels (state-descriptive, never imperative) —
   'compliance.action.state.expired': 'Renewal overdue',
@@ -283,6 +284,7 @@ export const complianceId = {
   'compliance.certType.HALAL_FOREIGN': 'Halal (skema asing)',
   'compliance.certType.BPOM': 'BPOM',
   'compliance.certType.ISO': 'ISO',
+  'compliance.certType.TAX_LEGAL': 'Pajak & hukum',
   'compliance.certType.OTHER': 'Lainnya',
   // — Descriptive action labels (state-descriptive, never imperative) —
   'compliance.action.state.expired': 'Pembaruan terlambat',

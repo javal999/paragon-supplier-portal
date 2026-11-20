@@ -102,8 +102,9 @@ import { computeStatus, schemeValid } from './complianceProjection';
  * answering a different question with a confident yes.
  *
  * Declared as data and derived-from-nothing on purpose: `CertType` is a closed
- * union in `types.js`, and a SEVENTH type added there tomorrow is NOT halal-class
- * here until somebody says it is. That is the fail-closed direction.
+ * union in `types.js`, and a NEW type added there — `TAX_LEGAL` is the one that
+ * exists today — is NOT halal-class here until somebody says it is. That is the
+ * fail-closed direction.
  * @type {readonly CertType[]}
  */
 export const HALAL_CERT_TYPES = Object.freeze(['HALAL_BPJPH', 'HALAL_MUI_LEGACY', 'HALAL_FOREIGN']);

@@ -34,7 +34,8 @@ export function isMatched(inv) {
 // chosen per line by whether its PO price comes from a contract:
 //   • contract price → 0%: the billed amount must equal quantity × PO price;
 //   • otherwise      → within 2% of quantity × PO price AND within the absolute
-//                      rupiah cap (a placeholder until Finance sets it, BL-54).
+//                      rupiah cap (owner-approved default 2026-11-20, BL-54;
+//                      Finance may change it).
 // The numbers live in `fulfilmentConfig.js`, never here.
 
 /** Which CR-12 rule a price is checked under. */

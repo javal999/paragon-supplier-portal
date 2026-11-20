@@ -106,7 +106,7 @@ const ON_MANDATE = `${BPJPH_MANDATE_DATE}T00:00:00.000Z`;
 const AFTER_MANDATE = '2026-12-01T09:30:00.000Z';
 
 describe('H3 — halal-class certificate selection', () => {
-  it('the three halal schemes are halal-class and the other three cert types are not', () => {
+  it('the three halal schemes are halal-class and the other four cert types are not', () => {
     expect([...HALAL_CERT_TYPES].sort()).toEqual([
       'HALAL_BPJPH',
       'HALAL_FOREIGN',
@@ -114,6 +114,8 @@ describe('H3 — halal-class certificate selection', () => {
     ]);
     expect(isHalalCertType('BPOM')).toBe(false);
     expect(isHalalCertType('ISO')).toBe(false);
+    // BL-145 — the seventh CertType is a real document about taxes, not halal.
+    expect(isHalalCertType('TAX_LEGAL')).toBe(false);
     expect(isHalalCertType('OTHER')).toBe(false);
   });
 

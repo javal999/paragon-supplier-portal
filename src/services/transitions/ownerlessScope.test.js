@@ -221,9 +221,21 @@ async function realIds() {
     payload: { receiptId: 'gr-006', comment: 'raised to probe the scope gate' }
   });
   // NR-2 — both firm-offer stores start empty (no sample RFP is Closed), so the
-  // probe walks one through the real verbs: close rfp-002, ask sup-007 (which
-  // proposed on it) for a firm price, and let sup-007 send one. A repeat call
-  // finds the RFP already Closed and opens a further round, which is harmless.
+  // probe walks one through the real verbs: close rfp-002, ask a PASSING
+  // responder for a firm price, and let it send one. sup-013 is that responder:
+  // the fixture's own is sup-007, which measures 86% and can no longer join a
+  // round under the 90% minimum the owner ruled on 2026-11-20 (BL-55). A repeat
+  // call finds the RFP already Closed and opens a further round, which is
+  // harmless.
+  rfpResponseStore.add({
+    id: 'rfp-resp-ownerless-sup-013',
+    rfpId: 'rfp-002',
+    supplierId: 'sup-013',
+    status: 'Submitted',
+    updatedAt: rfxNow(),
+    submittedAt: rfxNow(),
+    answers: []
+  });
   const inFiveDays = new Date(Date.parse(rfxNow()) + 5 * 86_400_000).toISOString().slice(0, 10);
   await svc.dispatch(buyerSeat('procurement'), {
     transitionId: 't_rfp_close',
@@ -237,17 +249,17 @@ async function realIds() {
       rfpId: 'rfp-002',
       optionRefs: ['opt-full-set'],
       quantityPoints: [50_000],
-      invitedSupplierIds: ['sup-007'],
+      invitedSupplierIds: ['sup-013'],
       deadline: inFiveDays
     }
   });
   const offer = round.entityId
-    ? await svc.dispatch(supplierSeatOf('sup-007', ...PERSONA_SYSTEM_ROLES.supplier), {
+    ? await svc.dispatch(supplierSeatOf('sup-013', ...PERSONA_SYSTEM_ROLES.supplier), {
         transitionId: 't_rfpfirmoffer_submit',
         entity: 'rfpFirmOffer',
         payload: {
           roundId: round.entityId,
-          supplierId: 'sup-007',
+          supplierId: 'sup-013',
           prices: [{ optionRef: 'opt-full-set', qty: 50_000, unitPrice: 4_150 }],
           validUntil: inFiveDays
         }

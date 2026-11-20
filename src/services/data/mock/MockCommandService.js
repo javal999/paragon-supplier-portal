@@ -6029,6 +6029,7 @@ const CERT_TYPE_TO_CATEGORY = {
   HALAL_FOREIGN: 'Halal Compliance',
   BPOM: 'BPOM Regulatory',
   ISO: 'Quality',
+  TAX_LEGAL: 'Tax & Legal',
   OTHER: 'Other'
 };
 

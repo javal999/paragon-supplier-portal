@@ -16,16 +16,16 @@
 //   · `applyTransition` APPENDS a change; `setAt` is store-assigned, never a
 //     payload field, and `setBy` comes from the session, never from the form.
 //
-// ── ⚠️ `threepl:maintain` IS A `compliance` ATOM, AND THE REASON IS WHO IS ──
-// ── MEASURED BY IT, NOT WHO SEES IT ─────────────────────────────────────────
+// ── ⚠️ `threepl:maintain` IS HELD BY `compliance`, `planning` AND `admin` ───
 // The list decides which tracking page a PTI planner is sent to when they check
-// whether a supplier's goods are really on the way. A supplier lane cannot hold
-// it (a supplier would choose the page that vouches for its own shipment), and
-// neither can `planning` or `receiving`, whose deliveries it is read against.
-// It sits with the platform's other governance acts (`role:grant`, and the
-// working calendar's `calendar:set` on its own branch), and `admin` — the Hub
-// administrator seat (ADM, the owner named in BR-05) — holds it by derivation,
-// as it holds every lane's atoms. No new lane is minted for it (C10 §4.1).
+// whether a supplier's goods are really on the way. A supplier lane still
+// cannot hold it (a supplier would choose the page that vouches for its own
+// shipment). The original argument also excluded `planning` and `receiving`;
+// the owner ruling of 2026-11-20 (BL-70) overrides the `planning` half — the
+// super admin (`admin`) and the planner maintain the list. The atom stays in
+// `compliance`; the ruling adds the planner and subtracts nobody. `admin`
+// holds it by derivation, as it holds every lane's atoms. No new lane is
+// minted for it (C10 §4.1).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FlowDefinition } from '../schema' */

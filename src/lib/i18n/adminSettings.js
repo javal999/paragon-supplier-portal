@@ -172,7 +172,8 @@ export const adminSettingsEn = {
   'adminSet.key.gate.minOtifPct.label': 'Minimum OTIF to pass the compliance gate',
   'adminSet.key.gate.minOtifPct.hint': 'A supplier below it can quote but cannot be awarded.',
   'adminSet.key.gate.noHistoryPasses.label': 'A supplier with no OTIF history passes the gate',
-  'adminSet.key.gate.noHistoryPasses.hint': 'Proposed: yes.',
+  'adminSet.key.gate.noHistoryPasses.hint':
+    'Yes. A supplier with nothing measured is not treated as below the minimum.',
   'adminSet.key.risk.mediumBelowMultiple.label': 'Medium risk below this multiple of the lead time',
   'adminSet.key.risk.mediumBelowMultiple.hint':
     'High below 1 × the lead time; Low at or above this multiple. Must be more than 1.',
@@ -522,7 +523,8 @@ export const adminSettingsId = {
   'adminSet.key.gate.minOtifPct.hint':
     'Pemasok di bawahnya dapat mengajukan penawaran tetapi tidak dapat dimenangkan.',
   'adminSet.key.gate.noHistoryPasses.label': 'Pemasok tanpa riwayat OTIF lolos gerbang',
-  'adminSet.key.gate.noHistoryPasses.hint': 'Usulan: ya.',
+  'adminSet.key.gate.noHistoryPasses.hint':
+    'Ya. Pemasok yang belum memiliki pengukuran tidak dianggap di bawah minimum.',
   'adminSet.key.risk.mediumBelowMultiple.label': 'Risiko sedang di bawah kelipatan lead time ini',
   'adminSet.key.risk.mediumBelowMultiple.hint':
     'Tinggi di bawah 1 × lead time; Rendah pada atau di atas kelipatan ini. Harus lebih dari 1.',

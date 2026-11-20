@@ -24,15 +24,13 @@
 // cascade to fan out, nothing to recompute and nothing that can fall out of
 // step with the calendar. A late commitment is never a state a clock fired.
 //
-// ── ⚠️ `calendar:set` IS A `compliance` ATOM, AND THE REASON IS THE DEADLINES
-// Whoever sets the calendar moves every deadline the hub measures people by —
-// including the planner's own escalations and the supplier's response windows.
-// The lanes those deadlines MEASURE (planning, procurement, and every supplier
-// lane) therefore cannot hold it: a party may not set the clock it is timed on.
-// `compliance` already holds the platform's other governance acts
-// (`role:grant`, and `enforcement:set` is ruled to move there), and `admin` —
-// the Hub administrator seat (ADM) — holds it by derivation, as it holds every
-// lane's atoms. No new lane is minted for it (C10 §4.1).
+// ── ⚠️ `calendar:set` IS HELD BY `compliance`, `planning` AND `admin`
+// The original argument — the lanes the deadlines measure cannot set the clock
+// they are timed on — is OVERRIDDEN by the owner ruling of 2026-11-20 (BL-70):
+// the super admin (`admin`) and the planner set the working calendar. The atom
+// stays in `compliance`; the ruling adds the planner and subtracts nobody.
+// `admin` holds it by derivation, as it holds every lane's atoms. No new lane
+// is minted for it (C10 §4.1).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FlowDefinition } from '../schema' */

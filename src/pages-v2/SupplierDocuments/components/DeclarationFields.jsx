@@ -11,8 +11,8 @@ import { declarationComplete } from '../utils';
 //
 // ⚠️ **THE SCHEME LIST IS THE `CertType` UNION, WRITTEN OUT ONCE AND BOUND BY
 // THE TYPE.** `satisfies readonly CertType[]` plus the exhaustive
-// `certTypeLabelKey` switch means adding a seventh scheme is a `tsc` failure in
-// two places rather than a dropdown that silently omits it. A `.map` over an
+// `certTypeLabelKey` switch means adding a scheme is a `tsc` failure in two
+// places rather than a dropdown that silently omits it. A `.map` over an
 // object's keys would have been shorter and would have lost that.
 const CERT_TYPES = /** @satisfies {readonly CertType[]} */ (
   /** @type {const} */ ([
@@ -21,6 +21,7 @@ const CERT_TYPES = /** @satisfies {readonly CertType[]} */ (
     'HALAL_FOREIGN',
     'BPOM',
     'ISO',
+    'TAX_LEGAL',
     'OTHER'
   ])
 );

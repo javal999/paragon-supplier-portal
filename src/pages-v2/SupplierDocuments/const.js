@@ -17,6 +17,7 @@
 export const CERT_TYPE_FOR_CATEGORY = {
   'Halal Compliance': 'HALAL_BPJPH',
   'BPOM Regulatory': 'BPOM',
+  'Tax & Legal': 'TAX_LEGAL',
   Quality: 'ISO',
   Other: 'OTHER'
 };

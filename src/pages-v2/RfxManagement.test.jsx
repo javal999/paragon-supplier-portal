@@ -159,13 +159,13 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
 
   it('CR-23 / BR-06 — a supplier failing the compliance gate is still listed and selectable, and marked with why', async () => {
     await openInviteStep();
-    // ⚠️ PREMISE CHANGE (BL-94): this named sup-007, whose OTIF was 50%. BL-94
-    // gave sup-007 a real delivery history (86%), so it passes now; the failing
-    // supplier is sup-008, whose measured OTIF is 0%, under the 80% gate
-    // minimum (BL-55 placeholder). The rule under test is unchanged.
+    // ⚠️ PREMISE CHANGE (BL-55, owner ruling 2026-11-20): the gate minimum is
+    // now 90%, so sup-007 (86% since BL-94) fails too. The named failing row
+    // here is sup-008, whose measured OTIF is 0%. The rule under test is
+    // unchanged.
     const row = await screen.findByTestId('invitee-row-sup-008');
     expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('Cannot be awarded');
-    expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('OTIF below 80%');
+    expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('OTIF below 90%');
     const box = within(row).getByRole('checkbox');
     fireEvent.click(box);
     expect(box).toBeChecked();
@@ -611,16 +611,18 @@ describe('REQ-E03-05 — the bid comparison', () => {
 });
 
 describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
-  // ⚠️ PREMISE CHANGE (BL-94): the three specs below named sup-007 as rfq-014's
-  // failing bidder (OTIF 50%). sup-007 now passes at 86%, so they name sup-008
-  // (OTIF 0%), rfq-014's other failing bidder; each rule is unchanged.
+  // ⚠️ PREMISE CHANGE (BL-55, owner ruling 2026-11-20): the minimum is 90%,
+  // so rfq-014 has TWO failing bidders — sup-008 (0%) and sup-007 (86%) —
+  // beside sup-013 (no history) and sup-015, which pass.
   it('BR-06 — the invitee list marks a failing supplier and names why; a passing one is unmarked', async () => {
     openEvent();
     const marker = await screen.findByTestId('event-gate-sup-008');
     expect(marker).toHaveTextContent('Cannot be awarded');
-    expect(marker).toHaveTextContent('OTIF below 80%');
+    expect(marker).toHaveTextContent('OTIF below 90%');
     expect(screen.queryByTestId('event-gate-sup-013')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('event-gate-sup-007')).not.toBeInTheDocument();
+    // sup-007 measures 86%, below the raised minimum — a second failing row,
+    // which is what keeps "marked" from being a single-supplier coincidence.
+    expect(screen.getByTestId('event-gate-sup-007')).toHaveTextContent('OTIF below 90%');
     // Still an invitee — the row is there and still selectable for an extension.
     expect(within(screen.getByTestId('event-invitee-sup-008')).getByRole('checkbox')).toBeEnabled();
   });
@@ -643,7 +645,7 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     const failing = await screen.findByTestId('award-input-PK-PETB-8802-sup-008');
     expect(within(failing).queryByLabelText(/Share/i)).not.toBeInTheDocument();
     expect(within(failing).getByTestId('award-gate-PK-PETB-8802-sup-008')).toHaveTextContent(
-      'OTIF below 80%'
+      'OTIF below 90%'
     );
     // KNOWN-GOOD twin — a passing supplier can be given a share.
     expect(
@@ -856,9 +858,14 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 //
 // rfp-002 (Tundra) is the fixture: PTI's options "Full set: bottle, pump and
 // cap" (`opt-full-set`) and `opt-pump-cap` at 10K / 50K / 100K, and sup-007's
-// submitted proposal. sup-015 (passes CR-23) and sup-008 (OTIF 0%: fails it)
-// are added as submitted responders, as in rfpAwardCommand.test, and the RFP
-// is closed by its verb.
+// submitted proposal. sup-015, sup-013 (both pass CR-23) and sup-008 (OTIF 0%:
+// fails it) are added as submitted responders, as in rfpAwardCommand.test, and
+// the RFP is closed by its verb.
+//
+// ⚠️ THE ROUNDS NAME sup-013, NOT sup-007, since the owner ruling of
+// 2026-11-20 (BL-55) raised the OTIF minimum to 90%: sup-007 measures 86% and
+// can no longer be invited to a firm-offer round. sup-013 has no OTIF history,
+// which passes.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FULL_SET = 'opt-full-set';
@@ -883,9 +890,9 @@ const supplierScope = (supplierId) => ({
 async function closedTundra(svc) {
   rfpEventStore.update('rfp-002', (e) => ({
     ...e,
-    invitees: [...e.invitees, { supplierId: 'sup-008' }]
+    invitees: [...e.invitees, { supplierId: 'sup-013' }, { supplierId: 'sup-008' }]
   }));
-  for (const supplierId of ['sup-015', 'sup-008']) {
+  for (const supplierId of ['sup-015', 'sup-013', 'sup-008']) {
     rfpResponseStore.add({
       id: `rfp-resp-d3-${supplierId}`,
       rfpId: 'rfp-002',
@@ -906,7 +913,7 @@ async function closedTundra(svc) {
 }
 
 /**
- * A round on the full set at 10K and 50K asking sup-007 and sup-015; returns its id.
+ * A round on the full set at 10K and 50K asking sup-013 and sup-015; returns its id.
  * @param {MockCommandService} svc
  * @returns {Promise<string>}
  */
@@ -918,7 +925,7 @@ async function fullSetRound(svc) {
       rfpId: 'rfp-002',
       optionRefs: [FULL_SET],
       quantityPoints: [10_000, 50_000],
-      invitedSupplierIds: ['sup-007', 'sup-015'],
+      invitedSupplierIds: ['sup-013', 'sup-015'],
       deadline: dayFromNow(5)
     }
   });
@@ -936,7 +943,7 @@ async function fullSetOffersClosed(svc) {
   /** @type {Record<string, string>} */
   const offers = {};
   for (const [supplierId, p10, p50] of /** @type {const} */ ([
-    ['sup-007', 4_500, 4_100],
+    ['sup-013', 4_500, 4_100],
     ['sup-015', 4_600, 4_180]
   ])) {
     const res = await svc.dispatch(supplierScope(supplierId), {
@@ -979,7 +986,7 @@ async function partlyAwardedTundra(svc) {
       rfpId: 'rfp-002',
       optionRefs: [FULL_SET, PUMP_CAP],
       quantityPoints: [50_000],
-      invitedSupplierIds: ['sup-007', 'sup-015'],
+      invitedSupplierIds: ['sup-013', 'sup-015'],
       deadline: dayFromNow(5)
     }
   });
@@ -987,7 +994,7 @@ async function partlyAwardedTundra(svc) {
   /** @type {Record<string, string>} */
   const offers = {};
   for (const [supplierId, price] of /** @type {const} */ ([
-    ['sup-007', 4_100],
+    ['sup-013', 4_100],
     ['sup-015', 4_180]
   ])) {
     const res = await svc.dispatch(supplierScope(supplierId), {
@@ -1018,9 +1025,9 @@ async function partlyAwardedTundra(svc) {
       awardReason: 'Dual source on the full set.',
       awardLines: [
         {
-          supplierId: 'sup-007',
+          supplierId: 'sup-013',
           optionRef: FULL_SET,
-          firmOfferId: offers['sup-007'],
+          firmOfferId: offers['sup-013'],
           sharePct: 60,
           quantity: 30_000,
           splitBasis: 'pct',
@@ -1057,12 +1064,12 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await waitFor(() =>
       expect(within(form).getByTestId('rfp-round-supplier-sup-008')).toBeDisabled()
     );
-    expect(within(form).getByTestId('rfp-round-gate-sup-008')).toHaveTextContent('OTIF below 80%');
+    expect(within(form).getByTestId('rfp-round-gate-sup-008')).toHaveTextContent('OTIF below 90%');
     expect(within(form).getByTestId('rfp-round-supplier-sup-015')).toBeEnabled();
     // Nothing picked yet: the verb's own rule holds the button.
     expect(within(form).getByTestId('rfp-round-open-rfp-002')).toBeDisabled();
     fireEvent.click(within(form).getByTestId(`rfp-round-option-${FULL_SET}`));
-    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-007'));
+    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-013'));
     fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-015'));
     fireEvent.change(within(form).getByLabelText('Round deadline'), {
       target: { value: dayFromNow(5) }
@@ -1073,7 +1080,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     const [round] = rfpOfferRoundStore.all();
     expect(
       /** @type {import('@services/sourcing/types').RfpOfferRound} */ (round).invitedSupplierIds
-    ).toEqual(['sup-007', 'sup-015']);
+    ).toEqual(['sup-013', 'sup-015']);
     expect(
       /** @type {import('@services/sourcing/types').RfpOfferRound} */ (round).optionRefs
     ).toEqual([FULL_SET]);
@@ -1088,7 +1095,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     const svc = new MockCommandService();
     await closedTundra(svc);
     const roundId = await fullSetRound(svc);
-    renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    renderWithProviders(<SupplierRfp />, { identity: SUP_013 });
     expect(await screen.findByTestId(`supplier-round-notice-${roundId}`)).toHaveTextContent(
       'Prices you give in this round are firm offers until the validity date you set.'
     );
@@ -1126,7 +1133,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await selectEventTab('Overview');
     const item = await screen.findByTestId(`award-item-${FULL_SET}`);
     fireEvent.change(
-      within(within(item).getByTestId(`award-input-${FULL_SET}-sup-007`)).getByLabelText(/Share/i),
+      within(within(item).getByTestId(`award-input-${FULL_SET}-sup-013`)).getByLabelText(/Share/i),
       {
         target: { value: '60' }
       }
@@ -1156,7 +1163,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await waitFor(() =>
       expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Awarded')
     );
-    expect(await screen.findByTestId(`award-line-${FULL_SET}-sup-007`)).toHaveTextContent('60%');
+    expect(await screen.findByTestId(`award-line-${FULL_SET}-sup-013`)).toHaveTextContent('60%');
     // RFx UX B-07 — the awarded option stays listed, greyed "Awarded" and not
     // pickable; the open one can still go to an RFQ.
     const toRfq = screen.getByTestId('rfp-to-rfq-rfp-002');
@@ -1177,9 +1184,9 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
         awardReason: 'Dual source on the full set.',
         awardLines: [
           {
-            supplierId: 'sup-007',
+            supplierId: 'sup-013',
             optionRef: FULL_SET,
-            firmOfferId: offers['sup-007'],
+            firmOfferId: offers['sup-013'],
             sharePct: 60,
             quantity: 6_000,
             splitBasis: 'pct',
@@ -1198,7 +1205,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
       }
     });
     expect(res.status, res.reason).toBe('done');
-    renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    renderWithProviders(<SupplierRfp />, { identity: SUP_013 });
     const outcome = await screen.findByTestId(`supplier-rfp-outcome-rfp-002-${FULL_SET}`);
     expect(outcome).toHaveTextContent('Your share: 60% (6,000) at the 10,000 quantity point');
     expect(outcome).not.toHaveTextContent('40%');
@@ -1231,7 +1238,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
       within(form).queryByTestId(`rfp-round-option-settled-${PUMP_CAP}`)
     ).not.toBeInTheDocument();
     fireEvent.click(within(form).getByTestId(`rfp-round-option-${PUMP_CAP}`));
-    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-007'));
+    fireEvent.click(within(form).getByTestId('rfp-round-supplier-sup-013'));
     fireEvent.change(within(form).getByLabelText('Round deadline'), {
       target: { value: dayFromNow(5) }
     });
@@ -1300,7 +1307,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     const svc = new MockCommandService();
     await closedTundra(svc);
     const roundId = await fullSetRound(svc);
-    const first = renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
+    const first = renderWithProviders(<SupplierRfp />, { identity: SUP_013 });
     await screen.findByTestId(`supplier-round-notice-${roundId}`);
     fireEvent.change(screen.getByLabelText(`${FULL_SET_TITLE} — 10,000`), {
       target: { value: '4500' }
@@ -1358,12 +1365,12 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     // RFx UX 2G — firm-up and award sit on the Overview tab.
     await selectEventTab('Overview');
-    const seen = await screen.findByTestId(`rfp-round-docs-${roundId}-sup-007`);
+    const seen = await screen.findByTestId(`rfp-round-docs-${roundId}-sup-013`);
     expect(seen).toHaveTextContent('Documents from');
     expect(seen).toHaveTextContent('revised-drawing.pdf');
     // Read-only on the buyer's side: no add control.
     expect(
-      within(seen).queryByTestId(`rfp-round-docs-${roundId}-sup-007-add`)
+      within(seen).queryByTestId(`rfp-round-docs-${roundId}-sup-013-add`)
     ).not.toBeInTheDocument();
   });
 });
