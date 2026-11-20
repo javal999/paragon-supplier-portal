@@ -4,9 +4,10 @@
 //
 // Proved here, by named case:
 //   • it is a DISPATCHED verb, so every ruling lands in the DR-10 trail;
-//   • `calendar:set` is held by `compliance` and by `admin` (ADM), and REFUSED
-//     at the role gate to the lanes the deadlines measure — planning,
-//     procurement — and to every supplier (at scope: the calendar is PTI's);
+//   • `calendar:set` is held by `compliance`, `planning` and `admin` (ADM) —
+//     owner ruling 2026-11-20 (BL-70) added the planner — and REFUSED at the
+//     role gate to every lane without it, and to every supplier (at scope: the
+//     calendar is PTI's);
 //   • the policy refuses a date outside the SAP load, a kind that is not one,
 //     a blank reason and a malformed attribution — each by name;
 //   • `setAt` is MINTED by the store: a payload cannot backdate a ruling;
@@ -117,14 +118,13 @@ describe('BL-50 · t_calendar_day_set — the recorded act', () => {
 });
 
 describe('BL-50 · who may rule — the role atom, both ways', () => {
-  it('BL50-ROLE-01 · compliance and admin (ADM) hold calendar:set; the measured lanes do not', () => {
+  it('BL50-ROLE-01 · compliance, planning and admin (ADM) hold calendar:set; the other lanes do not', () => {
     // `rolesHolding` names the OWNING lanes and leaves the superset seats out
     // by design, so ADM's hold is asserted on its own bundle.
-    expect(rolesHolding('calendar:set')).toEqual(['compliance']);
+    // Owner ruling 2026-11-20 (BL-70): planning was added to the holders.
+    expect(rolesHolding('calendar:set')).toEqual(['compliance', 'planning']);
     expect(SYSTEM_ROLES.admin).toContain('calendar:set');
-    // The lanes the deadlines measure must NOT hold it.
     for (const lane of /** @type {const} */ ([
-      'planning',
       'procurement',
       'receiving',
       'finance',
@@ -142,11 +142,10 @@ describe('BL-50 · who may rule — the role atom, both ways', () => {
     expect(r.status, r.reason).toBe('done');
   });
 
-  it('BL50-ROLE-03 · a planner is refused at the ROLE gate — a party may not set the clock it is timed on', async () => {
+  it('BL50-ROLE-03 · a planner can rule a day (owner ruling 2026-11-20, BL-70)', async () => {
     const r = await svc.dispatch(seat('planning'), rule('2026-09-09'));
-    expect(r.status).toBe('failed');
-    expect(r.reason).toMatch(/^ROLE_NOT_PERMITTED/);
-    expect(isWorkingDay('2026-09-09', hubWorkingCalendar())).toBe(true);
+    expect(r.status, r.reason).toBe('done');
+    expect(isWorkingDay('2026-09-09', hubWorkingCalendar())).toBe(false);
   });
 
   it('BL50-ROLE-04 · procurement is refused at the ROLE gate', async () => {

@@ -313,9 +313,10 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
   });
 
   it('KNOWN-GOOD — the SAME award at 70/30 is recorded, with the loser named', async () => {
-    // ⚠️ PREMISE CHANGE (BL-43): the 30% line used to name sup-007, which then
-    // failed the compliance gate on OTIF (50% < 80%; it passes at 86% since
-    // BL-94). The split rule is unchanged; the second supplier is one that passes.
+    // ⚠️ PREMISE CHANGE (BL-43, and again at BL-55 on 2026-11-20): the 30% line
+    // used to name sup-007, which failed the gate twice — at OTIF 50%, then at
+    // 86% once the owner raised the minimum to 90%. The split rule is unchanged;
+    // the second supplier is one that passes.
     const lines = awardLines([
       ['sup-015', 'qt-014d-r1', 70],
       ['sup-013', 'qt-014c', 30]
@@ -431,13 +432,17 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
     expect(recorded.bestScoredQuotationId).toBe(best);
   });
 
-  it('POSITIVE TWIN — an award that DOES follow the best-scored quote needs no reason', async () => {
+  it('POSITIVE TWIN — following the best-scored quote satisfies the best-score rule; the qualification gap still needs its reason', async () => {
     const best = /** @type {NonNullable<Awaited<ReturnType<typeof bestOf014>>>} */ (
       await bestOf014()
     );
     const winner = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(best)
     );
+    // ⚠️ PREMISE CHANGE (BL-55, 2026-11-20): sup-007 (Preferred, the old best
+    // score) now fails the 90% gate, so rfq-014's best-scored PASSING quote
+    // belongs to a Registered supplier. A direct event needs Preferred, and
+    // that rule demands the reason independently of the best-score rule.
     const res = await svc.dispatch(buyer, {
       transitionId: 't_rfq_award',
       entity: 'rfq',
@@ -445,10 +450,15 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
       payload: {
         awardedQuotationId: best,
         awardedSupplierId: winner.supplierId,
-        awardLines: awardLines([[winner.supplierId, best, 100]])
+        awardLines: awardLines([[winner.supplierId, best, 100]]),
+        awardReason: 'Best-scored quote; qualification gap accepted for this launch.'
       }
     });
     expect(res.status, res.reason).toBe('done');
+    const recorded = /** @type {import('../../sourcing/types').AwardRecord} */ (
+      awardStore.all().find((a) => a.eventId === 'rfq-014')
+    );
+    expect(recorded.bestScoredQuotationId).toBe(best);
   });
 });
 
@@ -733,7 +743,7 @@ describe('REQ-E03-01 — the invitee read', () => {
   it('AC-01 — the purchasing-group filter narrows, and combines with the category', async () => {
     const group = (await reads.getInviteeCandidates(buyer, { purchasingGroup: '101' })).items;
     // BL-64 — the gate demo adds four packaging suppliers to group 101: the two
-    // ACTIVE ones (sup-019, OTIF 80%; sup-020, OTIF 79%) are candidates; the
+    // ACTIVE ones (sup-019, OTIF 90%; sup-020, OTIF 79%) are candidates; the
     // SUSPENDED sup-021 and BLACKLISTED sup-022 are not, like sup-012 and sup-014.
     expect(group.map((c) => c.supplierId).sort()).toEqual([
       'sup-007',
@@ -797,10 +807,11 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
       }
     });
 
-  // ⚠️ PREMISE CHANGE (BL-94): the failing bidder here was sup-007 (OTIF 50%).
-  // It passes at 86% now, so the refusals name sup-008 (OTIF 0%), rfq-014's
-  // other failing bidder. The rule and its twins are unchanged.
-  it('KNOWN-BAD — awarding 100% to sup-008 (OTIF 0% < 80%) is refused by name, and awards nothing', async () => {
+  // ⚠️ PREMISE CHANGE (BL-94, and again at BL-55 on 2026-11-20): the failing
+  // bidder here was sup-007 (OTIF 50%); it reached 86% at BL-94 and is below the
+  // 90% minimum again. The refusals name sup-008 (OTIF 0%) as well; the rule and
+  // its twins are unchanged.
+  it('KNOWN-BAD — awarding 100% to sup-008 (OTIF 0% < 90%) is refused by name, and awards nothing', async () => {
     const res = await award014(awardLines([['sup-008', 'qt-014b', 100]]));
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008 .*\(otif\)/);

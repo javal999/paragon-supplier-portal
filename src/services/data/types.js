@@ -2530,6 +2530,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   | 'HALAL_FOREIGN'
  *   | 'BPOM'
  *   | 'ISO'
+ *   | 'TAX_LEGAL'
  *   | 'OTHER'} CertType
  */
 

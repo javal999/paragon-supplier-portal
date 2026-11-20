@@ -147,11 +147,12 @@ describe('BL-51 · the tracking number can never reshape the address', () => {
 });
 
 describe('BL-51 · maintaining the list is a governed verb on an administration atom', () => {
-  it('the atom is compliance’s (and admin’s by derivation) — never a supplier lane, never planning or receiving', () => {
-    expect(rolesHolding('threepl:maintain')).toEqual(['compliance']);
+  it('the atom is compliance’s and the planner’s (and admin’s by derivation) — never a supplier lane, never receiving', () => {
+    // Owner ruling 2026-11-20 (BL-70): the super admin and the planner maintain
+    // the list; the atom stays in `compliance` and nobody was subtracted.
+    expect(rolesHolding('threepl:maintain')).toEqual(['compliance', 'planning']);
     expect(SYSTEM_ROLES.admin).toContain('threepl:maintain');
     for (const lane of /** @type {const} */ ([
-      'planning',
       'receiving',
       'procurement',
       'commercial',
@@ -186,8 +187,25 @@ describe('BL-51 · maintaining the list is a governed verb on an administration 
     ).toHaveLength(1);
   });
 
+  it('BL-70 — the planner maintains the list too (owner ruling 2026-11-20)', async () => {
+    const id = threePlIdFor('Sample Night Courier (illustrative)');
+    const res = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_threepl_set',
+      entity: 'threePl',
+      entityId: id,
+      payload: {
+        name: 'Sample Night Courier (illustrative)',
+        trackingUrlPattern: 'https://night.sample.example/t/{tracking}',
+        active: true,
+        setBy: NO_PERSON
+      }
+    });
+    expect(res.status, res.reason).toBe('done');
+    expect(threePlStore.get(id)?.name).toBe('Sample Night Courier (illustrative)');
+  });
+
   it('a seat without the atom is refused at the ROLE gate and the list is unchanged', async () => {
-    const res = await svc.dispatch(buyerSeat('procurement', 'planning', 'receiving'), {
+    const res = await svc.dispatch(buyerSeat('procurement', 'receiving'), {
       transitionId: 't_threepl_set',
       entity: 'threePl',
       entityId: 'tpl-sample-express',

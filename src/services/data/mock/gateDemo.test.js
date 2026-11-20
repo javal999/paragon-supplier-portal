@@ -168,7 +168,7 @@ const SCENARIOS = [
   ['OTIF below the minimum alone (79%)', 'rfq-019', 'sup-020', ['otif']],
   ['several criteria at once (halal + BPOM + GMP)', 'rfq-020', 'sup-011', ['halal', 'bpom', 'gmp']],
   ['several criteria at once (halal + BPOM)', 'rfq-020', 'sup-004', ['halal', 'bpom']],
-  ['OTIF EXACTLY at the minimum (80%) passes', 'rfq-019', 'sup-019', []],
+  ['OTIF EXACTLY at the minimum (90%) passes', 'rfq-019', 'sup-019', []],
   ['"No history" passes', 'rfq-019', 'sup-011', []],
   ['registry VALID overrides a master holding no halal cert — passes', 'rfq-017', 'sup-005', []],
   ['registry EXPIRED overrides a master saying valid — fails', 'rfq-018', 'sup-002', ['halal']],
@@ -195,14 +195,14 @@ describe('BL-64 — every gate scenario, by named supplier on a named RFQ', () =
 // ── The mechanisms behind the boundary scenarios ────────────────────────────
 
 describe('BL-64 — the OTIF boundary is a real delivery history, not a typed number', () => {
-  it('sup-019 measures 4 met of 5 = 80%, and the minimum is 80', () => {
+  it('sup-019 measures 9 met of 10 = 90%, and the minimum is 90 (BL-55)', () => {
     const m = masterMeasure('sup-019').otif;
     expect({ met: m.met, measured: m.measured, pct: m.pct }).toEqual({
-      met: 4,
-      measured: 5,
-      pct: 80
+      met: 9,
+      measured: 10,
+      pct: 90
     });
-    expect(gateMinOtifPct()).toBe(80);
+    expect(gateMinOtifPct()).toBe(90);
   });
 
   it('sup-020 measures 11 met of 14 = 78.6%, shown 79% — one point under', () => {
@@ -215,7 +215,7 @@ describe('BL-64 — the OTIF boundary is a real delivery history, not a typed nu
   });
 
   it('the gate reads the SAME figure the invitee list and comparison show', () => {
-    expect(rfxSupplierOtif('sup-019')).toBe(80);
+    expect(rfxSupplierOtif('sup-019')).toBe(90);
     expect(rfxSupplierOtif('sup-020')).toBe(79);
     expect(rfxSupplierOtif('sup-011')).toBeNull(); // "No history"
   });

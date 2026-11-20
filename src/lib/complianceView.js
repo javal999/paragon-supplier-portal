@@ -15,11 +15,11 @@
 /** @typedef {'Halal' | 'Quality' | 'Regulatory' | 'Other'} CertCategory */
 
 /** Category derived from the certificate SCHEME (`certType`). HALAL_* → Halal,
- *  BPOM → Regulatory, ISO → Quality, OTHER → Other. Deliberately NO
- *  'Environmental': the DTO carries no field to distinguish ISO 14001 from 9001,
+ *  BPOM → Regulatory, ISO → Quality, TAX_LEGAL → Other, OTHER → Other.
+ *  Deliberately NO 'Environmental': the DTO carries no field to distinguish
  * @param {CertType} certType
  * @returns {CertCategory}
- *  and we do not fabricate one (D4). */
+ *  ISO 14001 from 9001, and we do not fabricate one (D4). */
 export function certCategory(certType) {
   switch (certType) {
     case 'HALAL_BPJPH':
@@ -30,6 +30,7 @@ export function certCategory(certType) {
       return 'Regulatory';
     case 'ISO':
       return 'Quality';
+    case 'TAX_LEGAL':
     case 'OTHER':
       return 'Other';
   }

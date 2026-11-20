@@ -14,7 +14,8 @@
 //     (material type `ROH`);
 //   · status — not Suspended and not Blacklisted;
 //   · otif  — measured OTIF at or above the gate minimum; "No history" is
-//     judged by `gateNoHistoryPasses()` (both values: BL-55 placeholders).
+//     judged by `gateNoHistoryPasses()` (both values: owner rulings 2026-11-20,
+//     BL-55).
 //
 // ⚠️ **`UNDETERMINED` IS NOT `REQUIRED`.** A material the master has not
 // classified asks for no certificate here: the gate refuses an award on a rule

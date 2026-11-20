@@ -4,14 +4,14 @@
 /** @import { useDocumentRequest } from '../hooks/useDocumentRequest' */
 import Data from '@components/ui-v2/Data';
 
-// ⚠️ **ALL SIX MEMBERS OF `SupplierDocumentCategory`, AND THE TWO THAT LOOK
-// REDUNDANT ARE THE REASON THE VERB CARRIES A CATEGORY AT ALL.**
-// `CERT_TYPE_TO_CATEGORY` (the declare path) reaches only four of them —
-// `Halal Compliance` · `BPOM Regulatory` · `Quality` · `Other`. **`Tax & Legal`
-// and `Contract` have NO declare path**: outside the seeded fixtures, a
-// requested document is the only way a row in either category can ever exist.
-// Dropping them from this list would make two of the platform's six document
-// kinds unreachable by anybody.
+// ⚠️ **EVERY MEMBER OF `SupplierDocumentCategory`, AND THE ONE THAT STILL
+// LOOKS REDUNDANT IS THE REASON THE VERB CARRIES A CATEGORY AT ALL.**
+// `CERT_TYPE_TO_CATEGORY` (the declare path) reaches `Halal Compliance` ·
+// `BPOM Regulatory` · `Quality` · `Tax & Legal` · `Other` — BL-145 added the
+// Tax & Legal certificate type. **`Contract` has NO declare path**: outside
+// the seeded fixtures, a requested document is the only way a row in that
+// category can ever exist. Dropping it from this list would make a document
+// kind unreachable by anybody.
 //
 // The `id` is the canonical EN union member — it is what the payload carries
 // and what the store holds. Only `labelKey` localizes.

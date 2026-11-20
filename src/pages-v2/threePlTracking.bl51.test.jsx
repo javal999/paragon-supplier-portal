@@ -94,13 +94,22 @@ describe('BL-51 · the administration page', () => {
 
   it('a seat without the atom reads the list and is shown the wait, never the form', async () => {
     /** @type {CurrentIdentity} */
-    const planner = { ...BUYER, businessRoles: ['planning'] };
-    renderWithProviders(<AdminThreePls />, { identity: planner });
+    const procurement = { ...BUYER, businessRoles: ['procurement'] };
+    renderWithProviders(<AdminThreePls />, { identity: procurement });
     expect(await screen.findByTestId('tpl-gate')).toBeInTheDocument();
     expect(screen.getByTestId('handoff-threepl-maintain')).toBeInTheDocument();
     expect(screen.queryByTestId('tpl-form')).not.toBeInTheDocument();
     expect(screen.queryByTestId('tpl-edit-tpl-sample-express')).not.toBeInTheDocument();
     // Reading is not withheld.
     expect(screen.getByTestId('tpl-row-tpl-sample-express')).toBeInTheDocument();
+  });
+
+  it('BL-70 — the planner maintains the list too (owner ruling 2026-11-20)', async () => {
+    /** @type {CurrentIdentity} */
+    const planner = { ...BUYER, businessRoles: ['planning'] };
+    renderWithProviders(<AdminThreePls />, { identity: planner });
+    expect(await screen.findByTestId('tpl-form')).toBeInTheDocument();
+    expect(screen.queryByTestId('tpl-gate')).not.toBeInTheDocument();
+    expect(screen.getByTestId('tpl-edit-tpl-sample-express')).toBeInTheDocument();
   });
 });

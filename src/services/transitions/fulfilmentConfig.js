@@ -6,8 +6,8 @@
 // compare against is read through this module:
 //   · CR-12 — invoice price tolerance (owner decision 2026-09-21): 0% where a
 //     contract price exists for the line; otherwise 2% AND within an absolute
-//     rupiah cap set by Finance (PQ-05, backlog BL-54 — a placeholder of
-//     IDR 500,000 until Finance decides).
+//     rupiah cap set by Finance (PQ-05, BL-54 — owner-approved default
+//     IDR 500,000 on 2026-11-20; Finance may change it).
 //   · CR-25 — goods receipt quantity tolerance (owner decision 2026-09-21):
 //     any over-delivery is flagged; a shortfall above 2% is flagged and keeps
 //     the receipt open. Values are held per material.
@@ -25,7 +25,7 @@ import { materialEntry } from '../sdc/materialMaster';
 /**
  * `contractPricePct`:  A line whose PO price comes from a contract may differ by up to this percentage (decided: 0).
  * `standardPct`:  A line without a contract price may differ by up to this percentage…
- * `standardCapIdr`:  …and by at most this many rupiah (placeholder until BL-54).
+ * `standardCapIdr`:  …and by at most this many rupiah (owner-approved default 2026-11-20, BL-54; Finance may change it).
  *
  * @typedef {{
  *   readonly contractPricePct: number;

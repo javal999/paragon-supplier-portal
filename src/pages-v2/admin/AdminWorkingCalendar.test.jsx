@@ -10,6 +10,7 @@ import { ADMIN_SECTIONS } from './adminSections';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PLANNER = { ...BUYER, businessRoles: ['planning'] };
+const FINANCE = { ...BUYER, businessRoles: ['finance'] };
 
 beforeEach(() => workingCalendarStore.reset());
 
@@ -32,19 +33,28 @@ describe('BL-50 · AdminWorkingCalendar', () => {
     expect(screen.queryByTestId('admin-sections-later')).toBeNull();
   });
 
-  it('BL50-PAGE-02 · a seat holding calendar:set gets the one form; a planner gets the wait, not the form', () => {
+  it('BL50-PAGE-02 · a seat holding calendar:set gets the one form; a seat without it gets the wait', () => {
     const { unmount } = renderWithProviders(<AdminWorkingCalendar />, { identity: BUYER });
     expect(screen.getByTestId('admin-cal-form')).toBeTruthy();
     expect(screen.queryByTestId('admin-cal-gate')).toBeNull();
     expect(screen.getByTestId('admin-cal-prefill-2026-08-17')).toBeTruthy();
     unmount();
 
-    renderWithProviders(<AdminWorkingCalendar />, { identity: PLANNER });
+    // Owner ruling 2026-11-20 (BL-70): the planner holds `calendar:set` too.
+    const { unmount: unmountPlanner } = renderWithProviders(<AdminWorkingCalendar />, {
+      identity: PLANNER
+    });
+    expect(screen.getByTestId('admin-cal-form')).toBeTruthy();
+    expect(screen.queryByTestId('admin-cal-gate')).toBeNull();
+    expect(screen.getByTestId('admin-cal-prefill-2026-08-17')).toBeTruthy();
+    unmountPlanner();
+
+    renderWithProviders(<AdminWorkingCalendar />, { identity: FINANCE });
     expect(screen.queryByTestId('admin-cal-form')).toBeNull();
     expect(screen.queryByTestId('admin-cal-prefill-2026-08-17')).toBeNull();
     expect(screen.getByTestId('admin-cal-gate')).toBeTruthy();
     expect(screen.getByTestId('handoff-calendar-set').textContent).toMatch(/Awaiting Compliance/);
-    // The planner can still READ the calendar.
+    // A seat without the atom can still READ the calendar.
     expect(screen.getByTestId('admin-cal-day-2026-08-17')).toBeTruthy();
   });
 
