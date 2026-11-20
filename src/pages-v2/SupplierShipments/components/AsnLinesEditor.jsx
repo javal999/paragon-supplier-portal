@@ -7,9 +7,11 @@ import MaterialSearch, {
   MaterialMatchReason,
   useMaterialSearch
 } from '@components/ui-v2/MaterialSearch';
+import { formatIDR } from '@lib/format';
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
-import { sequenceErrorFor } from '@services/transitions/fulfilmentRules';
+import { sequenceErrorFor, valueLimitLocked } from '@services/transitions/fulfilmentRules';
 /** @import { AsnLinesRead, LineEntry, OpenLine } from '../../shipments/asnLines' */
+/** @import { CallOff } from '@services/data/types' */
 import { EMPTY_LINE } from '../../shipments/asnLines';
 import { ShelfLifeLineNote } from '../../shipments/ShelfLifeParts';
 import { inputClass, labelClass } from '../const';
@@ -20,8 +22,9 @@ import BatchCell from './BatchCell';
  * The shared line editor: shipped quantity, batch and expiry per PO line.
  * Used by the wizard's details step and by the Submit drawer; `read` is the
  * caller's pass of the one line rule over `entries`, so both paths flag the
- * same lines.
- * @type {React.FC<{ open: readonly OpenLine[]; entries: Record<string, LineEntry>; read: AsnLinesRead; batches: Readonly<Record<string, readonly AvailableBatch[]>>; onChange: (materialCode: string, patch: Partial<LineEntry>) => void; overShipReason: string; onReasonChange: (v: string) => void; }>}
+ * same lines. `callOff`:  BL-140 — the released call-off the ASN names; a
+ * value-limit line is not offered unless it covers the line.
+ * @type {React.FC<{ open: readonly OpenLine[]; entries: Record<string, LineEntry>; read: AsnLinesRead; batches: Readonly<Record<string, readonly AvailableBatch[]>>; onChange: (materialCode: string, patch: Partial<LineEntry>) => void; overShipReason: string; onReasonChange: (v: string) => void; callOff?: Pick<CallOff, 'materialCode' | 'quantity'>; }>}
  */
 const AsnLinesEditor = ({
   open,
@@ -30,7 +33,8 @@ const AsnLinesEditor = ({
   batches,
   onChange,
   overShipReason,
-  onReasonChange
+  onReasonChange,
+  callOff
 }) => {
   const { t } = useTranslation();
   // Material C3 — the one material search over the PO's lines (MR-3 BR-04):
@@ -73,6 +77,12 @@ const AsnLinesEditor = ({
               const r = read.lines.find((x) => x.line.materialCode === l.materialCode);
               const bad = !!r && !r.qtyOk;
               const over = !!r && r.over;
+              // BL-140 — a value-limit line carries no quantity: it is raised
+              // against the released call-off that covers it, and it is not
+              // offered as a standalone line until that call-off is named.
+              const locked = valueLimitLocked(l, callOff?.materialCode);
+              const valueRefusal =
+                r?.refusal === 'overCallOff' || r?.refusal === 'overValueLimit' ? r.refusal : null;
               // AIB-1 BR-05 (BL-348) — each failed line shows its sequence
               // error, naming both values where two differ (AC-02: both POs).
               const seqError = read.sequenceRead
@@ -103,29 +113,64 @@ const AsnLinesEditor = ({
                     )}
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                    <Data>{`${qty(l.open)} ${l.uom}`}</Data>
+                    {l.valueLimit !== undefined ? (
+                      <Data>{t('fc.asn.valueLimit.open', { value: formatIDR(l.valueLimit) })}</Data>
+                    ) : (
+                      <Data>{`${qty(l.open)} ${l.uom}`}</Data>
+                    )}
                   </td>
                   <td className="py-1.5 pr-2">
                     <input
                       type="text"
                       inputMode="decimal"
                       aria-label={t('fc.asn.shippedFor', { material: l.materialCode })}
-                      aria-invalid={bad || over}
-                      // BL-326 — an over-open line is not `bad`, so its note
-                      // is the form-level over-open alert (rendered below
-                      // whenever any line is over). The row's own note is
-                      // referenced only when it is the one that renders.
+                      aria-invalid={!locked && (bad || over || valueRefusal !== null)}
+                      // BL-326 / BL-140 — an over-open line is not `bad`, so its
+                      // note is the form-level over-open alert (rendered below
+                      // whenever any line is over). A value-limit line describes
+                      // its own reason: the lock when no call-off covers it, else
+                      // the bound it broke. Each reference is to an element this
+                      // row renders on the same condition.
                       aria-describedby={
-                        bad
-                          ? `asn-qty-${l.materialCode}-invalid`
-                          : over
-                            ? 'asn-over-open-alert'
-                            : undefined
+                        locked
+                          ? `asn-qty-${l.materialCode}-value-limit`
+                          : bad
+                            ? `asn-qty-${l.materialCode}-invalid`
+                            : valueRefusal
+                              ? `asn-qty-${l.materialCode}-value-limit`
+                              : over
+                                ? 'asn-over-open-alert'
+                                : undefined
                       }
+                      disabled={locked}
                       value={e.qty}
                       onChange={(ev) => onChange(l.materialCode, { qty: ev.target.value })}
-                      className={`${inputClass} min-w-[96px]`}
+                      className={`${inputClass} min-w-[96px] ${locked ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
+                    {locked && (
+                      <div
+                        id={`asn-qty-${l.materialCode}-value-limit`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
+                      >
+                        {t('fc.asn.valueLimit.callOffRequired')}
+                      </div>
+                    )}
+                    {!locked && valueRefusal === 'overCallOff' && (
+                      <div
+                        id={`asn-qty-${l.materialCode}-value-limit`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
+                        {t('fc.asn.valueLimit.overCallOff')}
+                      </div>
+                    )}
+                    {!locked && valueRefusal === 'overValueLimit' && (
+                      <div
+                        id={`asn-qty-${l.materialCode}-value-limit`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
+                        {t('fc.asn.valueLimit.overValue')}
+                      </div>
+                    )}
                     {bad && (
                       <div
                         id={`asn-qty-${l.materialCode}-invalid`}
@@ -147,7 +192,10 @@ const AsnLinesEditor = ({
                     <input
                       type="date"
                       aria-label={t('fc.asn.expiryFor', { material: l.materialCode })}
-                      // BL-84 — an expiry the rule refuses says which note.
+                      // BL-84 / BL-326 — an expiry the rule refuses says which
+                      // note. A date the rule cannot read (`expiry`) has its own
+                      // message; the shelf-life note renders only when it has a
+                      // figure to show, so it is referenced only then.
                       aria-invalid={
                         r?.refusal === 'expiry' ||
                         r?.refusal === 'expiryRequired' ||
@@ -155,15 +203,25 @@ const AsnLinesEditor = ({
                         (r?.shelfLife ? !r.shelfLife.ok : false)
                       }
                       aria-describedby={
-                        r?.refusal === 'expiryRequired' ||
-                        (r?.shelfLife?.monthsLeft ?? null) !== null
-                          ? `asn-expiry-${l.materialCode}-note`
-                          : undefined
+                        r?.refusal === 'expiry'
+                          ? `asn-expiry-${l.materialCode}-invalid`
+                          : r?.refusal === 'expiryRequired' ||
+                              (r?.shelfLife?.monthsLeft ?? null) !== null
+                            ? `asn-expiry-${l.materialCode}-note`
+                            : undefined
                       }
                       value={e.expiry}
                       onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
                       className={inputClass}
                     />
+                    {r?.refusal === 'expiry' && (
+                      <div
+                        id={`asn-expiry-${l.materialCode}-invalid`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
+                        {t('fc.asn.expiry.invalid')}
+                      </div>
+                    )}
                     {/* MR-6 d step 4 — "Expiry <date> · <n> months left at ETA". */}
                     <ShelfLifeLineNote
                       view={r?.shelfLife ?? null}

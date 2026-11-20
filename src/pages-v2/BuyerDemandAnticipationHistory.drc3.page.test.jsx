@@ -180,3 +180,45 @@ describe('the way in and the locales', () => {
     await i18n.changeLanguage('en');
   });
 });
+
+describe('BL-233 — "After the check" keeps its final wording and its (i) (TL-D44)', () => {
+  /**
+   * The row label's TermTip wrapper, found from the label text itself.
+   * @param {HTMLElement} card
+   * @param {string} label
+   * @returns {HTMLElement}
+   */
+  const tipOf = (card, label) => {
+    const cell = within(card).getByText(label);
+    const tip = /** @type {HTMLElement | null} */ (cell.closest('[data-testid^="term-tip-"]'));
+    expect(tip, label).not.toBeNull();
+    return /** @type {HTMLElement} */ (tip);
+  };
+
+  it('in EN the grid row reads "After the check" and its (i) carries the definition', async () => {
+    renderWithProviders(<BuyerDemandAnticipationHistory />, { route: ROUTE });
+    const card = await screen.findByTestId(`dah-card-${EMUL}`);
+    const tip = tipOf(card, 'After the check');
+    expect(tip).toHaveAttribute('data-testid', 'term-tip-da-after-check');
+    const button = within(tip).getByRole('button');
+    expect(
+      document.getElementById(button.getAttribute('aria-describedby') ?? '')
+    ).toHaveTextContent('after the plan check absorbed any surplus');
+  });
+
+  it('in ID the grid row reads "Setelah pemeriksaan" with its own (i)', async () => {
+    await i18n.changeLanguage('id');
+    try {
+      renderWithProviders(<BuyerDemandAnticipationHistory />, { route: ROUTE });
+      const card = await screen.findByTestId(`dah-card-${EMUL}`);
+      const tip = tipOf(card, 'Setelah pemeriksaan');
+      expect(tip).toHaveAttribute('data-testid', 'term-tip-da-after-check');
+      const button = within(tip).getByRole('button');
+      expect(
+        document.getElementById(button.getAttribute('aria-describedby') ?? '')
+      ).toHaveTextContent('setelah pemeriksaan rencana menyerap kelebihan');
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+});
