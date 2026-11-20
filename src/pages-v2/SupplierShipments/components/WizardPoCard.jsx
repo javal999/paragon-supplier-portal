@@ -52,6 +52,14 @@ const WizardPoCard = ({ po, asns, receipts = [], selected, updateForm }) => {
           </div>
         </div>
       </div>
+      {/* BL-140 (owner ruling 2026-11-20) — a value-limit line carries no
+          quantity: the ASN is raised against a released call-off, so the
+          supplier learns it here, where the order is picked. */}
+      {po.lineItems.some((li) => li.valueLimit !== undefined) ? (
+        <p className="mt-2 text-xs text-text-tertiary" data-testid="asn-po-value-limit">
+          {t('fc.asn.valueLimit.poHint')}
+        </p>
+      ) : null}
       {selected && (
         <div className="mt-3 pt-3 border-t border-teal/30 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-text-secondary">
           <div>

@@ -18,6 +18,16 @@ export const fulfilmentCollaborationEn = {
   'fc.asn.batchFor': 'Batch number for {{material}}',
   'fc.asn.expiryFor': 'Expiry date for {{material}}',
   'fc.asn.qty.invalid': 'Enter a quantity greater than zero.',
+  'fc.asn.expiry.invalid': 'Enter a real expiry date, or leave it empty.',
+  // BL-140 (owner ruling 2026-11-20) — a value-limit line (BL-49) ships only
+  // against the released call-off (CR-04).
+  'fc.asn.valueLimit.open': 'Value limit {{value}}',
+  'fc.asn.valueLimit.callOffRequired':
+    'This line commits a value, not a quantity. Raise the ASN against a released call-off.',
+  'fc.asn.valueLimit.overCallOff': 'Above the quantity this call-off released.',
+  'fc.asn.valueLimit.overValue': 'Above the value this line has left.',
+  'fc.asn.valueLimit.poHint':
+    'This order holds a value-limit line. Ship it against a released call-off.',
   'fc.asn.overOpen.one': 'The shipped quantity is above the open quantity on 1 line. Tell PTI why.',
   'fc.asn.overOpen.other':
     'The shipped quantity is above the open quantity on {{count}} lines. Tell PTI why.',
@@ -283,6 +293,16 @@ export const fulfilmentCollaborationId = {
   'fc.asn.batchFor': 'Nomor batch untuk {{material}}',
   'fc.asn.expiryFor': 'Tanggal kedaluwarsa untuk {{material}}',
   'fc.asn.qty.invalid': 'Isi kuantitas lebih dari nol.',
+  'fc.asn.expiry.invalid': 'Isi tanggal kedaluwarsa yang valid, atau kosongkan.',
+  // BL-140 (owner ruling 2026-11-20) — a value-limit line (BL-49) ships only
+  // against the released call-off (CR-04).
+  'fc.asn.valueLimit.open': 'Batas nilai {{value}}',
+  'fc.asn.valueLimit.callOffRequired':
+    'Baris ini menetapkan nilai, bukan kuantitas. Buat ASN terhadap call-off yang sudah dirilis.',
+  'fc.asn.valueLimit.overCallOff': 'Melebihi kuantitas yang dirilis call-off ini.',
+  'fc.asn.valueLimit.overValue': 'Melebihi nilai yang tersisa pada baris ini.',
+  'fc.asn.valueLimit.poHint':
+    'Pesanan ini memiliki baris batas nilai. Kirim melalui call-off yang sudah dirilis.',
   'fc.asn.overOpen.one':
     'Kuantitas dikirim melebihi kuantitas terbuka pada 1 baris. Beri tahu PTI alasannya.',
   'fc.asn.overOpen.other':
