@@ -83,11 +83,38 @@ const AsnLinesEditor = ({
               const locked = valueLimitLocked(l, callOff?.materialCode);
               const valueRefusal =
                 r?.refusal === 'overCallOff' || r?.refusal === 'overValueLimit' ? r.refusal : null;
+              // BL-326 — every quantity message on screen is named: the
+              // value-limit note (the lock when no call-off covers the line,
+              // else the bound it broke), the row's own bad-quantity note, and
+              // the form-level over-open alert. A line can carry more than one,
+              // and naming only the first left the others unannounced. Each id
+              // belongs to an element this row renders on the same condition.
+              const qtyNoteIds = [
+                locked || valueRefusal ? `asn-qty-${l.materialCode}-value-limit` : null,
+                bad ? `asn-qty-${l.materialCode}-invalid` : null,
+                over ? 'asn-over-open-alert' : null
+              ].filter(Boolean);
               // AIB-1 BR-05 (BL-348) — each failed line shows its sequence
               // error, naming both values where two differ (AC-02: both POs).
               const seqError = read.sequenceRead
                 ? sequenceErrorFor(read.sequenceRead, l.materialCode)
                 : null;
+              // BL-326 — the expiry's mark, the note it names and the note's
+              // render all come from ONE reading, so the field can never name
+              // a message that is not up. `expiry` (an unreadable date) had no
+              // note at all: the shelf-life note only renders for
+              // `expiryRequired` or once both dates are real.
+              const expiryInvalidDate = r?.refusal === 'expiry';
+              const expiryInvalid =
+                expiryInvalidDate ||
+                r?.refusal === 'expiryRequired' ||
+                r?.refusal === 'shelfLife' ||
+                (r?.shelfLife ? !r.shelfLife.ok : false);
+              const expiryNoteId = expiryInvalidDate
+                ? `asn-expiry-${l.materialCode}-invalid`
+                : expiryInvalid
+                  ? `asn-expiry-${l.materialCode}-note`
+                  : undefined;
               return (
                 <tr key={l.materialCode} className="border-t border-border-subtle align-top">
                   <td className="py-1.5 pr-2">
@@ -125,23 +152,12 @@ const AsnLinesEditor = ({
                       inputMode="decimal"
                       aria-label={t('fc.asn.shippedFor', { material: l.materialCode })}
                       aria-invalid={!locked && (bad || over || valueRefusal !== null)}
-                      // BL-326 / BL-140 — an over-open line is not `bad`, so its
-                      // note is the form-level over-open alert (rendered below
-                      // whenever any line is over). A value-limit line describes
-                      // its own reason: the lock when no call-off covers it, else
-                      // the bound it broke. Each reference is to an element this
-                      // row renders on the same condition.
-                      aria-describedby={
-                        locked
-                          ? `asn-qty-${l.materialCode}-value-limit`
-                          : bad
-                            ? `asn-qty-${l.materialCode}-invalid`
-                            : valueRefusal
-                              ? `asn-qty-${l.materialCode}-value-limit`
-                              : over
-                                ? 'asn-over-open-alert'
-                                : undefined
-                      }
+                      // BL-326 / BL-140 — a value-limit line describes its own
+                      // reason (the lock, or the bound it broke); an over-open
+                      // line describes the form-level alert; a bad quantity
+                      // describes its row note. The list above names every one
+                      // that is on screen.
+                      aria-describedby={qtyNoteIds.length ? qtyNoteIds.join(' ') : undefined}
                       disabled={locked}
                       value={e.qty}
                       onChange={(ev) => onChange(l.materialCode, { qty: ev.target.value })}
@@ -192,31 +208,20 @@ const AsnLinesEditor = ({
                     <input
                       type="date"
                       aria-label={t('fc.asn.expiryFor', { material: l.materialCode })}
-                      // BL-84 / BL-326 — an expiry the rule refuses says which
-                      // note. A date the rule cannot read (`expiry`) has its own
-                      // message; the shelf-life note renders only when it has a
-                      // figure to show, so it is referenced only then.
-                      aria-invalid={
-                        r?.refusal === 'expiry' ||
-                        r?.refusal === 'expiryRequired' ||
-                        r?.refusal === 'shelfLife' ||
-                        (r?.shelfLife ? !r.shelfLife.ok : false)
-                      }
-                      aria-describedby={
-                        r?.refusal === 'expiry'
-                          ? `asn-expiry-${l.materialCode}-invalid`
-                          : r?.refusal === 'expiryRequired' ||
-                              (r?.shelfLife?.monthsLeft ?? null) !== null
-                            ? `asn-expiry-${l.materialCode}-note`
-                            : undefined
-                      }
+                      // BL-84 — an expiry the rule refuses says which note;
+                      // BL-326 — the mark and the note come from one reading.
+                      aria-invalid={expiryInvalid || undefined}
+                      aria-describedby={expiryNoteId}
                       value={e.expiry}
                       onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
                       className={inputClass}
                     />
-                    {r?.refusal === 'expiry' && (
+                    {/* BL-326 — an unreadable date is refused by name HERE;
+                        the shelf-life note below cannot say it. */}
+                    {expiryInvalidDate && (
                       <div
                         id={`asn-expiry-${l.materialCode}-invalid`}
+                        role="alert"
                         className="mt-1 text-[length:var(--fs-label-3)] text-danger"
                       >
                         {t('fc.asn.expiry.invalid')}
