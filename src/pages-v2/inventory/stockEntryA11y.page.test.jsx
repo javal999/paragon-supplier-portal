@@ -88,3 +88,43 @@ describe('BL-326 · a batch date refusal blames the date it is about', () => {
     expect(expiry).not.toHaveAttribute('aria-describedby');
   });
 });
+
+describe('BL-326 · no description points at an element that is not on screen', () => {
+  /**
+   * The defect class in one sweep: every control that claims a description
+   * resolves it to rendered text, and every invalid control claims one.
+   */
+  const assertWired = () => {
+    const root = /** @type {HTMLElement} */ (panel().getByTestId('stock-entry-panel'));
+    const described = [...root.querySelectorAll('[aria-describedby]')];
+    expect(described.length).toBeGreaterThan(0);
+    for (const el of described)
+      expect(describedText(/** @type {HTMLElement} */ (el)), el.id).not.toBe('');
+    const invalid = [...root.querySelectorAll('[aria-invalid="true"]')];
+    for (const el of invalid) {
+      expect(el.getAttribute('aria-describedby'), el.id).not.toBeNull();
+      expect(describedText(/** @type {HTMLElement} */ (el)), el.id).not.toBe('');
+    }
+  };
+
+  it('holds on the pristine form and while a batch refusal is on screen', async () => {
+    await openPanel();
+    assertWired();
+
+    fireEvent.change(panel().getByLabelText('Material'), { target: { value: 'PK-PETB-8801' } });
+    fireEvent.change(panel().getByLabelText(/^Stock on hand/), { target: { value: '100' } });
+    fireEvent.change(panel().getByLabelText(/^In production/), { target: { value: '0' } });
+    fireEvent.click(panel().getByRole('button', { name: 'Add batch' }));
+    fireEvent.change(panel().getByLabelText('Batch number'), { target: { value: 'B-1' } });
+    fireEvent.change(panel().getByLabelText('Quantity'), { target: { value: '100' } });
+    fireEvent.change(panel().getByLabelText('Manufacturing date'), {
+      target: { value: '2027-06-30' }
+    });
+    fireEvent.change(panel().getByLabelText(/^Expiry date/), { target: { value: '2027-01-01' } });
+
+    assertWired();
+    expect(describedText(panel().getByLabelText('Manufacturing date'))).toContain(
+      'The manufacturing date cannot be after the expiry date'
+    );
+  });
+});
