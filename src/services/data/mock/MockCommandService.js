@@ -3222,6 +3222,24 @@ const inventoryDeclarationTarget = {
           : {}),
         ...(typeof b.expiryDate === 'string' && b.expiryDate ? { expiryDate: b.expiryDate } : {})
       }));
+    // BL-358 — production runs, when the caller supplies them. Each keeps its
+    // own date; a malformed run (no numeric quantity) is dropped, never guessed,
+    // like a malformed batch. The policy hook has already refused the bad ones.
+    const rawRuns = Array.isArray(payload.inProductionRuns) ? payload.inProductionRuns : [];
+    /** @type {{ quantity: number; completionDate?: string }[]} */
+    const inProductionRuns = rawRuns
+      .filter(
+        /** @returns {r is Record<string, unknown>} */ (r) =>
+          !!r &&
+          typeof r === 'object' &&
+          typeof (/** @type {Record<string, unknown>} */ (r).quantity) === 'number'
+      )
+      .map((r) => ({
+        quantity: /** @type {number} */ (r.quantity),
+        ...(typeof r.completionDate === 'string' && r.completionDate
+          ? { completionDate: r.completionDate }
+          : {})
+      }));
     const id = inventoryDeclarationStore.nextNumber();
     /** @type {InventoryDeclaration} */
     const declaration = {
@@ -3244,6 +3262,9 @@ const inventoryDeclarationTarget = {
       ...(isIsoDay(payload.productionCompletionDate)
         ? { productionCompletionDate: payload.productionCompletionDate }
         : {}),
+      // BL-358 — the runs are stored as given, so a caller that declares two
+      // runs does not have them silently dropped by the write path.
+      ...(inProductionRuns.length > 0 ? { inProductionRuns } : {}),
       // BR-08 — a PTI recording is ALWAYS "Entered by PTI", whatever the payload
       // says; a supplier's own submission is the template or manual entry.
       channel: submissionChannel(scope.personaType === 'buyer', payload.channel),
@@ -3329,6 +3350,39 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload, scope }) => {
               : hit.problem === 'manufacturedAfterExpiry'
                 ? `batch ${name}: manufacturing date is after the expiry date`
                 : `batch ${name}: manufacturing date is in the future`
+        };
+      }
+    }
+  }
+  // BL-358 — the production RUNS, when given, are well formed: a list, each run
+  // with a non-negative quantity and, above 0, its own completion date. The
+  // same MAT-D4 rule the single pair follows, applied per run, so a second run
+  // is either stored correctly or refused by name, never silently dropped.
+  if (payload.inProductionRuns !== undefined) {
+    if (!Array.isArray(payload.inProductionRuns)) {
+      return { ok: false, reason: 'inProductionRuns must be a list of production runs' };
+    }
+    const runsChannel = submissionChannel(scope.personaType === 'buyer', payload.channel);
+    for (const run of payload.inProductionRuns) {
+      const rec = /** @type {Record<string, unknown> | null} */ (
+        run && typeof run === 'object' ? run : null
+      );
+      const quantity = rec ? rec.quantity : null;
+      if (!isNonNegative(quantity)) {
+        return { ok: false, reason: 'each production run needs a quantity of zero or more' };
+      }
+      const problem = productionProblem(
+        quantity,
+        typeof rec?.completionDate === 'string' ? rec.completionDate : '',
+        runsChannel
+      );
+      if (problem) {
+        return {
+          ok: false,
+          reason:
+            problem.reason === 'invalidDate'
+              ? 'production run completion date must be a date (YYYY-MM-DD)'
+              : 'a production run above 0 needs its own completion date'
         };
       }
     }

@@ -464,6 +464,17 @@
  * }} InventoryBatch
  */
 
+/** BL-358 — one production run of a stock submission. */
+/**
+ * `quantity`:  The quantity in this run.
+ * `completionDate`:  Expected completion of THIS run (`YYYY-MM-DD`); absent when the supplier gave none.
+ *
+ * @typedef {{
+ *   readonly quantity: number;
+ *   readonly completionDate?: string;
+ * }} InProductionRun
+ */
+
 /**
  * SOH keyed by material + as-of (`declaredAt`), NOT against a requirement
  * version — it changes when stock moves, not when demand publishes. One true SOH
@@ -479,8 +490,9 @@
  * `totalQty`:  The SOH floor. Keys off MaterialMaster.canonicalUom (invariant #2).
  * `batches`:  OPTIONAL batch-grain detail (portal / magic-link grid; never required by  the chat channel). When present, Σ qty must equal `totalQty`.
  * `supplierRop`:  REQ-E08-02 BR-06 — the supplier's own reorder point, when it gave one.
- * `inProductionQty`:  REQ-E08-01 BR-06 — quantity in production at the supplier for PTI.
+ * `inProductionQty`:  REQ-E08-01 BR-06 — quantity in production at the supplier for PTI. The SINGLE-run form; BL-358 keeps it as the fallback for records that predate `inProductionRuns`.
  * `productionCompletionDate`:  Expected production completion date (`YYYY-MM-DD`) for `inProductionQty`.
+ * `inProductionRuns`:  BL-358 — the production runs declared for the pair, each with its own quantity and completion date. A NON-EMPTY list supersedes `inProductionQty`/`productionCompletionDate` at read (`buildInventoryPositions`); an absent or empty list falls back to the single pair.
  * `channel`: REQ-E08-02 BR-01 / BR-08 — how the figures reached the hub. Set by the target from the verb's scope, never trusted from a PTI caller: a PTI recording is always `pti` ("Entered by PTI"), an API pull is `api`. Absent on the SDC-0 seed rows, which predate the channel.
  * `provenance`:  source = SUPPLIER.
  *
@@ -495,6 +507,7 @@
  *   readonly supplierRop?: number;
  *   readonly inProductionQty?: number;
  *   readonly productionCompletionDate?: string;
+ *   readonly inProductionRuns?: readonly InProductionRun[];
  *   readonly channel?: StockChannel;
  *   readonly provenance: Provenance;
  * }} InventoryDeclaration

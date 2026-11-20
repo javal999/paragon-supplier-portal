@@ -543,18 +543,31 @@ export function buildInventoryPositions(input, nowIso) {
       input.planningEstimate(supplierId, materialCode),
       nowIso
     );
+    // BL-358 — the declaration's production runs, one In Production entry each,
+    // so the drawer and the download see N runs. A non-empty run list supersedes
+    // the single `inProductionQty` pair, which stays as the fallback for records
+    // that predate the list. A run of 0 is "nothing", exactly as the pair's 0 is.
     /** @type {IncomingItem[]} */
     const production =
-      decl?.inProductionQty && decl.inProductionQty > 0
-        ? [
-            {
-              source: 'production',
-              date: decl.productionCompletionDate ?? null,
-              quantity: decl.inProductionQty,
+      decl?.inProductionRuns && decl.inProductionRuns.length > 0
+        ? decl.inProductionRuns
+            .filter((run) => run.quantity > 0)
+            .map((run) => ({
+              source: /** @type {const} */ ('production'),
+              date: run.completionDate ?? null,
+              quantity: run.quantity,
               reference: null
-            }
-          ]
-        : [];
+            }))
+        : decl?.inProductionQty && decl.inProductionQty > 0
+          ? [
+              {
+                source: 'production',
+                date: decl.productionCompletionDate ?? null,
+                quantity: decl.inProductionQty,
+                reference: null
+              }
+            ]
+          : [];
     const syncs = input.syncAttempts
       .filter((a) => a.supplierId === supplierId)
       .sort((a, b) => b.at.localeCompare(a.at));

@@ -23,7 +23,13 @@ import { SSTP_INVENTORY_DECLARATION } from '../fixtures/walkthroughSstp';
  * @returns {InventoryDeclaration}
  */
 function clone(d) {
-  return { ...d, batches: d.batches ? d.batches.map((b) => ({ ...b })) : undefined };
+  return {
+    ...d,
+    batches: d.batches ? d.batches.map((b) => ({ ...b })) : undefined,
+    // BL-358 — the runs are a nested list like the batches; a reset must not
+    // hand two callers the same objects.
+    inProductionRuns: d.inProductionRuns ? d.inProductionRuns.map((r) => ({ ...r })) : undefined
+  };
 }
 
 // REQ-E08-01 — ONE inventory model (INVENTORY-REFERENT-01 closed). The supplier
@@ -44,6 +50,9 @@ const HUB_SEED = mockInventory.map((r) => ({
   ...(r.supplierRop !== undefined ? { supplierRop: r.supplierRop } : {}),
   ...(r.inProductionQty !== undefined ? { inProductionQty: r.inProductionQty } : {}),
   ...(r.productionCompletionDate ? { productionCompletionDate: r.productionCompletionDate } : {}),
+  // BL-358 — the seeded runs reach the declaration store as runs, not folded
+  // into the single pair, so the real read projects N In Production entries.
+  ...(r.inProductionRuns ? { inProductionRuns: r.inProductionRuns } : {}),
   provenance: { source: 'SUPPLIER', liveness: 'SIMULATED', planState: 'committed' }
 }));
 
