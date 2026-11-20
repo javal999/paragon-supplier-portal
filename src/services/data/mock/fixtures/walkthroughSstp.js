@@ -238,15 +238,18 @@ const callOff = (id, callOffNumber, quantity, needOffset, releasedOffset) => ({
 });
 
 /**
- * Numbered straight after the gate demo's CO-2026-0042 (the store's next
- * assigned number is seed length + 1, so the two must stay the last seeds).
- *   · CO-2026-0043 — 21,168 due Wednesday last week (W45), shipped, received.
- *   · CO-2026-0044 — 32,256 due Monday 7 September (W47), confirmed, in transit.
+ * Numbered into the free numbers above the base seed's last row (CO-2026-0046,
+ * its BL-94 delivery history). The store assigns `seed length + 1`, so keeping
+ * the pair last in the seed puts the first assigned number past them and no
+ * number or id is reused (BL-359 — these were once CO-2026-0043/0044, beside
+ * the base seed's rows).
+ *   · CO-2026-0047 — 21,168 due Wednesday last week (W45), shipped, received.
+ *   · CO-2026-0048 — 32,256 due Monday 7 September (W47), confirmed, in transit.
  * @type {readonly CallOff[]}
  */
 export const SSTP_CALL_OFFS = [
-  callOff('co-0043', 'CO-2026-0043', SSTP_FIGURES.pastCallOff, -5, -16),
-  callOff('co-0044', 'CO-2026-0044', SSTP_FIGURES.openCallOff, 7, -4)
+  callOff('co-0047', 'CO-2026-0047', SSTP_FIGURES.pastCallOff, -5, -16),
+  callOff('co-0048', 'CO-2026-0048', SSTP_FIGURES.openCallOff, 7, -4)
 ];
 
 /**
@@ -328,6 +331,6 @@ export const SSTP_GOODS_RECEIPTS = [
     ],
     disposition: 'Accept',
     sapMaterialDoc: 'MAT-DOC-5019100',
-    notes: 'E2E walkthrough sample: call-off CO-2026-0043 received in full.'
+    notes: 'E2E walkthrough sample: call-off CO-2026-0047 received in full.'
   }
 ];

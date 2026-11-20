@@ -103,10 +103,10 @@ describe('BL-94 — sup-007 passes the compliance gate on Oslo at the declared p
     expect(oslo().invitedSupplierIds).toContain('sup-007');
   });
 
-  it('sup-007’s calculated OTIF is 5 met of 6 = 83%, at or above the gate minimum', () => {
+  it('sup-007’s calculated OTIF is 6 met of 7 = 86%, at or above the gate minimum', () => {
     const m = masterMeasure('sup-007');
-    // pending 1: the E2E walkthrough's open call-off CO-2026-0044 (due 7 Sep).
-    expect(m.otif).toEqual({ pct: 83, measured: 6, met: 5, pending: 1 });
+    // The walkthrough's open call-off is due 7 Sep, after the 90-day window.
+    expect(m.otif).toEqual({ pct: 86, measured: 7, met: 6, pending: 0 });
     expect(/** @type {NonNullable<typeof m.otif.pct>} */ (m.otif.pct)).toBeGreaterThanOrEqual(
       gateMinOtifPct()
     );

@@ -165,7 +165,7 @@ describe('B — the summary strip on rfp-001', () => {
     expect(within(top).getByTestId('rfp-card-sup-007-name')).toHaveTextContent(
       'PT Sample Packaging Indonesia'
     );
-    expect(within(top).getByTestId('rfp-card-sup-007-score')).toHaveTextContent('82');
+    expect(within(top).getByTestId('rfp-card-sup-007-score')).toHaveTextContent('84');
     expect(within(top).getByTestId('rfp-card-sup-007-deviations')).toHaveTextContent('0');
     expect(within(top).getByTestId('rfp-card-sup-007-lead')).toHaveTextContent('21 days');
     expect(within(top).getByTestId('rfp-card-sup-007-version')).toHaveTextContent(

@@ -314,7 +314,7 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
 
   it('KNOWN-GOOD — the SAME award at 70/30 is recorded, with the loser named', async () => {
     // ⚠️ PREMISE CHANGE (BL-43): the 30% line used to name sup-007, which then
-    // failed the compliance gate on OTIF (50% < 80%; it passes at 83% since
+    // failed the compliance gate on OTIF (50% < 80%; it passes at 86% since
     // BL-94). The split rule is unchanged; the second supplier is one that passes.
     const lines = awardLines([
       ['sup-015', 'qt-014d-r1', 70],
@@ -763,14 +763,14 @@ describe('REQ-E03-01 — the invitee read', () => {
       ).otif
     ).toBeNull();
     // PREMISE CHANGED (REQ-E10-01): the figure is CALCULATED from the seeded
-    // call-offs and receipts — sup-007 has six measured deliveries in the
-    // window, five met and one late (BL-94; it read 50% on two) — not read off
+    // call-offs and receipts — sup-007 has seven measured deliveries in the
+    // window, six met and one late (BL-94; it read 50% on two) — not read off
     // the master.
     expect(
       /** @type {import('../../transitions/rfxRules').InviteeCandidate} */ (
         all.find((c) => c.supplierId === 'sup-007')
       ).otif
-    ).toBe(83);
+    ).toBe(86);
   });
 
   it('the invitee roster is PTI’s — a supplier reads nothing', async () => {
@@ -798,7 +798,7 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
     });
 
   // ⚠️ PREMISE CHANGE (BL-94): the failing bidder here was sup-007 (OTIF 50%).
-  // It passes at 83% now, so the refusals name sup-008 (OTIF 0%), rfq-014's
+  // It passes at 86% now, so the refusals name sup-008 (OTIF 0%), rfq-014's
   // other failing bidder. The rule and its twins are unchanged.
   it('KNOWN-BAD — awarding 100% to sup-008 (OTIF 0% < 80%) is refused by name, and awards nothing', async () => {
     const res = await award014(awardLines([['sup-008', 'qt-014b', 100]]));

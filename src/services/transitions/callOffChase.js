@@ -174,9 +174,9 @@ export function callOffChaseRows(
   const rows = [];
   // One chase per call-off id — and the id is the entity the close verb names,
   // so a store holding two rows under one id yields ONE chase, the first, the
-  // same row `callOffStore.get(id)` resolves. (The walkthrough fixture's
-  // CO-2026-0043/0044 reuse the base seed's ids; that collision is reported,
-  // not repaired here.)
+  // same row `callOffStore.get(id)` resolves. The seeded fixtures are id-unique
+  // (BL-359 renumbered the walkthrough pair that collided with the BL-94 rows),
+  // so this is a tie-break for a future duplicate, not a reading of the seed.
   const seen = new Set();
   for (const c of callOffs) {
     if (!c.releasedAt || !isReleased(c)) continue;

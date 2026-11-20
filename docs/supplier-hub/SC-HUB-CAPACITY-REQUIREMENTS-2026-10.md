@@ -291,3 +291,4 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 | CAP-D15 | Open supply and the extra PO | Released call-offs by need week; call-off on the oldest blanket line first, otherwise "New PO needed"; own section on What to order | Accepted, 2026-10-13 |
 | CAP-D16 | Ary's numbers | Golden fixture and test; placeholders in one config block | Accepted, 2026-10-13; the fixture moves to BL-209 beside the PPT 7 to 9 fixtures (DRC design rule 4) |
 | CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-01 (horizon = lead time, rolling weekly) |
+| CAP-D18 | Monthly view on the commitment table | The Commitment-per-material table's own month periods stay editable in Monthly; the combined-month view elsewhere stays read only (CAP-2 BR-05). Exception ruled by the owner | Owner, 2026-11-20 |

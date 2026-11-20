@@ -39,7 +39,7 @@ describe('CR-23 — the seeded demo', () => {
     expect(gatesOf('rfq-003')).toEqual({ 'sup-001': [], 'sup-002': [], 'sup-010': ['halal'] });
   });
 
-  it('rfq-014 (Closed): sup-008 (OTIF 0%) fails on OTIF; sup-007 (OTIF 83%, BL-94) and sup-013 ("No history") pass', () => {
+  it('rfq-014 (Closed): sup-008 (OTIF 0%) fails on OTIF; sup-007 (OTIF 86%, BL-94) and sup-013 ("No history") pass', () => {
     expect(gatesOf('rfq-014')).toEqual({
       'sup-007': [],
       'sup-008': ['otif'],
@@ -70,7 +70,7 @@ describe('CR-15 / BR-01a — a failing supplier is not ranked', () => {
 
   it('an RFQ whose every bidder fails ranks nothing — no best score to follow', () => {
     // ⚠️ PREMISE CHANGE (BL-94): this read rfq-005, whose two bidders (sup-007
-    // and sup-008) were both under the OTIF minimum. sup-007 passes at 83% now,
+    // and sup-008) were both under the OTIF minimum. sup-007 passes at 86% now,
     // so the every-bidder-fails case is rfq-020, the gate demo built for it
     // (sup-011, sup-004 and sup-009 each fail on certificates).
     expect(currentQuotesFor('rfq-020').length).toBeGreaterThan(0); // they DID quote
