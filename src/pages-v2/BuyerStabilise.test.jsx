@@ -1,13 +1,32 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { screen, fireEvent, within } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerStabilise from './BuyerStabilise';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { isLive } from '@services/liveness';
 import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { formatDate, formatNumber } from '@lib/format';
+import { isoWeek } from '@services/engine/dates';
+import { qtyOf } from './materialPlan/planDisplay';
 import i18n from '@lib/i18n';
 /** @import { QueryScope } from '@services/data/types' */
+
+/**
+ * The cell of row `rowId` under week `week`, found through the table's own
+ * header (G-15): the column a week header sits in is the column of its cells.
+ * @param {HTMLElement} grid the <table>
+ * @param {string} rowId
+ * @param {string} week
+ * @returns {HTMLElement}
+ */
+const cellAt = (grid, rowId, week) => {
+  const heads = [...grid.querySelectorAll('thead th')];
+  const col = heads.findIndex((h) => h.getAttribute('data-week') === week);
+  expect(col, `week ${week} is a column`).toBeGreaterThan(0);
+  const row = grid.querySelector(`tbody tr[data-row="${rowId}"]`);
+  expect(row, `row ${rowId}`).not.toBeNull();
+  return /** @type {HTMLElement} */ (/** @type {Element} */ (row).querySelectorAll('td')[col - 1]);
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-06 — the planner's Stabilise and publish page. Every figure is read
@@ -184,14 +203,21 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     const key = `${s.supplierId}-${s.materialCode}`;
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
     fireEvent.click(await screen.findByTestId(`stb-open-${key}`));
-    const row = await screen.findByTestId(`stb-week-${key}-${w.period}`);
-    expect(within(row).getByTestId(`stb-rule-${key}-${w.period}`)).toHaveTextContent(
+    // CAP-1 wave 3 — the week is a column now: its header carries the row's old
+    // id, and the week's cells are found by their own ids.
+    const head = await screen.findByTestId(`stb-week-${key}-${w.period}`);
+    expect(head.tagName).toBe('TH');
+    expect(head).toHaveTextContent(`W${isoWeek(w.period)}`);
+    expect(screen.getByTestId(`stb-rule-${key}-${w.period}`)).toHaveTextContent(
       'Zone Capacity — held at ±10% a version'
     );
-    expect(within(row).getByTestId(`stb-reason-needed-${key}-${w.period}`)).toHaveTextContent(
+    expect(screen.getByTestId(`stb-reason-needed-${key}-${w.period}`)).toHaveTextContent(
       'needs a reason'
     );
-    expect(within(row).getByText('Zone Capacity')).toBeInTheDocument();
+    // The zone row carries the zone of that week, and the published figure is its own.
+    const grid = screen.getByTestId(`stb-weeks-${key}`);
+    expect(cellAt(grid, 'zone', w.period)).toHaveTextContent('Zone Capacity');
+    expect(cellAt(grid, 'toPublish', w.period)).toHaveTextContent(qtyOf(w.published, s.uom));
     expect(w.published).not.toBe(w.damped);
   });
 

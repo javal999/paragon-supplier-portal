@@ -282,4 +282,94 @@ describe('WeekGrid — Monthly view (CAP-2)', () => {
       await i18n.changeLanguage('en');
     }
   });
+
+  it('a column marked `danger` tints the header and every cell of the column red', () => {
+    renderGrid({
+      weeks: [
+        { week: '2026-08-31', testId: 'head-2026-08-31' },
+        { week: '2026-09-07', danger: true, testId: 'head-2026-09-07' },
+        { week: '2026-09-14', testId: 'head-2026-09-14' }
+      ],
+      currentWeek: undefined
+    });
+    expect(screen.getByTestId('head-2026-09-07').className).toContain('bg-danger-soft');
+    expect(screen.getByTestId('head-2026-08-31').className).not.toContain('bg-danger-soft');
+    const cells = [...screen.getByTestId('grid').querySelectorAll('tbody tr[data-row] td')];
+    // 3 weeks × 2 shown rows, in DOM order: cells 1 and 4 are the middle week's.
+    expect(cells[1].className).toContain('bg-danger-soft');
+    expect(cells[4].className).toContain('bg-danger-soft');
+    expect(cells[0].className).not.toContain('bg-danger-soft');
+  });
+});
+
+// CAP-2 BR-07 (BL-343 wave 3) — a table whose horizon is weeks THEN months
+// marks its month periods `month: true`: Monthly shows exactly those columns,
+// headed by the month, and the page's own `cell` draws them (so a month period
+// keeps its inputs). Weekly shows only the weeks.
+describe('WeekGrid — the table’s own month columns (CAP-2 BR-07)', () => {
+  const renderOwnMonths = () =>
+    render(
+      <I18nextProvider i18n={i18n}>
+        <WeekGrid
+          label="Commitments"
+          corner="Period"
+          currentWeek="2026-11-02"
+          testId="grid"
+          editable
+          weeks={[
+            { week: '2026-10-26', testId: 'head-2026-10-26' },
+            { week: '2026-11-02', testId: 'head-2026-11-02' },
+            { week: '2026-12', month: true, testId: 'head-2026-12' },
+            { week: '2027-01', month: true, testId: 'head-2027-01' }
+          ]}
+          rows={[
+            {
+              id: 'qty',
+              label: 'Commitment',
+              cell: (period) =>
+                period.length === 7 ? (
+                  <input aria-label={`Commitment ${period}`} defaultValue="" />
+                ) : (
+                  <span>{`qty ${period}`}</span>
+                )
+            }
+          ]}
+        />
+      </I18nextProvider>
+    );
+
+  it('Weekly shows the weeks only; Monthly the months only, from the page’s own cell', () => {
+    renderOwnMonths();
+    const table = screen.getByTestId('grid');
+    expect(
+      [...table.querySelectorAll('thead th[data-week]')].map((h) => h.getAttribute('data-week'))
+    ).toEqual(['2026-10-26', '2026-11-02']);
+    expect(table.querySelectorAll('thead th[data-month]')).toHaveLength(0);
+    expect(screen.getByText('qty 2026-11-02')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Monthly/ }));
+    expect(
+      [...table.querySelectorAll('thead th[data-month]')].map((h) => h.getAttribute('data-month'))
+    ).toEqual(['2026-12', '2027-01']);
+    expect(table.querySelectorAll('thead th[data-week]')).toHaveLength(0);
+    // The month header names the month alone: no week count, no Partial mark,
+    // because the month is the period, not a grouping of weeks.
+    const dec = screen.getByTestId('head-2026-12');
+    expect(dec).toHaveTextContent('Dec 2026');
+    expect(dec).not.toHaveTextContent(/wk/);
+    expect(dec).not.toHaveAttribute('data-partial');
+    expect(table.querySelectorAll('[data-testid^="grid-partial-"]')).toHaveLength(0);
+    expect(screen.queryByText('Partial')).toBeNull();
+    // The page's own month cell renders — inputs and all — so a month period
+    // can still be committed; and `editable` prints no "Switch to Weekly" line.
+    expect(screen.getByLabelText('Commitment 2026-12')).toBeInTheDocument();
+    expect(screen.getByLabelText('Commitment 2027-01')).toBeInTheDocument();
+    expect(screen.queryByTestId('grid-readonly')).toBeNull();
+    // The corner keeps the page's own word for the label column.
+    expect(table.querySelector('th[data-label-col]')).toHaveTextContent('Period');
+    // Back to Weekly: the two weeks return, the months go.
+    fireEvent.click(screen.getByRole('button', { name: /Weekly/ }));
+    expect(table.querySelectorAll('thead th[data-month]')).toHaveLength(0);
+    expect(screen.getByText('qty 2026-10-26')).toBeInTheDocument();
+  });
 });

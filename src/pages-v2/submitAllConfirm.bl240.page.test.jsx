@@ -76,10 +76,10 @@ describe('BL-240 — Submit all asks first (U-02)', () => {
     });
     // 8801 is typed (above its forecast of 34,300, so no reason is needed); 8802 stays pre-filled.
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[0]}`);
-    fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
-      target: { value: '40000' }
-    });
+    const qty = within(section).getByLabelText(
+      `Commitment quantity for Week of ${formatDate(W[0])}`
+    );
+    fireEvent.change(qty, { target: { value: '40000' } });
     fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     const dialog = screen.getByRole('dialog');
     const typed = within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8801');

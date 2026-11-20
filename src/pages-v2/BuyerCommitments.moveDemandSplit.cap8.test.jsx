@@ -198,16 +198,16 @@ describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
       identity: supplierSeat('sup-002', SUP002_NAME),
       route: '/supplier/forecasts'
     });
-    const row002 = await screen.findByTestId(`fc-sup-row-${MAT}-${SEP}`, {}, LOAD);
-    expect(row002).toHaveTextContent('1,200');
+    const cells002 = await screen.findAllByTestId(/^fc-demand-/, {}, LOAD);
+    expect(cells002.some((c) => /^1,200(?![\d,])/.test((c.textContent ?? '').trim()))).toBe(true);
     first.unmount();
 
     renderWithProviders(<SupplierForecastCommitments />, {
       identity: supplierSeat('sup-010', SUP010_NAME),
       route: '/supplier/forecasts'
     });
-    const row010 = await screen.findByTestId(`fc-sup-row-${MAT}-${SEP}`, {}, LOAD);
-    expect(row010).toHaveTextContent('100');
+    const cells010 = await screen.findAllByTestId(/^fc-demand-/, {}, LOAD);
+    expect(cells010.some((c) => /^100(?![\d,])/.test((c.textContent ?? '').trim()))).toBe(true);
   });
 
   it('a partial split leaves the rest as an exception, and its panel lists both allocations', async () => {

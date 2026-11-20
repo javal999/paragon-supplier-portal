@@ -10,9 +10,11 @@
 //   · PEX-10 (BL-273) — "Fulfil by <date> (lead time n days)".
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { screen, within } from '@testing-library/react';
+import { screen, fireEvent, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { mockDataService } from '@services/data/mock/mockDataService';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { requirementResponseStore } from '@services/data/mock/stores/requirementResponseStore';
 import {
   forecastVersionStore,
@@ -29,6 +31,15 @@ import { sdcClock } from '@services/sdc';
 import i18n from '@lib/i18n';
 import { formatDate } from '@lib/format';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
+/** @import { ForecastCommitmentLine } from '@services/data/types' */
+
+const clearStorage = () => {
+  try {
+    window.localStorage.clear();
+  } catch {
+    // nothing stored
+  }
+};
 
 beforeEach(() => {
   requirementResponseStore.reset();
@@ -38,8 +49,10 @@ beforeEach(() => {
   capacityStore.reset();
   stockAccessStore.reset();
   sdcClock.reset();
+  clearStorage();
 });
 afterEach(async () => {
+  clearStorage();
   await i18n.changeLanguage('en');
 });
 
@@ -51,25 +64,99 @@ const open = async () => {
   return screen.findByTestId('fc-sup-material-PK-PETB-8802');
 };
 
-/** @param {HTMLElement} section */
-const columnsOf = (section) =>
-  within(section)
-    .getAllByTestId(/^fc-sup-row-PK-PETB-8802-/)
-    .map((c) => /** @type {string} */ (c.dataset.testid).replace('fc-sup-row-PK-PETB-8802-', ''));
+/** The 8802 section's grid (`WeekGrid` renders a real table). */
+const gridOf = () => screen.getByTestId('fc-sup-grid-PK-PETB-8802');
+
+/**
+ * The period columns of the active view (weekly by default).
+ * @param {HTMLElement} grid
+ * @param {'week' | 'month'} kind
+ * @returns {string[]}
+ */
+const columnsOf = (grid, kind = 'week') =>
+  [...grid.querySelectorAll(`thead th[data-${kind}]`)].map(
+    (h) => /** @type {string} */ (h.getAttribute(`data-${kind}`))
+  );
+
+/**
+ * The cell of grid row `rowId` under period `bucket`, through the column its
+ * header names (G-15).
+ * @param {HTMLElement} grid the <table>
+ * @param {string} rowId
+ * @param {string} bucket
+ * @param {'week' | 'month'} [kind]
+ * @returns {HTMLElement}
+ */
+const cellAt = (grid, rowId, bucket, kind = 'week') => {
+  const heads = [...grid.querySelectorAll('thead th')];
+  const col = heads.findIndex((h) => h.getAttribute(`data-${kind}`) === bucket);
+  expect(col, `period ${bucket} is a column`).toBeGreaterThan(0);
+  const row = grid.querySelector(`tbody tr[data-row="${rowId}"]`);
+  expect(row, `row ${rowId}`).not.toBeNull();
+  return /** @type {HTMLElement} */ (/** @type {Element} */ (row).querySelectorAll('td')[col - 1]);
+};
+
+/** @param {string} testId the grid's test id */
+const toMonthly = (testId) =>
+  fireEvent.click(
+    within(screen.getByTestId(`${testId}-view`)).getByRole('button', { name: /Monthly/ })
+  );
+
+/**
+ * The lines the page reads, in the service's order, for one material.
+ * @param {string} materialCode
+ * @returns {Promise<ForecastCommitmentLine[]>}
+ */
+const linesFor = async (materialCode) => {
+  const view = await mockDataService.procurement.getForecastCommitments({
+    personaType: 'supplier',
+    supplierId: 'sup-007',
+    businessRoles: PERSONA_SYSTEM_ROLES.supplier
+  });
+  const stream = /** @type {ForecastCommitmentLine} */ (
+    view.items.find((l) => l.materialCode === materialCode)
+  ).stream;
+  return view.items.filter((l) => l.stream === stream && l.materialCode === materialCode);
+};
 
 describe('PEX-2 (BL-265) — periods are columns', () => {
-  it('one column per period, oldest first: 17 weeks, then months; the row labels come first', async () => {
-    const section = await open();
-    const cols = columnsOf(section);
-    expect(cols.slice(0, 17)).toEqual(W.slice(0, 17));
-    expect(cols.filter((c) => /^\d{4}-\d{2}-\d{2}$/.test(c))).toHaveLength(17);
-    expect(cols.slice(17).every((c) => /^\d{4}-\d{2}$/.test(c))).toBe(true);
-    const grid = screen.getByTestId('fc-sup-grid-PK-PETB-8802');
-    const labels = [...grid.querySelectorAll('[data-grid-label]')];
-    expect(labels).toHaveLength(10);
-    // The labels precede every period column and are pinned on the left.
-    expect(grid.firstElementChild).toBe(labels[0]);
+  it('one column per period, oldest first: 17 weeks in Weekly, the months in Monthly; the row labels come first', async () => {
+    await open();
+    const grid = gridOf();
+    // CAP-1 wave 3 — the grid is the shared WeekGrid: a real table.
+    expect(grid.tagName).toBe('TABLE');
+    expect(columnsOf(grid)).toEqual(W.slice(0, 17));
+    expect(columnsOf(grid, 'month')).toEqual([]);
+    // The measures are the grid's rows, pinned on the left (BR-02).
+    const labels = [...grid.querySelectorAll('tbody th[scope="row"]')];
+    expect(labels).toHaveLength(9);
     for (const l of labels) expect(l.className).toMatch(/\bsticky\b.*\bleft-0\b/);
+    // CAP-2 BR-07 — Monthly shows the table's own month periods, the same
+    // months the old table listed after its weeks; Weekly leaves them out.
+    const lines = await linesFor('PK-PETB-8802');
+    const months = lines.map((l) => l.periodBucket).filter((b) => /^\d{4}-\d{2}$/.test(b));
+    expect(months.length).toBeGreaterThan(0);
+    toMonthly('fc-sup-grid-PK-PETB-8802');
+    expect(columnsOf(grid, 'month')).toEqual(months);
+    expect(columnsOf(grid)).toEqual([]);
+    const first = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${months[0]}`);
+    expect(first.tagName).toBe('TH');
+    expect(first).toHaveTextContent(
+      new Intl.DateTimeFormat('en-GB', {
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC'
+      }).format(new Date(`${months[0]}-01T00:00:00Z`))
+    );
+    // A month period is drawn by the page's own cell — the state pill, the
+    // capacity left, the Acknowledge control — not by the read-only combined
+    // month of CAP-2 BR-05, so the page prints no "Switch to Weekly" line.
+    expect(
+      within(cellAt(grid, 'status', months[0], 'month')).getByTestId(
+        `fc-sup-state-PK-PETB-8802-${months[0]}`
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('fc-sup-grid-PK-PETB-8802-readonly')).toBeNull();
   });
 });
 
@@ -79,13 +166,15 @@ describe('PEX-1 (BL-264) — zone names', () => {
     expect(within(section).getAllByText('Zone Liability').length).toBeGreaterThan(0);
     expect(within(section).getAllByText('Zone Capacity').length).toBeGreaterThan(0);
     expect(within(section).queryByText(/^(Firm|Trade-off|Forecast)$/)).toBeNull();
-    // BL-306 (UL-08): the zone tips sit on each period's chip, not three on the label.
+    // BL-306 (UL-08): the zone tips sit on each period's chip; the Zone row
+    // label carries the one `forecastZone` tip and no per-zone tip.
     expect(within(section).getAllByTestId('term-tip-zone-liability').length).toBeGreaterThan(0);
     expect(within(section).getAllByTestId('term-tip-zone-capacity').length).toBeGreaterThan(0);
-    const zoneLabel = within(section)
-      .getAllByText((_, el) => el?.hasAttribute('data-grid-label') ?? false)
-      .find((el) => el.querySelector('[data-testid="term-tip-zone-liability"]'));
-    expect(zoneLabel).toBeUndefined();
+    const zoneLabel = /** @type {HTMLElement} */ (
+      gridOf().querySelector('tbody tr[data-row="zone"] th')
+    );
+    expect(zoneLabel.querySelector('[data-testid="term-tip-zone-liability"]')).toBeNull();
+    expect(zoneLabel.querySelector('[data-testid="term-tip-forecast-zone"]')).not.toBeNull();
   });
 
   it('BR-04 — the two names stay English in Indonesian', async () => {
@@ -183,18 +272,19 @@ describe('PEX-10 (BL-273) — the fulfilment window', () => {
       );
     expect(submitted?.submittedAt).toBeDefined();
     const by = /** @type {string} */ (fulfilByDay(submitted?.submittedAt, 14));
-    const col = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[1]}`);
-    expect(within(col).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
+    const grid = gridOf();
+    const submittedCell = cellAt(grid, 'fulfilBy', W[1]);
+    expect(within(submittedCell).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
       `Fulfil by ${formatDate(by)} (lead time 14 days)`
     );
     // PEX-D22 — the open line is sup-007's awaiting Zone Liability week W[0];
     // a Trade-off week (W[6]) is an acknowledgement and has no fulfilment window.
-    const open0 = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
-    expect(within(open0).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
+    expect(within(cellAt(grid, 'fulfilBy', W[0])).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
       'Lead time 14 days; the date is set when you submit'
     );
-    const ack6 = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`);
+    const ack6 = cellAt(grid, 'fulfilBy', W[6]);
     expect(within(ack6).queryByTestId(/^fc-fulfil-/)).toBeNull();
+    expect(ack6).toHaveTextContent('—');
   });
 });
 
@@ -208,25 +298,30 @@ describe('UI layering review 2026-11 — the commitments grid', () => {
 
   it('BL-306 (UL-08): one ⓘ on the Zone label, and one on each period chip', async () => {
     const section = await open();
-    const labels = [...section.querySelectorAll('[data-grid-label]')];
-    const zoneLabel = labels.find((l) => l.querySelector('[data-testid="term-tip-forecast-zone"]'));
-    expect(zoneLabel?.querySelectorAll('button[aria-describedby]')).toHaveLength(1);
-    const periods = section.querySelectorAll('[data-testid^="fc-sup-row-"]');
+    const grid = gridOf();
+    const zoneLabel = /** @type {HTMLElement} */ (
+      grid.querySelector('tbody tr[data-row="zone"] th')
+    );
+    expect(zoneLabel.querySelectorAll('button[aria-describedby]')).toHaveLength(1);
+    const periods = grid.querySelectorAll('thead th[data-week], thead th[data-month]');
     const chipTips = section.querySelectorAll(
       '[data-testid="term-tip-zone-liability"], [data-testid="term-tip-zone-capacity"]'
     );
     expect(chipTips).toHaveLength(periods.length);
   });
 
-  it('BL-304 (UL-06): below md the pinned label column is 7rem and the scroll area pads by it plus the cell padding', async () => {
-    const section = await open();
-    const grid = /** @type {HTMLElement} */ (
-      section.querySelector('[data-testid^="fc-sup-grid-"]')
-    );
-    expect(grid.className).toContain('grid-cols-[7rem]');
-    expect(grid.className).toContain('md:grid-cols-[max-content]');
-    expect(/** @type {HTMLElement} */ (grid.parentElement).className).toContain(
-      'scroll-ps-[7.75rem]'
-    );
+  it('BL-304 (UL-06): the pinned label column and the scroll padding come from the shared grid', async () => {
+    await open();
+    const grid = gridOf();
+    // G-02 — the row labels are sticky, 140 px under 768 px and 220 px from md up.
+    const label = /** @type {HTMLElement} */ (grid.querySelector('tbody th[scope="row"]'));
+    expect(label.className).toMatch(/\bsticky\b.*\bleft-0\b/);
+    expect(label.className).toContain('w-[140px]');
+    expect(label.className).toContain('md:w-[220px]');
+    // G-13 (BL-186) — the scroll area's own padding is the label column's
+    // width, so a focused field lands clear of the labels.
+    const scroll = screen.getByTestId('fc-sup-grid-PK-PETB-8802-scroll');
+    expect(scroll.className).toContain('scroll-ps-[140px]');
+    expect(scroll.className).toContain('md:scroll-ps-[220px]');
   });
 });

@@ -48,14 +48,24 @@ import { combineWeeks, groupWeeksByMonth, weekHeaderDate } from '@lib/weekMonths
 // (BR-04, BR-06). Monthly is READ ONLY (BR-05, CAP-D6): no week `cell` is
 // called, so no input, select or per-week action can render; an `editable`
 // grid says "Switch to Weekly to edit." A month holding a gap week is tinted.
+//
+// CAP-2 BR-07 (BL-343 wave 3) — a table whose horizon is weeks THEN months
+// (the commitment page) marks its month periods `month: true` on their
+// columns. In Monthly the grid then shows exactly those columns, headed
+// `Oct 2026`, and calls the row's `cell` with the month key: those months are
+// the table's own commit periods, not a summary, so they keep their inputs.
+// Weekly leaves them out. A table with no month column groups its weeks as
+// before, so every wave 1 and 2 grid is unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * One week column.
  * @typedef {object} WeekGridColumn
- * @property {string} week The week's Monday, ISO date (YYYY-MM-DD).
+ * @property {string} week The week's Monday, ISO date (YYYY-MM-DD). A month column names its month (`YYYY-MM`) instead.
  * @property {boolean} [gap] G-08 — tint the whole column amber.
+ * @property {boolean} [danger] Tint the whole column red (a period above BE).
  * @property {boolean} [drill] G-08 — draw the 1 px action-blue inset ring.
+ * @property {boolean} [month] CAP-2 BR-07 — this column is one of the table's OWN month periods. In Monthly the grid shows exactly these columns, header `Oct 2026`, and calls the row's `cell` with the month key; Weekly leaves them out. Without any month column, Monthly groups the weeks (BR-02) as before.
  * @property {React.ReactNode} [marker] G-09 — shown in the header, under the date.
  * @property {string} [testId] `data-testid` of the week's header cell.
  * @property {Record<string, string | undefined>} [headerAttrs] Extra `data-*` attributes on the header cell.
@@ -107,7 +117,14 @@ const DRILL_RING =
  * @returns {string}
  */
 const columnClass = (c) =>
-  [WEEK_COL, c.gap ? 'bg-warning-soft' : '', c.drill ? DRILL_RING : ''].filter(Boolean).join(' ');
+  [
+    WEEK_COL,
+    c.gap ? 'bg-warning-soft' : '',
+    c.danger ? 'bg-danger-soft' : '',
+    c.drill ? DRILL_RING : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
 
 const DASH = <span className="text-text-tertiary">—</span>;
 
@@ -152,7 +169,14 @@ const WeekGrid = ({
   const monthly = view === 'monthly';
   const current = currentWeek ? mondayOf(currentWeek) : null;
   const shownRows = rows.filter((r) => !r.hidden);
-  const months = monthly ? groupWeeksByMonth(weeks.map((c) => c.week)) : [];
+  // CAP-2 BR-07 — a table whose horizon is weeks THEN months names its own
+  // month columns. In Monthly the grid shows those columns as they are (the
+  // page's `cell` draws them, so a month period keeps its inputs); a table
+  // without them groups its weeks into months (BR-02) as before.
+  const ownMonths = weeks.filter((c) => c.month);
+  const ownMonthView = monthly && ownMonths.length > 0;
+  const months = monthly && !ownMonthView ? groupWeeksByMonth(weeks.map((c) => c.week)) : [];
+  const currentMonth = current ? current.slice(0, 7) : null;
 
   const measure = useCallback(() => {
     const el = scrollRef.current;
@@ -296,7 +320,7 @@ const WeekGrid = ({
       {/* CAP-2 BR-01 — the toggle sits outside the table, so it never joins
           the grid's row-wise tab order (G-11). */}
       <div className="flex flex-wrap items-center justify-end gap-2 px-2 py-2">
-        {monthly && editable ? (
+        {monthly && editable && !ownMonthView ? (
           <p
             className="mr-auto text-xs text-text-secondary"
             data-testid={testId ? `${testId}-readonly` : undefined}
@@ -341,87 +365,122 @@ const WeekGrid = ({
                   edges.left ? 'shadow-[4px_0_6px_-4px_rgba(13,27,42,0.18)]' : ''
                 }`}
               >
-                {monthly ? t('weekGrid.month.corner') : corner}
+                {monthly ? (ownMonthView ? corner : t('weekGrid.month.corner')) : corner}
               </th>
-              {monthly
-                ? months.map((m) => {
-                    const c = monthColumn(m);
-                    const isCurrent = current !== null && m.weeks.includes(current);
+              {ownMonthView
+                ? // CAP-2 BR-07 — the table's own month periods: the header
+                  // names the month only (the period IS the month, so there is
+                  // no week count, no Monday range and no partial mark).
+                  ownMonths.map((c) => {
+                    const isCurrent = currentMonth === c.week;
                     return (
                       <th
-                        key={m.key}
+                        key={c.week}
                         scope="col"
-                        data-month={m.key}
+                        data-month={c.week}
                         data-current={isCurrent ? 'true' : undefined}
                         data-gap={c.gap ? 'true' : undefined}
-                        data-partial={m.partial ? 'true' : undefined}
-                        data-testid={testId ? `${testId}-month-${m.key}` : undefined}
-                        className={`${columnClass(c)} ${c.gap ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
+                        data-testid={c.testId}
+                        className={`${columnClass(c)} ${c.gap || c.danger ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
                           isCurrent
                             ? 'border-t-2 border-t-action'
                             : 'border-t-2 border-t-transparent'
                         }`}
                       >
                         <div className="font-semibold whitespace-nowrap">
-                          {monthName(m.key, i18n.language ?? 'en')}
+                          {monthName(c.week, i18n.language ?? 'en')}
                         </div>
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
-                          {t('weekGrid.month.weeks', { count: m.weeks.length })}
-                        </div>
-                        <Data as="div" className="text-xs text-text-secondary">
-                          {m.weeks.length > 1
-                            ? `${shortDate(m.firstMonday)} – ${shortDate(m.lastMonday)}`
-                            : shortDate(m.firstMonday)}
-                        </Data>
                         {isCurrent ? (
                           <div className="text-xs text-action-hover whitespace-nowrap">
                             {t('weekGrid.thisMonth')}
-                          </div>
-                        ) : null}
-                        {m.partial ? (
-                          <div
-                            className="mt-1"
-                            data-testid={testId ? `${testId}-partial-${m.key}` : undefined}
-                          >
-                            <StatusPill variant="neutral">{t('weekGrid.month.partial')}</StatusPill>
                           </div>
                         ) : null}
                         {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
                       </th>
                     );
                   })
-                : weeks.map((c) => {
-                    const isCurrent = c.week === current;
-                    return (
-                      <th
-                        key={c.week}
-                        scope="col"
-                        data-week={c.week}
-                        data-current={isCurrent ? 'true' : undefined}
-                        data-gap={c.gap ? 'true' : undefined}
-                        data-testid={c.testId}
-                        {...c.headerAttrs}
-                        className={`${columnClass(c)} ${c.gap ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
-                          isCurrent
-                            ? 'border-t-2 border-t-action'
-                            : 'border-t-2 border-t-transparent'
-                        }`}
-                      >
-                        <Data as="div" className="font-semibold">
-                          {`W${isoWeek(c.week)}`}
-                        </Data>
-                        <Data as="div" className="text-xs text-text-secondary whitespace-nowrap">
-                          {shortDate(c.week)}
-                        </Data>
-                        {isCurrent ? (
-                          <div className="text-xs text-action-hover whitespace-nowrap">
-                            {t('weekGrid.thisWeek')}
+                : monthly
+                  ? months.map((m) => {
+                      const c = monthColumn(m);
+                      const isCurrent = current !== null && m.weeks.includes(current);
+                      return (
+                        <th
+                          key={m.key}
+                          scope="col"
+                          data-month={m.key}
+                          data-current={isCurrent ? 'true' : undefined}
+                          data-gap={c.gap ? 'true' : undefined}
+                          data-partial={m.partial ? 'true' : undefined}
+                          data-testid={testId ? `${testId}-month-${m.key}` : undefined}
+                          className={`${columnClass(c)} ${c.gap ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
+                            isCurrent
+                              ? 'border-t-2 border-t-action'
+                              : 'border-t-2 border-t-transparent'
+                          }`}
+                        >
+                          <div className="font-semibold whitespace-nowrap">
+                            {monthName(m.key, i18n.language ?? 'en')}
                           </div>
-                        ) : null}
-                        {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
-                      </th>
-                    );
-                  })}
+                          <div className="text-xs text-text-secondary whitespace-nowrap">
+                            {t('weekGrid.month.weeks', { count: m.weeks.length })}
+                          </div>
+                          <Data as="div" className="text-xs text-text-secondary">
+                            {m.weeks.length > 1
+                              ? `${shortDate(m.firstMonday)} – ${shortDate(m.lastMonday)}`
+                              : shortDate(m.firstMonday)}
+                          </Data>
+                          {isCurrent ? (
+                            <div className="text-xs text-action-hover whitespace-nowrap">
+                              {t('weekGrid.thisMonth')}
+                            </div>
+                          ) : null}
+                          {m.partial ? (
+                            <div
+                              className="mt-1"
+                              data-testid={testId ? `${testId}-partial-${m.key}` : undefined}
+                            >
+                              <StatusPill variant="neutral">
+                                {t('weekGrid.month.partial')}
+                              </StatusPill>
+                            </div>
+                          ) : null}
+                          {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
+                        </th>
+                      );
+                    })
+                  : weeks.map((c) => {
+                      if (c.month) return null;
+                      const isCurrent = c.week === current;
+                      return (
+                        <th
+                          key={c.week}
+                          scope="col"
+                          data-week={c.week}
+                          data-current={isCurrent ? 'true' : undefined}
+                          data-gap={c.gap ? 'true' : undefined}
+                          data-testid={c.testId}
+                          {...c.headerAttrs}
+                          className={`${columnClass(c)} ${c.gap || c.danger ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
+                            isCurrent
+                              ? 'border-t-2 border-t-action'
+                              : 'border-t-2 border-t-transparent'
+                          }`}
+                        >
+                          <Data as="div" className="font-semibold">
+                            {`W${isoWeek(c.week)}`}
+                          </Data>
+                          <Data as="div" className="text-xs text-text-secondary whitespace-nowrap">
+                            {shortDate(c.week)}
+                          </Data>
+                          {isCurrent ? (
+                            <div className="text-xs text-action-hover whitespace-nowrap">
+                              {t('weekGrid.thisWeek')}
+                            </div>
+                          ) : null}
+                          {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
+                        </th>
+                      );
+                    })}
             </tr>
           </thead>
           <tbody>
@@ -449,28 +508,44 @@ const WeekGrid = ({
                     </span>
                   ) : null}
                 </th>
-                {monthly
-                  ? months.map((m) => (
-                      <td
-                        key={m.key}
-                        data-testid={testId ? `${testId}-${r.id}-${m.key}` : undefined}
-                        className={`${columnClass(monthColumn(m))} border-b border-border-subtle px-2 py-2 align-top ${
-                          (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
-                        }`}
-                      >
-                        {monthCellOf(r, m)}
-                      </td>
-                    ))
-                  : weeks.map((c, i) => (
-                      <td
-                        key={c.week}
-                        className={`${columnClass(c)} border-b border-border-subtle px-2 py-2 align-top ${
-                          (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
-                        }`}
-                      >
-                        {r.cell(c.week, i)}
-                      </td>
-                    ))}
+                {ownMonthView
+                  ? weeks.map((c, i) =>
+                      c.month ? (
+                        <td
+                          key={c.week}
+                          data-testid={testId ? `${testId}-${r.id}-${c.week}` : undefined}
+                          className={`${columnClass(c)} border-b border-border-subtle px-2 py-2 align-top ${
+                            (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
+                          }`}
+                        >
+                          {r.cell(c.week, i)}
+                        </td>
+                      ) : null
+                    )
+                  : monthly
+                    ? months.map((m) => (
+                        <td
+                          key={m.key}
+                          data-testid={testId ? `${testId}-${r.id}-${m.key}` : undefined}
+                          className={`${columnClass(monthColumn(m))} border-b border-border-subtle px-2 py-2 align-top ${
+                            (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
+                          }`}
+                        >
+                          {monthCellOf(r, m)}
+                        </td>
+                      ))
+                    : weeks.map((c, i) =>
+                        c.month ? null : (
+                          <td
+                            key={c.week}
+                            className={`${columnClass(c)} border-b border-border-subtle px-2 py-2 align-top ${
+                              (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
+                            }`}
+                          >
+                            {r.cell(c.week, i)}
+                          </td>
+                        )
+                      )}
               </tr>
             ))}
           </tbody>

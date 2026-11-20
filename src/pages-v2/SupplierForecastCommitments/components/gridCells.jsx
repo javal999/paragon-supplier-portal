@@ -8,20 +8,11 @@ import { qtyText } from '../../forecasts/forecastDisplay';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PEX-2 (BL-265) — the cells of the supplier commitments grid. The grid has one
-// column per period and one row per field (`GRID_ROWS`), so every period
-// column renders its cells in that order.
+// PEX-2 (BL-265) — the content of two cells of the supplier commitments grid.
+// CAP-1 wave 3 (BL-343) renders that grid through the shared `WeekGrid`, so
+// these draw a cell's CONTENT only: the grid owns the cell, its padding and
+// its border.
 // ─────────────────────────────────────────────────────────────────────────────
-
-/** The grid's rows, top to bottom; a period column renders one cell per row. */
-export const GRID_ROWS = 10;
-
-/** A body cell. */
-export const CELL = 'px-3 py-2 border-b border-border-subtle text-sm';
-
-/** The period header cell. */
-export const HEAD =
-  'px-3 py-2 border-b border-border-subtle bg-bg-hover text-label text-text-tertiary uppercase whitespace-nowrap';
 
 /**
  * PEX-3 (BL-266, BL-284) BR-02 — the period's ordered quantity, with a hover
@@ -55,7 +46,7 @@ export const DemandCell = ({ l, label, className = '' }) => {
   return (
     // BL-307 (UL-09) — left-aligned like every other row and its week header,
     // so the figure no longer sits against the next week's column.
-    <div className={`${CELL} ${className}`} data-testid={`fc-demand-${l.key}`}>
+    <div className={className || undefined} data-testid={`fc-demand-${l.key}`}>
       <TermTip
         entry={{
           label: { en: name, id: name },
@@ -88,7 +79,7 @@ export const FulfilByCell = ({ l, className = '' }) => {
   const days = l.leadTimeDays ?? null;
   const by = fulfilByDay(l.response?.submittedAt, days);
   return (
-    <div className={`${CELL} text-xs ${className}`} data-testid={`fc-fulfil-${l.key}`}>
+    <div className={`text-xs ${className}`.trim()} data-testid={`fc-fulfil-${l.key}`}>
       {days === null ? (
         <span className="text-text-tertiary">{t('fc.sup.fulfilNoLeadTime')}</span>
       ) : by ? (

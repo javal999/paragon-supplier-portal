@@ -55,6 +55,24 @@ const responsesFor = (supplierId, period) =>
     .all()
     .filter((r) => r.supplierId === supplierId && r.periodBucket === period);
 
+/**
+ * CAP-1 wave 3 — the period is a COLUMN now (the Submit-all grid renders
+ * through `WeekGrid`): its header carries the column's old id and the measure
+ * cells are found through the row.
+ * @param {string} rowId
+ * @param {string} bucket
+ * @returns {HTMLElement}
+ */
+const submitCell = (rowId, bucket) => {
+  const grid = screen.getByTestId('fc-sup-weeks-grid');
+  const heads = [...grid.querySelectorAll('thead th')];
+  const col = heads.findIndex((h) => h.getAttribute('data-week') === bucket);
+  expect(col, `period ${bucket} is a column`).toBeGreaterThan(0);
+  const row = grid.querySelector(`tbody tr[data-row="${rowId}"]`);
+  expect(row, `row ${rowId}`).not.toBeNull();
+  return /** @type {HTMLElement} */ (/** @type {Element} */ (row).querySelectorAll('td')[col - 1]);
+};
+
 describe('copy', () => {
   it('every new capacity string exists in EN and ID', () => {
     // BL-159 plural rule: compare BASE keys, with the plural suffix stripped.
@@ -79,28 +97,27 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       route: '/supplier/forecasts'
     });
     const weekRow = await screen.findByTestId(`fc-week-${W[0]}`);
+    expect(weekRow.tagName).toBe('TH');
     // 8802 awaits its commitment, and so does the E2E walkthrough's 2000028400
     // (its own planning group, capacity within); 8801's stands from version 1.
-    expect(weekRow).toHaveTextContent('Materials: 2');
-    expect(within(weekRow).getByTestId(`fc-week-check-${W[0]}-pg-MG-20`)).toHaveAttribute(
+    expect(submitCell('lines', W[0])).toHaveTextContent('Materials: 2');
+    expect(screen.getByTestId(`fc-week-check-${W[0]}-pg-MG-20`)).toHaveAttribute(
       'data-level',
       'within'
     );
     // Zone Capacity weeks have no Submit all (acknowledgement only). W[2] is
     // still Zone Liability for the E2E walkthrough's 2000028400 (35-day lead
     // time), so its period keeps a Submit all holding that material alone.
-    expect(screen.getByTestId(`fc-week-${W[2]}`)).toHaveTextContent('Materials: 1');
+    expect(submitCell('lines', W[2])).toHaveTextContent('Materials: 1');
     expect(screen.queryByTestId(`fc-week-${W[6]}`)).toBeNull();
     // A row no longer has its own Submit, only Save draft.
     expect(screen.queryByRole('button', { name: /^Submit commitment for/ })).toBeNull();
     // Editing 8801 puts it back into the period's Submit all beside 8802.
-    const row8801 = within(screen.getByTestId('fc-sup-material-PK-PETB-8801')).getByTestId(
-      `fc-sup-row-PK-PETB-8801-${W[0]}`
+    const row8801 = within(screen.getByTestId('fc-sup-material-PK-PETB-8801')).getByLabelText(
+      `Commitment quantity for Week of ${formatDate(W[0])}`
     );
-    fireEvent.change(within(row8801).getByLabelText(/^Commitment quantity for/), {
-      target: { value: '35000' }
-    });
-    expect(weekRow).toHaveTextContent('Materials: 3');
+    fireEvent.change(row8801, { target: { value: '35000' } });
+    expect(submitCell('lines', W[0])).toHaveTextContent('Materials: 3');
     fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     // BL-240 — Submit all opens the summary; its confirm sends the period.
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
@@ -121,28 +138,31 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const weekRow = await screen.findByTestId(`fc-week-${W[1]}`);
-    expect(within(weekRow).getByTestId(`fc-week-check-${W[1]}-pg-MG-20`)).toHaveAttribute(
+    await screen.findByTestId(`fc-week-${W[1]}`);
+    expect(screen.getByTestId(`fc-week-check-${W[1]}-pg-MG-20`)).toHaveAttribute(
       'data-level',
       'cannotSupply'
     );
-    expect(weekRow).toHaveTextContent('Cannot be supplied');
+    expect(submitCell('checks', W[1])).toHaveTextContent('Cannot be supplied');
     // Both lines were already committed; editing one puts the period back to
     // submit. Below forecast, the period's reason also covers the row.
     // (8802: 8801's standing answer already carries a reason of its own.)
     const section = screen.getByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[1]}`);
-    fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
-      target: { value: '34000' }
-    });
+    const qty = within(section).getByLabelText(
+      `Commitment quantity for Week of ${formatDate(W[1])}`
+    );
+    fireEvent.change(qty, { target: { value: '34000' } });
     const submit = screen.getByTestId(`fc-week-submit-${W[1]}`);
     expect(submit).toBeDisabled();
     expect(screen.getByTestId(`fc-week-refusal-${W[1]}`)).toHaveTextContent(
       'Above BE: choose a reason.'
     );
-    fireEvent.change(within(weekRow).getByLabelText(/^Reason for .*: LTP above capacity/), {
-      target: { value: 'capacity' }
-    });
+    fireEvent.change(
+      within(submitCell('reason', W[1])).getByLabelText(/^Reason for .*: LTP above capacity/),
+      {
+        target: { value: 'capacity' }
+      }
+    );
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
@@ -167,21 +187,18 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     // time. BL-282: raw-material periods are weeks, so it is the second week
     // (M[1], 3,100 committed of 2,900; it was the October month). Its
     // commitment stands, so a changed quantity puts it back to submit.
-    const weekRow = await screen.findByTestId(`fc-week-${M[1]}`);
-    expect(within(weekRow).getByTestId(`fc-week-check-${M[1]}-pg-MG-10`)).toHaveAttribute(
+    await screen.findByTestId(`fc-week-${M[1]}`);
+    expect(screen.getByTestId(`fc-week-check-${M[1]}-pg-MG-10`)).toHaveAttribute(
       'data-level',
       'unconfirmed'
     );
-    expect(within(weekRow).getByRole('link', { name: 'Confirm capacity' })).toHaveAttribute(
-      'href',
-      expect.stringContaining('/supplier/capacity')
+    expect(
+      within(submitCell('checks', M[1])).getByRole('link', { name: 'Confirm capacity' })
+    ).toHaveAttribute('href', expect.stringContaining('/supplier/capacity'));
+    const qty = within(screen.getByTestId('fc-sup-material-RM-STEAR-7300')).getByLabelText(
+      `Commitment quantity for Week of ${formatDate(M[1])}`
     );
-    const row = within(screen.getByTestId('fc-sup-material-RM-STEAR-7300')).getByTestId(
-      `fc-sup-row-RM-STEAR-7300-${M[1]}`
-    );
-    fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
-      target: { value: '3000' }
-    });
+    fireEvent.change(qty, { target: { value: '3000' } });
     expect(screen.getByTestId(`fc-week-submit-${M[1]}`)).toBeDisabled();
     expect(screen.getByTestId(`fc-week-refusal-${M[1]}`)).toHaveTextContent('Confirm capacity for');
     // Scoping: no other supplier's group or period on this page.

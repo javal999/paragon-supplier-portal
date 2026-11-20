@@ -55,6 +55,34 @@ const panel = () =>
   within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
 /** @param {string} bucket */
 const week = (bucket) => `Week of ${formatDate(bucket)}`;
+
+/**
+ * CAP-1 wave 3 — the commitments material table renders through `WeekGrid`:
+ * the periods are its columns, so a period's cells are found by row and
+ * column, and its state reads from its own cell.
+ * @param {string} code
+ * @param {string} rowId
+ * @param {string} bucket
+ * @param {'week' | 'month'} [kind]
+ * @returns {HTMLElement}
+ */
+const cellAt = (code, rowId, bucket, kind = 'week') => {
+  const grid = screen.getByTestId(`fc-sup-grid-${code}`);
+  const heads = [...grid.querySelectorAll('thead th')];
+  const col = heads.findIndex((h) => h.getAttribute(`data-${kind}`) === bucket);
+  expect(col, `period ${bucket} is a column of ${code}`).toBeGreaterThan(0);
+  const row = grid.querySelector(`tbody tr[data-row="${rowId}"]`);
+  expect(row, `row ${rowId}`).not.toBeNull();
+  return /** @type {HTMLElement} */ (/** @type {Element} */ (row).querySelectorAll('td')[col - 1]);
+};
+
+/**
+ * A period's state cell (the pill, the draft marker and the gap).
+ * @param {string} code
+ * @param {string} bucket
+ * @returns {HTMLElement}
+ */
+const stateOf = (code, bucket) => screen.getByTestId(`fc-sup-state-${code}-${bucket}`);
 /**
  * @param {string} supplierId
  * @param {string} material
@@ -98,13 +126,11 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
       route: '/supplier/forecasts'
     });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
-    const firmShort = within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`);
-    expect(firmShort).toHaveTextContent('Zone Liability');
-    expect(firmShort).toHaveTextContent('Outside tolerance');
-    expect(within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[8]}`)).toHaveTextContent(
-      'Acknowledged'
-    );
-    expect(screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`)).toHaveTextContent('Overdue');
+    expect(cellAt('PK-PETB-8801', 'zone', W[1])).toHaveTextContent('Zone Liability');
+    expect(stateOf('PK-PETB-8801', W[1])).toHaveTextContent('Outside tolerance');
+    expect(stateOf('PK-PETB-8801', W[8])).toHaveTextContent('Acknowledged');
+    expect(stateOf('PK-PETB-8802', W[0])).toHaveTextContent('Overdue');
+    expect(section).toBeInTheDocument();
     expect(screen.getByTestId('fc-sup-version')).toHaveTextContent('Version 2');
     expect(screen.queryByText('RM-STEAR-7300')).toBeNull();
     await waitFor(() => expect(forecastViewStore.find('FC-PK-V2', 'sup-007')).toBeDefined());
@@ -127,33 +153,39 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
   it('below forecast cannot be submitted without a reason; with one it is submitted to PTI', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
     // BR-09 — pre-filled with the forecast quantity.
     const qty = /** @type {HTMLInputElement} */ (
-      within(row).getByLabelText(`Commitment quantity for ${week(W[0])}`)
+      within(section).getByLabelText(`Commitment quantity for ${week(W[0])}`)
     );
     expect(qty.value).toBe('42400');
     // PEX-D22 — a Trade-off week of the same material takes no quantity.
     expect(
-      within(within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`)).queryByLabelText(
-        /Commitment quantity/
-      )
+      within(cellAt('PK-PETB-8802', 'commitment', W[6])).queryByLabelText(/Commitment quantity/)
     ).toBeNull();
     // CAP-6 (BL-175) AC-01 — a quantity per period: no date input, no Date column.
-    expect(within(row).queryByLabelText(/Commitment date/)).toBeNull();
-    expect(within(row).queryByDisplayValue(W[0])).toBeNull();
+    expect(
+      within(cellAt('PK-PETB-8802', 'commitment', W[0])).queryByLabelText(/Commitment date/)
+    ).toBeNull();
+    expect(screen.queryByDisplayValue(W[0])).toBeNull();
     // PEX-2 (BL-265) — the periods are columns; the measures are the grid's row labels.
-    const labels = [...section.querySelectorAll('[data-grid-label]')].map((h) => h.textContent);
+    const labels = [
+      ...screen.getByTestId('fc-sup-grid-PK-PETB-8801').querySelectorAll('tbody th[scope="row"]')
+    ].map((h) => h.textContent);
     expect(labels.some((l) => /Commitment/.test(l ?? ''))).toBe(true);
     expect(labels.some((l) => /date/i.test(l ?? ''))).toBe(false);
     fireEvent.change(qty, { target: { value: '30000' } });
     // BL-133 (ENG-D19) — the period is submitted with its one Submit all.
     const submit = screen.getByTestId(`fc-week-submit-${W[0]}`);
     expect(submit).toBeDisabled();
-    expect(row).toHaveTextContent('Below forecast: choose a reason.');
-    fireEvent.change(within(row).getByLabelText(`Reason below forecast for ${week(W[0])}`), {
-      target: { value: 'material' }
-    });
+    expect(cellAt('PK-PETB-8802', 'actions', W[0])).toHaveTextContent(
+      'Below forecast: choose a reason.'
+    );
+    fireEvent.change(
+      within(cellAt('PK-PETB-8802', 'reason', W[0])).getByLabelText(
+        `Reason below forecast for ${week(W[0])}`
+      ),
+      { target: { value: 'material' } }
+    );
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
@@ -173,11 +205,10 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
   it('BR-10 — Save draft keeps it from PTI', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
     // W[0] holds version 1's answer (Submitted, no longer standing); the draft is new.
     const before = responsesFor('sup-007', 'PK-PETB-8802', W[0]).map((r) => r.status);
     expect(before).toEqual(['Submitted']);
-    fireEvent.click(within(row).getByRole('button', { name: `Save draft for ${week(W[0])}` }));
+    fireEvent.click(within(section).getByRole('button', { name: `Save draft for ${week(W[0])}` }));
     await waitFor(() =>
       expect(
         responsesFor('sup-007', 'PK-PETB-8802', W[0])
@@ -189,10 +220,15 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
 
   it('BR-08 — a Forecast period is acknowledged, not committed', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
-    const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[9]}`);
-    expect(within(row).queryByLabelText(/Commitment quantity/)).toBeNull();
-    fireEvent.click(within(row).getByRole('button', { name: `Acknowledge ${week(W[9])}` }));
+    await screen.findByTestId('fc-sup-material-PK-PETB-8802');
+    expect(
+      within(cellAt('PK-PETB-8802', 'commitment', W[9])).queryByLabelText(/Commitment quantity/)
+    ).toBeNull();
+    fireEvent.click(
+      within(cellAt('PK-PETB-8802', 'actions', W[9])).getByRole('button', {
+        name: `Acknowledge ${week(W[9])}`
+      })
+    );
     await waitFor(() =>
       expect(responsesFor('sup-007', 'PK-PETB-8802', W[9])[0]).toMatchObject({
         status: 'Submitted',
@@ -264,9 +300,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     const log = await screen.findByTestId(`fc-sup-log-PK-PETB-8801-${W[1]}`);
     expect(log).toHaveTextContent('PTI asked for a revision');
     expect(log).toHaveTextContent('Launch week, please find more');
-    expect(screen.getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`)).toHaveTextContent(
-      'Revision requested'
-    );
+    expect(stateOf('PK-PETB-8801', W[1])).toHaveTextContent('Revision requested');
   });
 
   it('CAP-7 AC-02 / BR-02 — a line already in Revision requested counts on Home and can still be resubmitted', async () => {
@@ -291,10 +325,12 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     expect(await screen.findByTestId('home-task-commitments-revision')).toBeInTheDocument();
     home.unmount();
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
-    const row = await screen.findByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`);
-    expect(row).toHaveTextContent('Revision requested');
+    await screen.findByTestId('fc-sup-material-PK-PETB-8801');
+    expect(stateOf('PK-PETB-8801', W[1])).toHaveTextContent('Revision requested');
     const qty = /** @type {HTMLInputElement} */ (
-      within(row).getByLabelText(`Commitment quantity for ${week(W[1])}`)
+      within(cellAt('PK-PETB-8801', 'commitment', W[1])).getByLabelText(
+        `Commitment quantity for ${week(W[1])}`
+      )
     );
     fireEvent.change(qty, { target: { value: qty.value === '' ? '34300' : qty.value } });
     const submit = screen.getByTestId(`fc-week-submit-${W[1]}`);
@@ -309,9 +345,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
       ).toContain('Submitted')
     );
     await waitFor(() =>
-      expect(screen.getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`)).not.toHaveTextContent(
-        'Revision requested'
-      )
+      expect(stateOf('PK-PETB-8801', W[1])).not.toHaveTextContent('Revision requested')
     );
   });
 });
@@ -331,9 +365,9 @@ describe('Supplier — the Due rule is visible, once (a11y finding 19, supplier 
     expect(note).toHaveTextContent(/working days/);
     expect(screen.getAllByTestId('fc-sup-due-rule')).toHaveLength(1);
     // PEX-2 (BL-265) — "Commitment due" is a row label of the grid now.
-    const dueLabels = [...document.querySelectorAll('[data-grid-label]')].filter((h) =>
-      /Commitment due/.test(h.textContent ?? '')
-    );
+    const dueLabels = [
+      ...document.querySelectorAll('[data-testid^="fc-sup-grid-"] tbody th[scope="row"]')
+    ].filter((h) => /Commitment due/.test(h.textContent ?? ''));
     expect(dueLabels.length).toBeGreaterThan(0);
     for (const header of dueLabels) expect(header.querySelector('[title]')).toBeNull();
   });
