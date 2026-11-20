@@ -261,18 +261,28 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
     renderPage();
     await openConfirmFor('PK-PETB-8810');
     const input = screen.getByLabelText(/Confirmed quantity/);
-    // Pristine: the permanent hint is the description.
+    // Pristine: the permanent hint is the description, and nothing is refused.
     expect(input).toHaveAttribute('aria-describedby', 'sdcsup-qty-hint');
     expect(document.getElementById('sdcsup-qty-hint')).toHaveTextContent('Digits only');
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+    expect(document.getElementById('sdcsup-qty-refusal')).toBeNull();
 
     setQty('2.400'); // the unresolved cross-convention token
     const refusal = screen.getByTestId('confirm-qty-refusal');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
     const ids = (input.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
     expect(ids).toContain('sdcsup-qty-refusal');
     const described = document.getElementById('sdcsup-qty-refusal');
     expect(described).toBe(refusal);
     expect(described?.textContent).toBe(refusal.textContent);
     expect(described?.textContent).toContain('can be read two ways');
+
+    // A readable quantity takes the refusal away with the description that
+    // announces it: the field describes only what is on screen.
+    setQty('40000');
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+    expect(input).toHaveAttribute('aria-describedby', 'sdcsup-qty-hint');
+    expect(document.getElementById('sdcsup-qty-refusal')).toBeNull();
   });
 
   // PEX-D22 — on the firm line PK-PETB-8810 (40 000 PCS); it used the

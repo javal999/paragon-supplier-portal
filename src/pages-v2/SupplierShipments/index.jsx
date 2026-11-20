@@ -157,6 +157,7 @@ const SupplierShipments = () => {
     shippablePos: SHIPPABLE_POS,
     declaredBatches,
     receipts,
+    callOffs: callOffsQuery.data?.items ?? [],
     submitAsnMutation,
     requestExceptionMutation
   });
@@ -211,14 +212,15 @@ const SupplierShipments = () => {
     );
 
   const { form, updateForm } = wizard;
-  const { selectedPO, wizardOpenLines, wizardRead, wizardWarnings, isStepValid } = readWizard({
-    form,
-    shippablePos: SHIPPABLE_POS,
-    asns,
-    declaredBatches,
-    callOffViewList,
-    receipts
-  });
+  const { selectedPO, selectedCallOff, wizardOpenLines, wizardRead, wizardWarnings, isStepValid } =
+    readWizard({
+      form,
+      shippablePos: SHIPPABLE_POS,
+      asns,
+      declaredBatches,
+      callOffViewList,
+      receipts
+    });
 
   /** @type {WizardStep[]} */
   const wizardSteps = [
@@ -252,6 +254,7 @@ const SupplierShipments = () => {
           wizardOpenLines={wizardOpenLines}
           wizardRead={wizardRead}
           declaredBatches={declaredBatches}
+          callOff={selectedCallOff}
         />
       )
     },

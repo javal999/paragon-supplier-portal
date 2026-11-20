@@ -58,6 +58,11 @@ const SubmitAsnPanel = ({
   const { t } = useTranslation();
   // FU-5 — the drawer's lines and warnings, from the same rules as the wizard.
   const submitRead = submitTarget ? readSubmitLines(submitTarget) : null;
+  // BL-140 — the released call-off the draft names; a value-limit line is
+  // raised against it and not offered standalone.
+  const submitCallOff = submitTarget?.callOffId
+    ? callOffViewList.find((v) => v.callOff.id === submitTarget.callOffId)?.callOff
+    : undefined;
   const submitWarnings =
     submitTarget && submitRead
       ? asnCallOffWarnings(
@@ -203,6 +208,7 @@ const SubmitAsnPanel = ({
               }
               overShipReason={submitForm.overShipReason}
               onReasonChange={(v) => setSubmitForm((f) => ({ ...f, overShipReason: v }))}
+              callOff={submitCallOff}
             />
             <p className="mt-2 text-xs text-text-tertiary">{t('fc.asn.submit.required')}</p>
           </div>
