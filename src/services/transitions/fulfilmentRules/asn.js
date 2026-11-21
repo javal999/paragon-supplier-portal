@@ -3,10 +3,13 @@
 // quantity per PO line, and why one ASN line is refused. Separate from the
 // shelf-life, batch, receipt and invoice rules so each concern reads alone;
 // re-exported unchanged by `index.js`.
+// BL-140 adds the value-limit line (BL-49): it has no quantity to bound, so an
+// ASN on it is raised against the released call-off and a standalone one is
+// refused (owner ruling 2026-11-20, CR-04).
 // ────────────────────────────────────────────────────────────────────────────
 
 import { POStatus } from '../../data/types';
-/** @import { ASN, AsnLineItem, AsnStatus, PurchaseOrder, POLineItem } from '../../data/types' */
+/** @import { ASN, AsnLineItem, AsnStatus, CallOff, PurchaseOrder, POLineItem } from '../../data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 import { shelfLifeRuleFor } from '../fulfilmentConfig';
 import { compareReceipt } from './goodsReceipt';
@@ -191,6 +194,13 @@ export function openQtyForLine(po, line, asns, excludeAsn, receipts = []) {
  *                    shelf life. Checked LAST, so a line that returns it has
  *                    nothing else wrong — which is what lets the supplier ask
  *                    for an exception instead (BR-08).
+ *
+ * BL-140 (owner ruling 2026-11-20) adds these, all on a value-limit line
+ * (BL-49 — the line commits a value and carries no quantity, CR-04):
+ *   valueLimitNoCallOff — no released call-off covers the line: a standalone
+ *                         ASN on it is refused
+ *   overCallOff         — the quantity is above what that call-off released
+ *   overValueLimit      — the shipped value is above what the line has left
  */
 /**
  * @typedef {| 'unknownMaterial'
@@ -199,8 +209,64 @@ export function openQtyForLine(po, line, asns, excludeAsn, receipts = []) {
  *   | 'batch'
  *   | 'expiry'
  *   | 'expiryRequired'
- *   | 'shelfLife'} AsnLineRefusal
+ *   | 'shelfLife'
+ *   | 'valueLimitNoCallOff'
+ *   | 'overCallOff'
+ *   | 'overValueLimit'} AsnLineRefusal
  */
+
+// ── BL-140 · the value-limit line (BL-49, CR-04) ────────────────────────────
+
+/**
+ * BL-140 — a VALUE-LIMIT PO line (BL-49): it commits a value (`valueLimit`),
+ * carries no quantity (`quantity` is 0 meaning "no quantity"), and its open
+ * quantity therefore reads 0. The value is what bounds it.
+ * @param {Pick<POLineItem, 'valueLimit'>} line
+ * @returns {boolean}
+ */
+export const isValueLimitLine = (line) => line.valueLimit !== undefined;
+
+/**
+ * BL-140 — whether a value-limit line may not be carried standalone. The ASN
+ * is raised against the released call-off that covers the line, so a line is
+ * locked until a call-off of the same material is named; a line that carries a
+ * quantity is never locked. The form and `asnLineRefusal` read this one
+ * predicate, so a disabled field and a refused verb cannot disagree (AR-11).
+ * `callOffMaterial` is the named call-off's material, or undefined when the
+ * ASN names none.
+ * @param {Pick<POLineItem, 'materialCode' | 'valueLimit'>} line
+ * @param {string | undefined} callOffMaterial
+ * @returns {boolean}
+ */
+export const valueLimitLocked = (line, callOffMaterial) =>
+  isValueLimitLine(line) && callOffMaterial !== line.materialCode;
+
+/**
+ * BL-140 — the value still open on a value-limit PO line (CR-04): the line's
+ * `valueLimit` less the value the PO's other non-cancelled ASNs already carry
+ * for the material, priced at the line's unit price. The value-axis mirror of
+ * BR-02's `openQtyForLine`, which cannot bound a line that has no quantity.
+ * `excludeAsn` leaves one ASN out (the one being edited). Never below zero.
+ * @param {Pick<PurchaseOrder, 'poNumber'>} po
+ * @param {Pick<POLineItem, 'materialCode' | 'unitPrice' | 'valueLimit'>} line
+ * @param {readonly ASN[]} asns
+ * @param {string} [excludeAsn]
+ * @returns {number}
+ */
+export function openValueForLine(po, line, asns, excludeAsn) {
+  const shipped = asns
+    .filter((a) => a.poReference === po.poNumber && isActiveAsn(a) && a.asnNumber !== excludeAsn)
+    .reduce(
+      (sum, a) =>
+        sum +
+        a.lineItems
+          .filter((l) => l.materialCode === line.materialCode)
+          .reduce((s, l) => s + (Number.isFinite(l.shippedQty) ? l.shippedQty : 0), 0),
+      0
+    );
+  const left = (line.valueLimit ?? 0) - shipped * line.unitPrice;
+  return Number.isFinite(left) ? Math.max(0, left) : 0;
+}
 
 /**
  * A stored ASN line as the rule reads it, carrying the ASN's ETA.
@@ -228,10 +294,14 @@ export const asnLineCheckOf = (line, eta) => ({
  * `receipts`:  GR-1 / BL-71 — the goods receipts read, so a kept-open receipt's
  *   missing quantity is open again for this line (never read by this module
  *   itself; the caller holds the store).
+ * `callOff`:  BL-140 — the released call-off the ASN names, when it names one.
+ *   A value-limit line is bounded by that call-off's released quantity and by
+ *   the value the line has left; the open-quantity check is not asked of it,
+ *   because its open quantity is 0 by definition.
  * @param {Partial<AsnLineCheck> | null | undefined} line
  * @param {Pick<PurchaseOrder, 'poNumber' | 'lineItems'>} po
  * @param {readonly ASN[]} asns
- * @param {{ excludeAsn?: string; overShipReason?: unknown; requireBatch: boolean; waiveShelfLife?: boolean; receipts?: readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]; }} opts
+ * @param {{ excludeAsn?: string; overShipReason?: unknown; requireBatch: boolean; waiveShelfLife?: boolean; receipts?: readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]; callOff?: Pick<CallOff, 'materialCode' | 'quantity'>; }} opts
  * @returns {AsnLineRefusal | null}
  */
 export function asnLineRefusal(line, po, asns, opts) {
@@ -247,7 +317,27 @@ export function asnLineRefusal(line, po, asns, opts) {
   if (rule?.relevant && !isNonBlank(line.expiryDate)) return 'expiryRequired';
   const item = po.lineItems.find((li) => li.materialCode === line.materialCode);
   if (!item) return 'unknownMaterial';
-  if (
+  // BL-140 — a value-limit line carries no quantity, so the open-quantity check
+  // would refuse every shipment (its open is 0) and would never bound one
+  // either. It is raised against the released call-off instead: the quantity
+  // against what that call-off released, the value against what the line has
+  // left of its limit (CR-04). `overShipReason` waives neither — the ruling
+  // makes the bound hard.
+  if (item.valueLimit !== undefined) {
+    if (valueLimitLocked(item, opts.callOff?.materialCode)) return 'valueLimitNoCallOff';
+    const released = opts.callOff?.quantity;
+    if (typeof released === 'number' && Number.isFinite(released) && q > released) {
+      return 'overCallOff';
+    }
+    if (
+      typeof item.unitPrice === 'number' &&
+      Number.isFinite(item.unitPrice) &&
+      item.unitPrice > 0 &&
+      q * item.unitPrice > openValueForLine(po, item, asns, opts.excludeAsn)
+    ) {
+      return 'overValueLimit';
+    }
+  } else if (
     q > openQtyForLine(po, item, asns, opts.excludeAsn, opts.receipts) &&
     !isNonBlank(opts.overShipReason)
   ) {

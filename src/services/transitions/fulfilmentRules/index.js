@@ -41,6 +41,9 @@ export {
   isActiveAsn,
   committedQty,
   openQtyForLine,
+  isValueLimitLine,
+  valueLimitLocked,
+  openValueForLine,
   asnLineCheckOf,
   asnLineRefusal
 } from './asn';

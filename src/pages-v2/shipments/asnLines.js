@@ -18,7 +18,7 @@ import {
   openQtyForLine,
   shelfLifeLineView
 } from '@services/transitions/fulfilmentRules';
-/** @import { ASN, InventoryPosition, PurchaseOrder } from '@services/data/types' */
+/** @import { ASN, CallOff, InventoryPosition, PurchaseOrder } from '@services/data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 
 /** One line as the supplier types it (REQ-E07-04 BR-04): text, parsed once. */
@@ -39,6 +39,7 @@ export const EMPTY_LINE = { qty: '', batch: '', expiry: '', batchSource: 'declar
  * @property {string} description
  * @property {string} uom
  * @property {number} open
+ * @property {number} [valueLimit] -  BL-140 — an SAP value-limit line (BL-49): it commits this value and carries no quantity.
  */
 
 /**
@@ -65,7 +66,8 @@ export const openLinesFor = (po, asns, excludeAsn, receipts = []) =>
     materialCode: li.materialCode,
     description: li.description,
     uom: li.uom,
-    open: openQtyForLine(po, li, asns, excludeAsn, receipts)
+    open: openQtyForLine(po, li, asns, excludeAsn, receipts),
+    ...(li.valueLimit !== undefined ? { valueLimit: li.valueLimit } : {})
   }));
 
 /**
@@ -129,6 +131,7 @@ export const batchModeOf = (entry, options) =>
  * @property {string} [externalId] -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) the form holds.
  * @property {string} overShipReason
  * @property {Readonly<Record<string, readonly AvailableBatch[]>>} batches -  Declared batches on offer, per material.
+ * @property {Pick<CallOff, 'materialCode' | 'quantity'>} [callOff] -  BL-140 — the released call-off the ASN names; a value-limit line is raised against it.
  */
 
 /**
@@ -159,13 +162,15 @@ export const readLines = (entries, open, ctx) => {
       const drafted = asnLineRefusal(check, po, ctx.asns, {
         excludeAsn: ctx.excludeAsn,
         requireBatch: false,
-        receipts: ctx.receipts
+        receipts: ctx.receipts,
+        callOff: ctx.callOff
       });
       const submitted = asnLineRefusal(check, po, ctx.asns, {
         excludeAsn: ctx.excludeAsn,
         overShipReason: ctx.overShipReason,
         requireBatch: true,
-        receipts: ctx.receipts
+        receipts: ctx.receipts,
+        callOff: ctx.callOff
       });
       const picked =
         batchSource === 'declared' ? options.find((o) => o.batchNumber === batch) : undefined;
