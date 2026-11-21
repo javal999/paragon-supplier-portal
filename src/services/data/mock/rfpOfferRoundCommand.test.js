@@ -81,8 +81,9 @@ const dayFromNow = (offset) =>
  * rfxCommand.test).
  *
  * ⚠️ sup-013 carries the round, not sup-007: the owner ruling of 2026-11-20
- * (BL-55) raised the OTIF minimum to 90% and sup-007 measures 86%, so it can no
- * longer be invited. sup-013 has no OTIF history, which passes.
+ * (BL-55) put the OTIF minimum above sup-007's measured history at the time.
+ * BL-360 lifted sup-007 back above it, and sup-013 keeps the probe stable
+ * because its "No history" passes whatever the delivery corpus measures.
  * @returns {void}
  */
 function seedSecondResponses() {
@@ -109,9 +110,10 @@ beforeEach(async () => {
   quotationStore.reset();
   sdcClock.reset();
   // The known-good round invites sup-013, and a round may only name a supplier
-  // that responded. The fixture's own responder is sup-007, which can no longer
-  // be invited at the raised 90% minimum (BL-55, 2026-11-20), so sup-013 is
-  // seeded here as the passing participant.
+  // that responded. The fixture's own responder is sup-007, which sat under the
+  // raised gate minimum at BL-55; BL-360 restored it, and sup-013 stays the
+  // probe's passing participant because "No history" cannot be re-decided by a
+  // delivery fixture edit.
   rfpResponseStore.add({
     id: 'rfp-resp-probe-sup-013-base',
     rfpId: 'rfp-002',
@@ -198,8 +200,7 @@ describe('NR-2 — the fixture the round is probed against exists', () => {
     expect(rfpOfferRoundStore.all()).toEqual([]);
     expect(rfpFirmOfferStore.all()).toEqual([]);
     // CR-23 on an RFP judges status and OTIF: sup-013 passes (no history, which
-    // passes), sup-007 now fails on OTIF at 86% under the 90% minimum (BL-55),
-    // and sup-008 fails on OTIF at 0%.
+    // passes), sup-007 passes again since BL-360, and sup-008 fails on OTIF.
     expect(rfpSupplierGate('sup-013', rfxNow()).passes).toBe(true);
     expect(rfpSupplierGate('sup-008', rfxNow()).failed).toEqual(['otif']);
   });

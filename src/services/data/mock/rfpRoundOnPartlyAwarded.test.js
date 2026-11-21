@@ -18,8 +18,9 @@
 // adds submitted responses for sup-013 and sup-015.
 //
 // ⚠️ THE ROUNDS NAME sup-013, NOT sup-007: the owner ruling of 2026-11-20
-// (BL-55) raised the OTIF minimum to 90% and sup-007 measures 86%. sup-013 has
-// no OTIF history, which passes.
+// (BL-55) put the OTIF minimum above sup-007's measured history at the time;
+// BL-360 restored it, and sup-013 keeps this probe stable because its
+// "No history" passes whatever the delivery corpus measures.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';

@@ -640,8 +640,10 @@ const mockGoodsReceiptsRaw = [
   // (`invoiceMatchPairing.test.js` names the one pairing the corpus holds).
   // No ASN: the call-offs had none, and the receipt pages say "Received
   // without ASN".
-  // Every date is 12 days or more from every other sup-007 receipt and call-off
-  // (see the header above gr-015), so no other delivery re-decides.
+  // Every BL-94 date is 12 days or more from every other sup-007 receipt and
+  // call-off (see the header above gr-015), so no other delivery re-decides.
+  // BL-360's three receipts below keep the same rule at the match window's
+  // edge: more than seven days from all of them.
   .../** @type {const} */ ([
     [18, '2026-03-01'],
     [19, '2026-03-21'],
@@ -666,6 +668,55 @@ const mockGoodsReceiptsRaw = [
           qtyExpected: 12000,
           qtyReceived: 12000,
           qtyAccepted: 12000,
+          qtyRejected: 0,
+          visualCheck: 'Pass',
+          packagingCheck: 'Pass',
+          bpomLotCheck: 'N/A'
+        }
+      ],
+      disposition: 'Accept'
+    })
+  ),
+
+  // ⚠️ BL-360 — THE THREE RECEIPTS THAT KEEP sup-007 ABOVE THE RAISED GATE
+  // MINIMUM. One per additional past call-off CO-2026-0049..0051
+  // (`callOffs.js`), each received ON the approved date and IN FULL (2,000 of
+  // 2,000), so three more call-offs read on time in full and the DERIVED OTIF
+  // clears the minimum the owner ruled on 2026-11-20 (BL-55). No percentage is
+  // authored here — the figure comes from this data and the window.
+  //
+  // Authored dates, shifted +103 days like every row in this file: 2026-03-11 /
+  // 03-31 / 05-06 land 70, 50 and 14 days before the declared present, each
+  // more than the seven-day CR-06 match window from every other sup-007
+  // call-off and receipt on either PET code.
+  //
+  // Same umbrella (PO-2025-00108, `Sent`, no confirmed delivery date) as the
+  // BL-94 receipts, so CFOT reads nothing new and no invoice line appears
+  // (`receiptsForInvoice` needs a posted receipt). `Approved`, no ASN, and no
+  // SAP material document, for the reasons stated above gr-015 and at BL-94.
+  .../** @type {const} */ ([
+    [22, '2026-03-11'],
+    [23, '2026-03-31'],
+    [24, '2026-05-06']
+  ]).map(
+    /** @returns {GoodsReceipt} */ ([n, receivedDate]) => ({
+      id: `gr-0${n}`,
+      grNumber: `GR-2026-0${n}`,
+      asnId: '',
+      asnNumber: '',
+      poNumber: 'PO-2025-00108',
+      supplierId: 'sup-007',
+      supplierName: 'PT Sample Packaging Indonesia',
+      receivedDate,
+      receivedBy: 'Warehouse Supervisor',
+      status: 'Approved',
+      inspectionResults: [
+        {
+          materialCode: 'PK-PETB-8802',
+          description: 'PET Bottle 100ml Clear — Emina Series',
+          qtyExpected: 2000,
+          qtyReceived: 2000,
+          qtyAccepted: 2000,
           qtyRejected: 0,
           visualCheck: 'Pass',
           packagingCheck: 'Pass',

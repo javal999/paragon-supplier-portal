@@ -1,8 +1,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 // CR-23 over the real fixtures (BL-43) — the read model, the ranking and the
 // service read, against the seeded demo: on rfq-003 sup-010's halal certificate
-// has expired; on rfq-014 sup-008 (OTIF 0%) and sup-007 (OTIF 86%) are both
-// under the 90% minimum the owner ruled on 2026-11-20 (BL-55).
+// has expired; on rfq-014 sup-008 fails on OTIF under the minimum the owner
+// ruled on 2026-11-20 (BL-55), while sup-007 clears it again since BL-360.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -39,9 +39,9 @@ describe('CR-23 — the seeded demo', () => {
     expect(gatesOf('rfq-003')).toEqual({ 'sup-001': [], 'sup-002': [], 'sup-010': ['halal'] });
   });
 
-  it('rfq-014 (Closed): sup-007 (OTIF 86%) and sup-008 (OTIF 0%) fail on OTIF; sup-013 ("No history") and sup-015 pass', () => {
+  it('rfq-014 (Closed): sup-008 fails on OTIF; sup-007, sup-013 ("No history") and sup-015 pass', () => {
     expect(gatesOf('rfq-014')).toEqual({
-      'sup-007': ['otif'],
+      'sup-007': [],
       'sup-008': ['otif'],
       'sup-013': [],
       'sup-015': []
@@ -69,37 +69,45 @@ describe('CR-15 / BR-01a — a failing supplier is not ranked', () => {
   });
 
   it('an RFQ whose every bidder fails ranks nothing — no best score to follow', () => {
-    // rfq-005's two bidders (sup-007 at 86%, sup-008 at 0%) are both under the
-    // 90% minimum since the owner ruling of 2026-11-20 (BL-55). This test read
-    // rfq-020 while the minimum was 80%; rfq-020 is still a second such case.
-    expect(currentQuotesFor('rfq-005').length).toBeGreaterThan(0); // they DID quote
-    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005'));
+    // rfq-020's bidders fail on certificates (sup-011 on halal, BPOM and GMP;
+    // sup-004 on halal and BPOM; sup-009 on halal), so nothing can be ranked.
+    // This test read rfq-005's OTIF pair while every invoice history sat below
+    // the minimum; BL-360 lifted sup-007 back above it, so rfq-005 now has a
+    // passing bidder and is the KNOWN-GOOD twin below.
+    expect(currentQuotesFor('rfq-020').length).toBeGreaterThan(0); // they DID quote
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020'));
     const outcome = rfqScoring(rfq, rfxNow());
     expect(outcome.kind === 'scored' ? outcome.scores : null).toEqual([]);
     expect(bestScoredQuotationId(rfq, rfxNow())).toBeNull();
-    // And rfq-020, whose bidders fail on certificates.
-    expect(currentQuotesFor('rfq-020').length).toBeGreaterThan(0);
-    const outcome20 = rfqScoring(
-      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
-      rfxNow()
-    );
-    expect(outcome20.kind === 'scored' ? outcome20.scores : null).toEqual([]);
   });
 
-  it('KNOWN-GOOD twin — rfq-014 ranks its two passing bidders; the two failing ones stay unranked', () => {
+  it('KNOWN-GOOD twin — rfq-005 ranks its passing bidder and leaves the failing one unranked', () => {
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005'));
+    const byQuote = new Map(currentQuotesFor('rfq-005').map((q) => [q.id, q.supplierId]));
+    const outcome = rfqScoring(rfq, rfxNow());
+    const ranked =
+      outcome.kind === 'scored' ? outcome.scores.map((sc) => byQuote.get(sc.quoteId)) : null;
+    // sup-007 clears the gate since BL-360; sup-008, whose delivery history
+    // measures nothing on time, is still refused.
+    expect(ranked).toEqual(['sup-007']);
+    expect(ranked).not.toContain('sup-008');
+  });
+
+  it('KNOWN-GOOD twin — rfq-014 ranks its three passing bidders; the failing one stays unranked', () => {
     const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
     const outcome = rfqScoring(rfq, rfxNow());
     const byQuote = new Map(currentQuotesFor('rfq-014').map((q) => [q.id, q.supplierId]));
     const ranked =
       outcome.kind === 'scored' ? outcome.scores.map((sc) => byQuote.get(sc.quoteId)) : null;
-    expect([...(ranked ?? [])].sort()).toEqual(['sup-013', 'sup-015']);
+    expect([...(ranked ?? [])].sort()).toEqual(['sup-007', 'sup-013', 'sup-015']);
+    expect(ranked).not.toContain('sup-008');
     expect(
       byQuote.get(
         /** @type {NonNullable<ReturnType<typeof bestScoredQuotationId>>} */ (
           bestScoredQuotationId(rfq, rfxNow())
         )
       )
-    ).not.toBe('sup-007');
+    ).not.toBe('sup-008');
   });
 });
 

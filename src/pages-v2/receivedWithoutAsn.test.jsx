@@ -40,12 +40,13 @@ describe('BL-33 — "Received without ASN" has a sample receipt to show it', () 
     );
     const withAsn = screen.getByTestId('supplier-gr-row-gr-015');
     expect(within(withAsn).queryByTestId('gr-without-asn-gr-015')).toBeNull();
-    // The whole set, by name: only the four receipts that name no ASN. This
+    // The whole set, by name: only the receipts that name no ASN. This
     // page used to decide by whether the named ASN RESOLVED, and none of the
     // sample receipts' ASN numbers did, so it said "Received without ASN" on all
     // nine of sup-007's rows, under a printed ASN number on five of them.
     // BL-139 — the rule is `!gr.asnNumber` and stays that: a receipt whose ASN
     // does not resolve (gr-016) still NAMES one, so it is not in this set.
+    // BL-360's three call-off receipts join the BL-94 set for the same reason.
     const flagged = screen
       .queryAllByTestId(/^gr-without-asn-/)
       .map((e) =>
@@ -54,7 +55,7 @@ describe('BL-33 — "Received without ASN" has a sample receipt to show it', () 
         ).replace('gr-without-asn-', '')
       )
       .sort();
-    expect(flagged).toEqual(['gr-018', 'gr-019', 'gr-020', 'gr-021']);
+    expect(flagged).toEqual(['gr-018', 'gr-019', 'gr-020', 'gr-021', 'gr-022', 'gr-023', 'gr-024']);
   });
 
   it("PTI's goods-receipt page says it on gr-018 and not on gr-015", async () => {

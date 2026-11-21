@@ -159,10 +159,11 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
 
   it('CR-23 / BR-06 — a supplier failing the compliance gate is still listed and selectable, and marked with why', async () => {
     await openInviteStep();
-    // ⚠️ PREMISE CHANGE (BL-55, owner ruling 2026-11-20): the gate minimum is
-    // now 90%, so sup-007 (86% since BL-94) fails too. The named failing row
-    // here is sup-008, whose measured OTIF is 0%. The rule under test is
-    // unchanged.
+    // ⚠️ PREMISE CHANGE (BL-55, owner ruling 2026-11-20): the gate minimum the
+    // owner ruled is the one in force, so the failing rows are the ones whose
+    // MEASURED OTIF sits below it. The named failing row here is sup-008, whose
+    // measured OTIF is zero. sup-007 passes again since BL-360 extended its
+    // delivery history above the minimum. The rule under test is unchanged.
     const row = await screen.findByTestId('invitee-row-sup-008');
     expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('Cannot be awarded');
     expect(within(row).getByTestId('invitee-gate-sup-008')).toHaveTextContent('OTIF below 90%');
@@ -185,10 +186,9 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
     expect(within(row).queryByText('0%')).not.toBeInTheDocument();
     // POSITIVE TWIN — a measured supplier still shows its number.
     // PREMISE CHANGED (REQ-E10-01): the positive twin's figure is CALCULATED
-    // from sup-007's own deliveries (seven measured, six met since BL-94 and
-    // BL-359) rather than read off the master, so it is 86% where the authored
-    // master said 82%.
-    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('86%')).toBeInTheDocument();
+    // from sup-007's own deliveries (BL-94, BL-359 and BL-360), never read off
+    // the master's authored figure.
+    expect(within(screen.getByTestId('invitee-row-sup-007')).getByText('90%')).toBeInTheDocument();
   });
 
   it('the purchasing-group filter narrows the result, and the empty state names the filters', async () => {
@@ -226,7 +226,7 @@ describe('REQ-E03-02 — the information request', () => {
     // RFx UX 2G — the invitee table is on the Overview tab, the answers on Compare.
     await selectEventTab('Overview');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
-    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('86%');
+    expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('90%');
     // ⚠️ the new supplier's OTIF is a sentence, not a zero.
     expect(within(detail).getByTestId('rfi-otif-sup-013')).toHaveTextContent('No history');
     // BR-10 shape — the DRAFT author is listed as an invitee but its answers
@@ -530,7 +530,7 @@ describe('REQ-E03-05 — the bid comparison', () => {
     const row = await screen.findByTestId('cmp-row-reliability');
     expect(within(row).getByTestId('cmp-otif-sup-013')).toHaveTextContent('No history');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
-    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('86%');
+    expect(within(row).getByTestId('cmp-otif-sup-007')).toHaveTextContent('90%');
   });
 
   it('AC-03 — every quote version is kept and readable, rounds and all', async () => {
@@ -571,9 +571,10 @@ describe('REQ-E03-05 — the bid comparison', () => {
     );
     expect(screen.getByTestId('award-confirm')).toBeDisabled();
     // POSITIVE TWIN — completing the split to 100% enables it. ⚠️ PREMISE
-    // CHANGE (BL-43): the second share used to go to sup-007, which then failed
-    // the compliance gate (OTIF 50% < 80%; it passes at 86% since BL-94);
-    // sup-013 passes.
+    // CHANGE (BL-43, then BL-55, then BL-360): the second share used to go to
+    // sup-007, which fails the gate whenever its measured OTIF drops below the
+    // minimum in force; sup-013 passes whichever way, so the arithmetic twin is
+    // stable across those rulings.
     const second = within(screen.getByTestId('award-input-PK-PETB-8802-sup-013')).getByLabelText(
       /Share/i
     );
@@ -611,18 +612,20 @@ describe('REQ-E03-05 — the bid comparison', () => {
 });
 
 describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
-  // ⚠️ PREMISE CHANGE (BL-55, owner ruling 2026-11-20): the minimum is 90%,
-  // so rfq-014 has TWO failing bidders — sup-008 (0%) and sup-007 (86%) —
-  // beside sup-013 (no history) and sup-015, which pass.
+  // ⚠️ PREMISE CHANGE (BL-55, owner ruling 2026-11-20): the owner's minimum is
+  // the one in force, so every bidder whose MEASURED OTIF sits below it fails.
+  // After BL-360 that is sup-008 alone; sup-007, sup-013 (no history) and
+  // sup-015 pass.
   it('BR-06 — the invitee list marks a failing supplier and names why; a passing one is unmarked', async () => {
     openEvent();
     const marker = await screen.findByTestId('event-gate-sup-008');
     expect(marker).toHaveTextContent('Cannot be awarded');
     expect(marker).toHaveTextContent('OTIF below 90%');
     expect(screen.queryByTestId('event-gate-sup-013')).not.toBeInTheDocument();
-    // sup-007 measures 86%, below the raised minimum — a second failing row,
-    // which is what keeps "marked" from being a single-supplier coincidence.
-    expect(screen.getByTestId('event-gate-sup-007')).toHaveTextContent('OTIF below 90%');
+    // BILATERAL CONTROL — sup-007's measured OTIF clears the minimum again
+    // (BL-360), so its row carries no marker either; "marked" is a reading of
+    // the gate, not of the invitee list.
+    expect(screen.queryByTestId('event-gate-sup-007')).not.toBeInTheDocument();
     // Still an invitee — the row is there and still selectable for an extension.
     expect(within(screen.getByTestId('event-invitee-sup-008')).getByRole('checkbox')).toBeEnabled();
   });
@@ -862,10 +865,11 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
 // fails it) are added as submitted responders, as in rfpAwardCommand.test, and
 // the RFP is closed by its verb.
 //
-// ⚠️ THE ROUNDS NAME sup-013, NOT sup-007, since the owner ruling of
-// 2026-11-20 (BL-55) raised the OTIF minimum to 90%: sup-007 measures 86% and
-// can no longer be invited to a firm-offer round. sup-013 has no OTIF history,
-// which passes.
+// ⚠️ THE ROUNDS NAME sup-013, NOT sup-007. The owner ruling of 2026-11-20
+// (BL-55) raised the OTIF minimum and sup-007 failed it at the time, so the
+// round fixture was re-pointed at sup-013 (no OTIF history, which passes). BL-360
+// lifted sup-007 back above the minimum; the fixture still names sup-013, which
+// is the stable passing responder for this scenario.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FULL_SET = 'opt-full-set';

@@ -1,12 +1,12 @@
 // ────────────────────────────────────────────────────────────────────────────
-// BL-94 gave sup-007 ("PT Sample Packaging Indonesia") a real delivery history,
-// and its calculated 90-day OTIF reached 86% — above the then-80% minimum.
-//
-// ⚠️ OWNER RULING 2026-11-20 (BL-55) RAISED THE MINIMUM TO 90%. sup-007 at 86%
-// no longer passes the compliance gate on rfq-021, so it cannot take a share of
-// the Oslo award. This file pins that outcome BY NAME at the declared present,
-// and keeps the bilateral controls: sup-013 and sup-015 still pass and still
-// split the award, sup-008 (OTIF 0%) is still refused.
+// BL-94 gave sup-007 ("PT Sample Packaging Indonesia") a real delivery history.
+// BL-55 (owner ruling 2026-11-20) raised the compliance gate's OTIF minimum and
+// left that history below it, so the Oslo walkthrough (rfq-021) lost the main
+// supplier persona's share. BL-360 extends the history on the same line, and
+// this file pins the restored outcome BY NAME at the declared present: sup-007
+// clears the gate on its DERIVED 90-day OTIF, and a split that gives it a share
+// is recorded. The bilateral controls stay: sup-013 and sup-015 pass, and
+// sup-008, whose delivery history measures nothing on time, is still refused.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -97,29 +97,30 @@ const award = (lines) =>
     }
   });
 
-describe('BL-55 2026-11-20 — sup-007 now fails the compliance gate on Oslo', () => {
+describe('BL-360 — sup-007 clears the compliance gate on Oslo again', () => {
   it('population control: the clock is the declared present, and sup-007 is invited to Oslo', () => {
     expect(rfxNow().slice(0, 10)).toBe(DECLARED_PRESENT);
     expect(oslo().invitedSupplierIds).toContain('sup-007');
   });
 
-  it('sup-007’s calculated OTIF is 6 met of 7 = 86%, below the 90% minimum', () => {
+  it('sup-007’s calculated OTIF clears the gate minimum in force', () => {
     const m = masterMeasure('sup-007');
-    // The walkthrough's open call-off is due 7 Sep, after the 90-day window.
-    expect(m.otif).toEqual({ pct: 86, measured: 7, met: 6, pending: 0 });
+    // Derived from the seeded call-offs and receipts — the walkthrough's open
+    // call-off is due after the 90-day window, so it is not measured yet.
+    expect(m.otif).toEqual({ pct: 90, measured: 10, met: 9, pending: 0 });
     expect(gateMinOtifPct()).toBe(90);
-    expect(/** @type {NonNullable<typeof m.otif.pct>} */ (m.otif.pct)).toBeLessThan(
+    expect(/** @type {NonNullable<typeof m.otif.pct>} */ (m.otif.pct)).toBeGreaterThanOrEqual(
       gateMinOtifPct()
     );
   });
 
-  it('sup-007 fails on OTIF alone; sup-013 and sup-015 still pass, and sup-008 still fails', () => {
+  it('sup-007 passes; sup-013 and sup-015 pass, and sup-008 still fails on OTIF', () => {
     // Material G2 — the view also carries the vendor's eligibility beside the
     // gate (never inside it); sup-007 is still Preferred, so it stays qualified
     // — eligibility and the gate are different answers.
     const { eligibility, ...gate } =
       /** @type {import('../../sourcing/views').RfqSupplierGateView} */ (gateOf('sup-007'));
-    expect(gate).toEqual({ supplierId: 'sup-007', passes: false, failed: ['otif'] });
+    expect(gate).toEqual({ supplierId: 'sup-007', passes: true, failed: [] });
     expect(eligibility?.state).toBe('qualified');
     // BILATERAL CONTROLS — the same read passes two suppliers and refuses one.
     expect(gateOf('sup-013')?.passes).toBe(true);
@@ -129,30 +130,23 @@ describe('BL-55 2026-11-20 — sup-007 now fails the compliance gate on Oslo', (
   });
 });
 
-describe('BL-55 2026-11-20 — a share for a failing supplier is refused; a split of passing ones is accepted', () => {
-  it('KNOWN-BAD — a split giving sup-007 a share of item 1 is refused by name, and nothing is awarded', async () => {
+describe('BL-360 — the demo story: sup-007 can take a share of the Oslo award', () => {
+  it('KNOWN-GOOD — a split giving sup-007 a share is recorded on the hub clock', async () => {
     addQuote('qt-021s7', 'sup-007');
     const res = await award([
       line('sup-015', 'qt-021a', 1, 50),
       line('sup-007', 'qt-021s7', 1, 50),
       line('sup-013', 'qt-021b', 2, 100)
     ]);
-    expect(res.status).toBe('failed');
-    expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-007 .*\(otif\)/);
-    expect(awardStore.all().some((a) => a.eventId === 'rfq-021')).toBe(false);
-    expect(oslo().status).toBe('Open');
-  });
-
-  it('KNOWN-GOOD — the split between the two passing suppliers is recorded, on the hub clock', async () => {
-    const res = await award([
-      line('sup-015', 'qt-021a', 1, 100),
-      line('sup-013', 'qt-021b', 2, 100)
-    ]);
     expect(res.status, res.reason).toBe('done');
     const rec = /** @type {import('../../sourcing/types').AwardRecord} */ (
       awardStore.all().find((a) => a.eventId === 'rfq-021')
     );
-    expect([...new Set(rec.lines.map((l) => l.supplierId))].sort()).toEqual(['sup-013', 'sup-015']);
+    expect([...new Set(rec.lines.map((l) => l.supplierId))].sort()).toEqual([
+      'sup-007',
+      'sup-013',
+      'sup-015'
+    ]);
     // The same clock the handler scored the quotes at, so the record and its
     // best-scored ids describe one moment.
     expect(rec.awardedAt).toBe(rfxNow());
@@ -170,5 +164,17 @@ describe('BL-55 2026-11-20 — a share for a failing supplier is refused; a spli
     expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008/);
     expect(awardStore.all().some((a) => a.eventId === 'rfq-021')).toBe(false);
     expect(oslo().status).toBe('Open');
+  });
+
+  it('KNOWN-GOOD twin — the split between sup-013 and sup-015 is recorded without sup-007', async () => {
+    const res = await award([
+      line('sup-015', 'qt-021a', 1, 100),
+      line('sup-013', 'qt-021b', 2, 100)
+    ]);
+    expect(res.status, res.reason).toBe('done');
+    const rec = /** @type {import('../../sourcing/types').AwardRecord} */ (
+      awardStore.all().find((a) => a.eventId === 'rfq-021')
+    );
+    expect([...new Set(rec.lines.map((l) => l.supplierId))].sort()).toEqual(['sup-013', 'sup-015']);
   });
 });
