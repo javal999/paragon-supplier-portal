@@ -223,10 +223,11 @@ async function realIds() {
   // NR-2 — both firm-offer stores start empty (no sample RFP is Closed), so the
   // probe walks one through the real verbs: close rfp-002, ask a PASSING
   // responder for a firm price, and let it send one. sup-013 is that responder:
-  // the fixture's own is sup-007, which measures 86% and can no longer join a
-  // round under the 90% minimum the owner ruled on 2026-11-20 (BL-55). A repeat
-  // call finds the RFP already Closed and opens a further round, which is
-  // harmless.
+  // the fixture's own is sup-007, which failed the gate while the owner's raised
+  // minimum stood above its measured OTIF (BL-55). BL-360 lifted sup-007 back
+  // above the minimum; sup-013 carries the probe because its "No history"
+  // passes regardless of the delivery corpus. A repeat call finds the RFP
+  // already Closed and opens a further round, which is harmless.
   rfpResponseStore.add({
     id: 'rfp-resp-ownerless-sup-013',
     rfpId: 'rfp-002',

@@ -239,10 +239,11 @@ describe('MAT-R4 — a supplier reads only its own compliance at award', () => {
 });
 
 // ── The RFP: rfp-002, a closed firm-offer round, sup-013 and sup-015 ─────────
-// ⚠️ sup-013, not sup-007: the owner ruling of 2026-11-20 (BL-55) raised the
-// OTIF minimum to 90%, and sup-007 measures 86%, so it cannot join a round.
-// sup-013 has no OTIF history (which passes); its compliance figure is pinned
-// below, as sup-007's 92% used to be the sample's non-null one.
+// ⚠️ sup-013, not sup-007: the owner ruling of 2026-11-20 (BL-55) put the OTIF
+// minimum above sup-007's measured history at the time. BL-360 restored it, and
+// sup-013 keeps this fixture stable because its "No history" passes whatever the
+// delivery corpus measures; its compliance figure is pinned below, as sup-007's
+// figure used to be the sample's non-null one.
 
 const DAY_MS = 86_400_000;
 /** @param {number} offset */

@@ -15,8 +15,9 @@
 // closes it.
 //
 // ⚠️ THE ROUNDS NAME sup-013, NOT sup-007: the owner ruling of 2026-11-20
-// (BL-55) raised the OTIF minimum to 90% and sup-007 measures 86%, so it can no
-// longer join a firm-offer round. sup-013 has no OTIF history, which passes.
+// (BL-55) put the OTIF minimum above sup-007's measured history at the time.
+// BL-360 lifted it back above the minimum; sup-013 stays the stable passing
+// responder because its "No history" cannot be re-decided by a delivery edit.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -93,10 +94,12 @@ function seedResponses() {
     ...e,
     invitees: [...e.invitees, { supplierId: 'sup-013' }, { supplierId: 'sup-008' }]
   }));
-  // Owner ruling 2026-11-20 (BL-55): sup-007 measures 86% and no longer passes
-  // the 90% gate minimum, so it cannot join a firm-offer round. sup-013 has no
-  // OTIF history (which passes); its response proposes no option of its own, so
-  // the double-proposal case below still has its two suppliers.
+  // Owner ruling 2026-11-20 (BL-55): sup-007 sat under the raised gate minimum
+  // at the time, so it could not join a firm-offer round. BL-360 lifted it back
+  // above the minimum; sup-013 stays the spare responder here because its
+  // "No history" passes whatever the delivery fixture measures, and its response
+  // proposes no option of its own, so the double-proposal case below still has
+  // its two suppliers.
   rfpResponseStore.add({
     id: 'rfp-resp-d2-sup-013',
     rfpId: 'rfp-002',
@@ -335,8 +338,7 @@ describe('NR-2 AC-05 — an RFP is awarded per option, split on firm offers', ()
       )
     ).toBe(true);
     // NR-2 BR-09 — the final award names every responder no award named:
-    // sup-008, and sup-007 whose fixture response cannot be awarded at the 90%
-    // gate minimum (BL-55, 2026-11-20).
+    // sup-008, and sup-007, whose fixture response no award line covers.
     expect(
       /** @type {import('../../sourcing/types').RfpAwardRecord} */ (rec).notAwardedSupplierIds
     ).toEqual(expect.arrayContaining(['sup-007', 'sup-008']));
@@ -914,7 +916,7 @@ describe('BL-130 — a Partly awarded RFP is closed out with "Will not award the
     expect(closeOut.lines).toEqual([]);
     expect(closeOut.reason).toBe(REASON);
     // NR-2 BR-09 — the final award names every responder no award of the RFP
-    // named: sup-008, and sup-007 (below the 90% gate minimum, BL-55).
+    // named: sup-008 and sup-007, neither of which an award line covers.
     expect(closeOut.notAwardedSupplierIds).toEqual(expect.arrayContaining(['sup-007', 'sup-008']));
     // The partial award before it is untouched and still in force.
     expect(

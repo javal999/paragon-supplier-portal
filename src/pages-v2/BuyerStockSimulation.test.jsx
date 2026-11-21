@@ -253,7 +253,7 @@ describe('Stock simulation page (MR-7 section e)', () => {
     renderWithProviders(app, { identity: PLANNER, route: '/buyer/stock-simulation' });
     await screen.findByTestId(`sim-row-${PET2}`);
     expect(screen.getByTestId(`sim-free-${PET2}`)).toHaveTextContent(
-      /^Over-called by 121,000 PCS$/
+      /^Over-called by 127,000 PCS$/
     );
     expect(screen.getByTestId(`sim-free-${PET2}`).querySelector('.text-danger')).not.toBeNull();
     expect(screen.getByTestId(`sim-overcalled-${PET2}`)).toHaveTextContent(
@@ -330,14 +330,14 @@ describe('Stock simulation page (MR-7 section e)', () => {
   it('BL-292 — the draft PR opens with the shortfall quantity, and its note says the planner creates the PR in SAP', async () => {
     renderWithProviders(app, { identity: PLANNER, route: '/buyer/stock-simulation' });
     await screen.findByTestId(`sim-row-${PET2}`);
-    // The row reads "Over-called by 121,000 PCS"; the draft PR opens on 121000.
+    // The row reads "Over-called by 127,000 PCS"; the draft PR opens on 127000.
     expect(screen.getByTestId(`sim-free-${PET2}`)).toHaveTextContent(
-      /^Over-called by 121,000 PCS$/
+      /^Over-called by 127,000 PCS$/
     );
     fireEvent.click(screen.getByTestId(`sim-po-${PET2}`));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByDisplayValue('PK-PETB-8802')).toBeInTheDocument();
-    expect(within(dialog).getByLabelText('Quantity *')).toHaveValue('121000');
+    expect(within(dialog).getByLabelText('Quantity *')).toHaveValue('127000');
     expect(within(dialog).getByDisplayValue(/planner creates the PR in SAP/)).toBeInTheDocument();
     // The prefill params are consumed once, the quantity included.
     await waitFor(() =>

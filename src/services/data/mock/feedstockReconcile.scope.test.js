@@ -55,7 +55,9 @@ describe('getFixedStockReconcile (the feedstock reconcile) — scoping and sampl
     expect(rows.find((r) => r.key === 'sup-007|PK-PETB-8802')).toMatchObject({
       poOrdered: 320_000,
       poNumbers: ['PO-2025-00108', 'PO-2026-00121', 'PO-2026-00125', 'PO-2026-00126'],
-      calledOff: 143_000
+      // Released call-offs on the 100ml line: 0013, the BL-94 history and the
+      // BL-360 extension. The drafts stay out.
+      calledOff: 149_000
     });
     // A value-only PO line adds no quantity and is counted apart.
     expect(rows.find((r) => r.key === 'sup-003|FR-WARD-4410')).toMatchObject({

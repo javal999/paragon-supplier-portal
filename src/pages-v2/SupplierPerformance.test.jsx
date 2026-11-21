@@ -56,17 +56,18 @@ describe('SupplierPerformance — four honest states', () => {
 
 // ────────────────────────────────────────────────────────────────────────────
 // REQ-E10-01 — the supplier's own figures are CALCULATED now.
-// sup-007 has seven measured deliveries in the window, six met and one late
-// (BL-94 added the four earlier on-time call-offs; the walkthrough pair's
-// received call-off counts on its own id since BL-359).
+// sup-007's measured window holds the late seed call-off, the met base seed,
+// the BL-94 history and the BL-360 extension; the walkthrough pair's received
+// call-off counts on its own id since BL-359. No figure below is authored —
+// each is the page's read of that delivery record.
 // ────────────────────────────────────────────────────────────────────────────
 describe('My performance — calculated (REQ-E10-01)', () => {
   it('shows the calculated OTIF over the deliveries measured in the period', async () => {
     renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
     expect(await screen.findByTestId('my-performance-otif')).toHaveTextContent(
-      'From 7 deliveries due in this period'
+      'From 10 deliveries due in this period'
     );
-    expect(await screen.findByText('86%')).toBeInTheDocument();
+    expect(await screen.findByText('90%')).toBeInTheDocument();
   });
 
   it('the grade comes from the calculated score, and the bands are stated on screen', async () => {
@@ -79,7 +80,7 @@ describe('My performance — calculated (REQ-E10-01)', () => {
     expect(await screen.findByTestId('my-update-compliance-value')).toHaveTextContent(
       'Update compliance 92%'
     );
-    const delivery = Math.round((86 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
+    const delivery = Math.round((90 + 40) / 2) - 1 * REJECTION_PENALTY_POINTS;
     const expected = Math.round(0.9 * delivery + 0.1 * 92);
     expect(await screen.findByTestId('my-performance-grade')).toHaveTextContent(`${expected}/100`);
     expect(

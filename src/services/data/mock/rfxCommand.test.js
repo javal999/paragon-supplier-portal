@@ -313,9 +313,9 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
   });
 
   it('KNOWN-GOOD — the SAME award at 70/30 is recorded, with the loser named', async () => {
-    // ⚠️ PREMISE CHANGE (BL-43, and again at BL-55 on 2026-11-20): the 30% line
-    // used to name sup-007, which failed the gate twice — at OTIF 50%, then at
-    // 86% once the owner raised the minimum to 90%. The split rule is unchanged;
+    // ⚠️ PREMISE CHANGE (BL-43, BL-55, BL-360): the 30% line used to name
+    // sup-007, which dropped below the gate minimum when the owner raised it
+    // (BL-55) and was restored above it by BL-360. The split rule is unchanged;
     // the second supplier is one that passes.
     const lines = awardLines([
       ['sup-015', 'qt-014d-r1', 70],
@@ -773,14 +773,14 @@ describe('REQ-E03-01 — the invitee read', () => {
       ).otif
     ).toBeNull();
     // PREMISE CHANGED (REQ-E10-01): the figure is CALCULATED from the seeded
-    // call-offs and receipts — sup-007 has seven measured deliveries in the
-    // window, six met and one late (BL-94; it read 50% on two) — not read off
-    // the master.
+    // call-offs and receipts — sup-007's measured window holds the late seed
+    // call-off, the met base seed, the BL-94 history and the BL-360 extension
+    // (it read as a two-delivery sample before BL-94) — not read off the master.
     expect(
       /** @type {import('../../transitions/rfxRules').InviteeCandidate} */ (
         all.find((c) => c.supplierId === 'sup-007')
       ).otif
-    ).toBe(86);
+    ).toBe(90);
   });
 
   it('the invitee roster is PTI’s — a supplier reads nothing', async () => {
@@ -807,10 +807,11 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
       }
     });
 
-  // ⚠️ PREMISE CHANGE (BL-94, and again at BL-55 on 2026-11-20): the failing
-  // bidder here was sup-007 (OTIF 50%); it reached 86% at BL-94 and is below the
-  // 90% minimum again. The refusals name sup-008 (OTIF 0%) as well; the rule and
-  // its twins are unchanged.
+  // ⚠️ PREMISE CHANGE (BL-94, BL-55, BL-360): the failing bidder here was
+  // sup-007 while its measured OTIF sat below the minimum in force. BL-360
+  // lifted it back above the minimum, so the refusal names sup-008, whose
+  // delivery history measures nothing on time. The rule and its twins are
+  // unchanged.
   it('KNOWN-BAD — awarding 100% to sup-008 (OTIF 0% < 90%) is refused by name, and awards nothing', async () => {
     const res = await award014(awardLines([['sup-008', 'qt-014b', 100]]));
     expect(res.status).toBe('failed');

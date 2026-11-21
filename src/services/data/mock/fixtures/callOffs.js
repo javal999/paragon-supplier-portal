@@ -23,8 +23,9 @@
 //   (delivery drift) · 0009 Escalated · 0010 partial Awaiting Approval · 0011
 //   Rejected · 0012 Draft · 0013 Delivered on time and in full · 0043, 0044,
 //   0045 and 0046 Delivered on time and in full, 80, 60, 40 and 25 days ago —
-//   sup-007's delivery history (BL-94), which with 0013 met and 0001 late lifts
-//   its 90-day OTIF above the compliance gate's minimum on the Oslo RFQ.
+//   sup-007's delivery history (BL-94) · 0049, 0050 and 0051 Delivered on time
+//   and in full (BL-360), which extends that history so sup-007's DERIVED
+//   90-day OTIF clears the compliance gate's minimum on the Oslo RFQ.
 //
 // And the CR-05 / CR-04 cases (BL-47, BL-49):
 //   exactly +5% accepted: 0005 (JIT) and 0017 (forecast) · +5.1% awaiting
@@ -530,10 +531,11 @@ export const CALL_OFF_SEED = [
   // Four past call-offs on the 100ml PET line, each received ON its date and IN
   // FULL (GR-2026-018..021 in `mockGoodsReceipts.js`), so the main supplier
   // persona has a real OTIF record: these four are met in the 90-day window,
-  // with 0013 met and the late 0001 missed — 86%. ⚠️ That cleared the 80%
-  // minimum in force at BL-94, but the owner raised the minimum to 90% on
-  // 2026-11-20 (BL-55), so sup-007 no longer passes the compliance gate and
-  // can no longer take a share of the Oslo award (rfq-021).
+  // with 0013 met and the late 0001 missed. ⚠️ That cleared the minimum in
+  // force at BL-94. The owner raised the minimum on 2026-11-20 (BL-55), so
+  // BL-360 extends this history on the same line below: the DERIVED OTIF
+  // (REQ-E10-01) clears the minimum in force again, and the Oslo walkthrough
+  // (rfq-021) can award sup-007 a share.
   //
   // ⚠️ THE LINE IS NOT FREE. li-007a has exactly 15,000 left (draft 0012's
   // remainder) and li-024a exactly 37,000 (draft 0019's), so any release on
@@ -565,6 +567,52 @@ export const CALL_OFF_SEED = [
       confirmation: {
         kind: 'confirm',
         deliveries: [{ quantity: 12000, date: day(need) }],
+        confirmedAt: at(need - 9, 4),
+        approval: 'auto'
+      },
+      dispatches: [],
+      notes: []
+    })
+  ),
+
+  // ── BL-360 · the delivery history that clears the raised minimum ───────────
+  // BL-55 raised the compliance gate's OTIF minimum above what sup-007's
+  // history measured, which left the Oslo walkthrough (rfq-021) with a supplier
+  // that could not be awarded. Three more past call-offs on the same 100ml
+  // line, each received ON its date and IN FULL (GR-2026-022..024 in
+  // `mockGoodsReceipts.js`), lift the DERIVED OTIF over the minimum in force.
+  // No percentage is authored anywhere: the figure comes from the call-offs,
+  // the receipts and the window, exactly as BL-94's rows do.
+  //
+  // ⚠️ THE QUANTITY IS NOT FREE. li-008a (150,000 PCS) has 7,000 left after
+  // 0013 and the BL-94 rows; these three take 6,000 and leave 1,000, so no
+  // CR-04 release is re-decided. Twelve-thousand each would overdraw the line.
+  //
+  // ⚠️ THE DATES ARE NOT FREE EITHER. The matcher pairs a receipt with a
+  // call-off on supplier + material within ±7 days and uses each receipt once,
+  // so every date here is MORE than seven days from every other sup-007
+  // call-off and receipt on either PET code. The nearest are the BL-94 rows at
+  // ten days, and the same-day pair 0013 / GR-2026-003 at fourteen.
+  //
+  // Numbered after the walkthrough pair's CO-2026-0048, so the store's next
+  // assigned number (seed length + 1) stays free (`callOffSeedIdentity.test`).
+  ...[
+    { n: 49, need: -70 },
+    { n: 50, need: -50 },
+    { n: 51, need: -14 }
+  ].map(
+    /** @returns {CallOff} */ ({ n, need }) => ({
+      ...PET_100,
+      id: `co-00${n}`,
+      callOffNumber: `CO-2026-00${n}`,
+      quantity: 2000,
+      needDate: day(need),
+      type: 'forecast',
+      status: 'Confirmed',
+      releasedAt: at(need - 10, 2),
+      confirmation: {
+        kind: 'confirm',
+        deliveries: [{ quantity: 2000, date: day(need) }],
         confirmedAt: at(need - 9, 4),
         approval: 'auto'
       },
