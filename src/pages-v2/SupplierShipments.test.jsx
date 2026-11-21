@@ -188,6 +188,29 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     expect(done[0].actor).toBe('supplier:sup-007');
   });
 
+  it('UI: "Create ASN" on a value-limit PO opens the wizard, not a blind draft (BL-140)', async () => {
+    // The value-limit fixture is PO-2026-00128 (sup-003): one line, quantity 0
+    // meaning "no quantity", valueLimit 500,000,000. Its ASN must name a
+    // released call-off, which only the wizard's first step can do.
+    const fragrance = {
+      ...SUPPLIER,
+      supplierId: 'sup-003',
+      supplierName: 'Sample Fragrance House Indonesia'
+    };
+    renderWithProviders(<SupplierShipments />, { identity: fragrance });
+    const heading = await screen.findByText(/confirmed purchase orders? awaiting ASN/);
+    const panel = /** @type {HTMLElement} */ (heading.closest('section'));
+    const cell = within(panel).getByText('PO-2026-00128');
+    const row = /** @type {HTMLElement} */ (cell.closest('div') ?? cell.parentElement);
+    fireEvent.click(within(row).getByRole('button', { name: 'Create ASN' }));
+
+    // The wizard opens for that PO and offers the call-off selector.
+    expect(await screen.findByText('Call-off (optional)')).toBeInTheDocument();
+    // No blind ASN was drafted for the PO.
+    expect(asnStore.all().some((a) => a.poReference === 'PO-2026-00128')).toBe(false);
+    expect(commandAuditSink.byEvent('t_asn_create')).toHaveLength(0);
+  });
+
   it('UI: submit drawer with no fields → dispatcher rejects (MISSING_FIELDS, stays Draft)', async () => {
     // Fixture Draft ASN-2025-00215 has blank shipment details.
     renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
