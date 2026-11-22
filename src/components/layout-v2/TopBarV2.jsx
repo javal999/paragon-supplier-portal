@@ -9,12 +9,12 @@ import paragonLogo from '../../../paradise/assets/paragon-logo-primary.svg';
 import { SupplierNoticeBell } from './SupplierNotices';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 
-// BL-84 — the PTI bell's badge is sample chrome: no notice read backs it (the
-// supplier bell derives its own count). The number lives in ONE constant so the
-// badge and the accessible name are the same figure; when a real buyer-notice
-// read lands, both change together. [Proposed: the owner may prefer the badge
-// removed until that read exists.]
-const PTI_NOTICE_COUNT = 3;
+// BL-213 — THE PTI BELL SHOWS NO BADGE, BECAUSE NO NOTICE SOURCE EXISTS FOR
+// THAT SEAT. The fixed "3" that stood here was sample chrome (BL-84), not a
+// count: no buyer-side read derives a notice population, so any number would be
+// invented. The bell stays as the control; the badge returns when a real
+// buyer-notice read exists (the proposed source is in the MR report — a
+// pending-action read such as supplier replies on /buyer/comm-hub).
 
 /**
  * @typedef {object} TopBarV2Props
@@ -78,24 +78,18 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <LanguageMenu />
         {/* RFx UX S-04 — a supplier seat's bell lists its award and withdrawal
-            notices, derived from its own award reads. The PTI bell is unchanged. */}
+            notices, derived from its own award reads. BL-213 — the PTI bell
+            carries no badge: no buyer notice source exists (see the note above). */}
         {identity.personaType === 'supplier' && identity.supplierId ? (
           <SupplierNoticeBell />
         ) : (
           <button
             type="button"
-            // BL-84 (WCAG 4.1.2): the visible badge said 3 and the name said
-            // only "Notifications", so a screen reader never heard the count.
-            // Name and badge now read ONE constant, so they cannot disagree.
-            aria-label={t('topbar.notificationsCount', {
-              n: PTI_NOTICE_COUNT
-            })}
+            aria-label={t('topbar.notifications')}
             className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
+            data-testid="pti-notice-bell"
           >
             <Bell size={18} />
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[length:var(--fs-caption-1)] font-bold flex items-center justify-center">
-              {PTI_NOTICE_COUNT}
-            </span>
           </button>
         )}
         {/* The avatar is now a PANEL, not a decoration: the current role and the

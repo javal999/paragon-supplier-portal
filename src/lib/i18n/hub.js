@@ -227,6 +227,10 @@ export const hubEn = {
   'topbar.notices.empty': 'No award news yet',
   'topbar.notices.awarded': 'Awarded to you · {{event}} · {{share}}',
   'topbar.notices.withdrawn': 'Award withdrawn · {{event}} · {{date}}',
+  // BL-213 — the marker on an unread notice, and the bell's accessible name
+  // when the badge shows unread rather than total.
+  'topbar.notices.new': 'New',
+  'topbar.notices.unreadCount': 'Notifications: {{n}} unread',
   // BL-84 — the bell's accessible name states the count its badge shows.
   'topbar.notificationsCount': 'Notifications: {{n}}',
 
@@ -421,6 +425,8 @@ export const hubId = {
   'topbar.notices.empty': 'Belum ada kabar pemenangan',
   'topbar.notices.awarded': 'Dimenangkan oleh Anda · {{event}} · {{share}}',
   'topbar.notices.withdrawn': 'Pemenangan ditarik · {{event}} · {{date}}',
+  'topbar.notices.new': 'Baru',
+  'topbar.notices.unreadCount': 'Notifikasi: {{n}} belum dibaca',
   'topbar.notificationsCount': 'Notifikasi: {{n}}',
 
   'hub.sample.label': 'Data contoh',
