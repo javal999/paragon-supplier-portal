@@ -8,6 +8,7 @@ import TableCell from '@components/ui-v2/TableCell';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import TermTip from '@components/forecast/TermTip';
 import { FIELD_FOCUS_RING, TOUCH_TARGET } from '@components/forecast/focusRing';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useRefusalText } from '@hooks/useRefusalText';
@@ -105,6 +106,31 @@ const PoOnHoldPanel = ({ persona }) => {
     });
     if (result.status === 'failed') return refused(result);
     toast({ variant: 'success', title: t('poh.suggest.sent', { material: r.materialCode }) });
+  };
+
+  // UCX-P6 (BL-367) · UCX-PD22 — the preselected suggestions go out together.
+  // The lines a suggestion can be sent for are the lines whose picker shows
+  // (no decision yet, or an executed round with a remainder left on hold), and
+  // their option is the planner's pick or the hub's preselect — unchanged rule.
+  /** @param {PoOnHoldRow} r */
+  const suggestView = (r) => !r.decision || (r.execution.status === 'executed' && !r.closed);
+  const sendable = rows.filter((r) => suggestView(r) && (picked[r.key] ?? r.suggestion));
+
+  /** Sends every preselected (or picked) suggestion; each line stays editable. */
+  const sendAll = async () => {
+    let sent = 0;
+    for (const r of sendable) {
+      const option = picked[r.key] ?? r.suggestion;
+      if (!option) continue;
+      const result = await suggest.mutateAsync({
+        supplierId: r.supplierId,
+        materialCode: r.materialCode,
+        option
+      });
+      if (result.status === 'failed') return refused(result);
+      sent += 1;
+    }
+    if (sent > 0) toast({ variant: 'success', title: t('poh.suggest.sentAll', { count: sent }) });
   };
 
   /** @param {PoOnHoldRow} r */
@@ -793,6 +819,26 @@ const PoOnHoldPanel = ({ persona }) => {
       <p className="text-sm text-text-secondary mb-3">
         {t(isPti ? 'poh.intro.pti' : 'poh.intro.sup')}
       </p>
+      {/* UCX-P6 (BL-367) · UCX-F12 — the terms explained where they appear.
+          FG cap is the one term a source defines (PEX-8 BR-03), so it carries
+          the visible hint and the (i) (UCX-D25, TL-D4). PIPO and Max PTI have
+          no definition until BL-297, so this panel gives them neither. */}
+      <p className="text-xs text-text-secondary mb-2" data-testid="poh-terms">
+        {t('poh.cap')} <TermTip term="FG cap" /> — {t('poh.hint.fgCap')}
+      </p>
+      {isPti && suggestAvail.kind === 'held' && sendable.length > 0 ? (
+        <div className="mb-3 flex flex-wrap items-center gap-2" data-testid="poh-suggest-all-bar">
+          <Button
+            variant="outline"
+            disabled={suggest.isPending}
+            onClick={() => void sendAll()}
+            data-testid="poh-suggest-all"
+          >
+            {t('poh.suggest.sendAll', { count: sendable.length })}
+          </Button>
+          <span className="text-xs text-text-tertiary">{t('poh.suggest.sendAllHint')}</span>
+        </div>
+      ) : null}
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>

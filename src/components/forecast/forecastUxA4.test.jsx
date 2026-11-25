@@ -336,8 +336,9 @@ describe('page-specific copy (F-12, F-16, F-21)', () => {
 describe('planning terms (F-09)', () => {
   const TERMS = /** @type {PlanningTerm[]} */ (Object.keys(PLANNING_TERM_GLOSSARY));
 
-  it('registers the seven terms as a glossary vocabulary', () => {
+  it('registers the eight terms as a glossary vocabulary', () => {
     // FUX2 B3 adds Safety stock, tipped in the "Why this quantity" panel.
+    // UCX-P6 adds FG cap, tipped on the PO On Hold panel (PEX-8 BR-03).
     expect(TERMS).toEqual([
       'Zone Liability',
       'Zone Capacity',
@@ -345,7 +346,8 @@ describe('planning terms (F-09)', () => {
       'Tracking signal',
       'Reorder point',
       'P50/P90',
-      'Safety stock'
+      'Safety stock',
+      'FG cap'
     ]);
     expect(GLOSSARY_REGISTRIES.map((r) => r.sourceType)).toContain('PlanningTerm');
   });

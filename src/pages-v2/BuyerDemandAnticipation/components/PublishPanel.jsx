@@ -9,9 +9,9 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useToast } from '@hooks/useToast';
 import { useDemandAnticipationCommand } from '@services/query/commandHooks';
 import { pairKey } from '@services/transitions/demandAnticipationRules';
-import { formatNumber } from '@lib/format';
+import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
-import { agreementCandidates, weekDates, weekLabel } from '../display';
+import { agreementCandidates, askState, weekDates, weekLabel } from '../display';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DRC-2 (BL-188) — "Publish demand anticipation" for the current planning
@@ -42,12 +42,16 @@ const PublishPanel = ({ rows, planningWeek, changed }) => {
   const publish = useDemandAnticipationCommand();
   const [confirming, setConfirming] = useState(false);
   const candidates = agreementCandidates(rows);
-  const recorded = candidates
-    .filter((r) => r.agreedFirstOutside)
-    .map((r) => pairKey(r.supplierId, r.materialCode));
+  // UCX-P6 (BL-367) · UCX-D19 — the standing agreement carries week to week.
+  // A candidate whose agreement stands unchanged is pre-ticked with its date;
+  // only a NEW row or a row whose remainder CHANGED asks for a decision.
+  const keyOf = (/** @type {DemandAnticipationRow} */ r) => pairKey(r.supplierId, r.materialCode);
+  const states = new Map(candidates.map((r) => [keyOf(r), askState(r)]));
+  const carried = candidates.filter((r) => states.get(keyOf(r)) === 'standing').map(keyOf);
+  const askedCount = candidates.filter((r) => states.get(keyOf(r)) !== 'standing').length;
   const [agreed, setAgreed] = useState(/** @type {string[] | null} */ (null));
-  const chosen = agreed ?? recorded;
-  const agreementsChanged = [...chosen].sort().join(',') !== [...recorded].sort().join(',');
+  const chosen = agreed ?? carried;
+  const agreementsChanged = [...chosen].sort().join(',') !== [...carried].sort().join(',');
   const week = weekLabel(planningWeek);
 
   if (availability.kind !== 'held')
@@ -103,10 +107,17 @@ const PublishPanel = ({ rows, planningWeek, changed }) => {
                 <legend className="text-sm font-semibold text-text-primary mb-1">
                   {t('demandAnt.agree.legend')}
                 </legend>
-                <p className="text-xs text-text-tertiary mb-2">{t('demandAnt.agree.help')}</p>
+                <p className="text-xs text-text-tertiary mb-1">{t('demandAnt.agree.help')}</p>
+                <p className="text-xs text-text-secondary mb-2" data-testid="dant-agree-summary">
+                  {t('demandAnt.agree.summary', {
+                    carried: carried.length,
+                    asked: askedCount
+                  })}
+                </p>
                 <ul className="space-y-1">
                   {candidates.map((r) => {
-                    const key = pairKey(r.supplierId, r.materialCode);
+                    const key = keyOf(r);
+                    const state = states.get(key);
                     const id = `dant-agree-${r.supplierId}-${r.materialCode}`;
                     const last = r.today.horizonWeeks[r.today.horizonWeeks.length - 1];
                     return (
@@ -126,6 +137,21 @@ const PublishPanel = ({ rows, planningWeek, changed }) => {
                             outside: weekLabel(/** @type {string} */ (r.today.firstOutsideWeek)),
                             last: weekLabel(last)
                           })}
+                          <span
+                            className="block text-xs text-text-tertiary"
+                            data-testid={`dant-agree-record-${r.supplierId}-${r.materialCode}`}
+                          >
+                            {state === 'standing' && r.agreement
+                              ? t('demandAnt.agree.standing', {
+                                  date: formatDate(r.agreement.agreedAt)
+                                })
+                              : state === 'changed' && r.agreement
+                                ? t('demandAnt.agree.changed', {
+                                    date: formatDate(r.agreement.agreedAt),
+                                    qty: formatNumber(r.agreement.qty)
+                                  })
+                                : t('demandAnt.agree.isNew')}
+                          </span>
                         </label>
                       </li>
                     );

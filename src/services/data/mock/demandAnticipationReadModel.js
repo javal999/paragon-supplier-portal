@@ -65,6 +65,7 @@ import { engineDataset } from './fixtures/engineDataset';
 import { ptiStockStore } from './stores/ptiStockStore';
 import { supplierNameOf } from './inventoryReadModel';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
+import { standingAgreements } from '../../transitions/daAgreementRules';
 import { osipSafetySizes } from './osipSafetyReadModel';
 /** @import { SupplierDaRowCore } from '../../transitions/supplierDaView' */
 import { supplierDaRows } from '../../transitions/supplierDaView';
@@ -278,7 +279,10 @@ function figuresAt(publications, nowIso, agreed = null) {
 export function demandAnticipationToPublish(agreed, nowIso = sdcClock.now()) {
   const publications = demandAnticipationStore.all();
   const planningWeek = hubWeeks(nowIso, 1)[0];
-  const today = figuresAt(publications, nowIso);
+  // UCX-P6 — today's figures compute with the STANDING agreements, so the
+  // remainders the verb checks are the ones the page shows (UCX-D19).
+  const standingKeys = new Set(standingAgreements(publications).keys());
+  const today = figuresAt(publications, nowIso, standingKeys);
   const ltpRows = ltpInputStore.all();
   const osipRows = osipParamStore.all();
   return {
@@ -343,11 +347,15 @@ demandAnticipationStore.useSeeder(() => {
  */
 export function allDemandAnticipation(nowIso = sdcClock.now()) {
   const publications = demandAnticipationStore.all();
+  const standing = standingAgreements(publications);
   const lines = allCommitmentLines(null);
   /** @param {string} supplierId */
   const nameOf = (supplierId) =>
     lines.find((l) => l.supplierId === supplierId)?.supplierName ?? supplierNameOf(supplierId);
-  const pairs = figuresAt(publications, nowIso).map((f) => ({ ...f, today: f.figure }));
+  const pairs = figuresAt(publications, nowIso, new Set(standing.keys())).map((f) => ({
+    ...f,
+    today: f.figure
+  }));
   return withConsumption(
     demandAnticipationRows(publications, pairs, hubWeeks(nowIso, 1)[0]),
     consumptionStore.all()
@@ -357,7 +365,8 @@ export function allDemandAnticipation(nowIso = sdcClock.now()) {
       ...r,
       supplierName: nameOf(r.supplierId),
       materialLabel: entry?.label ?? r.materialCode,
-      uom: entry?.canonicalUom ?? ''
+      uom: entry?.canonicalUom ?? '',
+      agreement: standing.get(pairKey(r.supplierId, r.materialCode)) ?? null
     };
   });
 }
