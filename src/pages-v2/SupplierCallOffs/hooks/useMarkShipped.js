@@ -45,7 +45,14 @@ export function useMarkShipped({ asns, createAsnMutation }) {
   const markShipped = async (view, form) => {
     const c = /** @type {CallOff} */ (view.callOff);
     const shippedDate = form.shippedDate === '' ? DECLARED_PRESENT : form.shippedDate;
-    const expectedArrival = form.expectedArrival === '' ? c.needDate : form.expectedArrival;
+    // An overdue call-off's need date is before the shipped date; the dispatch
+    // policy refuses that, so the default clamps to the shipped day (browser pass).
+    const expectedArrival =
+      form.expectedArrival === ''
+        ? c.needDate < shippedDate
+          ? shippedDate
+          : c.needDate
+        : form.expectedArrival;
     const quantity = numberOf(form.dispatchQty);
     try {
       const notice = await callOffCommand.mutateAsync({

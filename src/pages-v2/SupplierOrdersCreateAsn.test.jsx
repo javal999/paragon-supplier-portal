@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, within } from '@testing-library/react';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 import { useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
@@ -190,8 +191,13 @@ describe('Call-offs — a confirmed call-off offers the one shipment step (UCX-P
     // The two controls the one step replaces are gone.
     expect(screen.queryByTestId('calloff-create-asn')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Send dispatch notice' })).toBeNull();
-    // The values start from the call-off (UCX-F9): its need date, its agreed quantity.
-    expect(screen.getByLabelText('Expected arrival')).toHaveValue(c.needDate);
+    // The values start from the call-off (UCX-F9): its agreed quantity, and its
+    // need date when that day is not before the goods leave — an overdue
+    // call-off defaults to the shipped day, which the dispatch policy accepts
+    // (found in the browser pass, 2026-11-26).
+    expect(screen.getByLabelText('Expected arrival')).toHaveValue(
+      c.needDate < DECLARED_PRESENT ? DECLARED_PRESENT : c.needDate
+    );
     const agreed = approvedDeliveries(c).reduce((s, d) => s + d.quantity, 0);
     expect(screen.getByLabelText(`Quantity (${c.uom})`)).toHaveValue(String(agreed));
   });

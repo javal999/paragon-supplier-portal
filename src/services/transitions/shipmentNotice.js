@@ -90,13 +90,23 @@ export function nextFreeSequence(asns) {
  * quantity (the approved deliveries — the accepted confirmation, else the
  * released figure) and the call-off's need date. Never the PO's open quantity
  * (UCX-F9).
+ *
+ * ⚠️ **AN OVERDUE CALL-OFF CANNOT DEFAULT TO ITS OWN PAST NEED DATE** — the
+ * dispatch policy (`CALLOFF_DISPATCH_VALID`) refuses an arrival before the
+ * shipped date, so on the sample data the first markable call-offs were
+ * refused with `expected arrival is before the shipped date` (found in the
+ * browser pass). When the need date is before `notBefore` (the day the goods
+ * leave), the default is `notBefore`: legal, visible, and editable like every
+ * other [Proposed] default.
  * @param {CallOff} callOff
+ * @param {string} [notBefore]  The shipped date the arrival cannot precede.
  * @returns {{ quantity: number; expectedArrival: string }}
  */
-export function callOffShipment(callOff) {
+export function callOffShipment(callOff, notBefore = '') {
+  const needDate = callOff.needDate;
   return {
     quantity: approvedDeliveries(callOff).reduce((sum, d) => sum + d.quantity, 0),
-    expectedArrival: callOff.needDate
+    expectedArrival: notBefore !== '' && needDate < notBefore ? notBefore : needDate
   };
 }
 

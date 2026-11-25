@@ -148,6 +148,10 @@ describe('callOffShipment — UCX-F9: the values come from the call-off', () => 
       }
     });
     expect(callOffShipment(c)).toEqual({ quantity: 8_000, expectedArrival: '2026-09-03' });
+    // An overdue call-off defaults to the shipped day, never to a past arrival
+    // the dispatch policy refuses (found in the browser pass, 2026-11-26).
+    expect(callOffShipment(c, '2026-09-05').expectedArrival).toBe('2026-09-05');
+    expect(callOffShipment(c, '2026-08-01').expectedArrival).toBe('2026-09-03');
   });
 });
 

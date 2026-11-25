@@ -91,7 +91,7 @@ const SupplierCallOffs = () => {
    * @param {CallOffView} v
    */
   const formFor = (v) => {
-    const { quantity, expectedArrival } = callOffShipment(v.callOff);
+    const { quantity, expectedArrival } = callOffShipment(v.callOff, DECLARED_PRESENT);
     return {
       ...EMPTY,
       shippedDate: DECLARED_PRESENT,
