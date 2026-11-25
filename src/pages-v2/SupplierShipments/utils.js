@@ -5,11 +5,12 @@
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
 /** @import { ASN, CallOff, CallOffWarning, PurchaseOrder } from '@services/data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
-/** @import { AsnLinesRead, OpenLine } from '../shipments/asnLines' */
+/** @import { AsnLinesRead, LineEntry, OpenLine } from '../shipments/asnLines' */
 /** @import { AsnForm } from './const' */
 import { formatDate } from '@lib/format';
 import { asnCallOffWarnings } from '@services/transitions/callOffRules';
-import { defaultCarrier } from '../shipments/CarrierPicker';
+import { sequencesInUse } from '@services/transitions/shipmentNotice';
+import { carrierFor, defaultCarrier } from '../shipments/CarrierPicker';
 import { openLinesFor, readLines, seedLines } from '../shipments/asnLines';
 import { EMPTY_FORM } from './const';
 
@@ -83,6 +84,69 @@ export const missingInboundRefs = (form) => {
 export const newAsnForm = () => ({ ...EMPTY_FORM, ...defaultCarrier() });
 
 /**
+ * UCX-P3 (BL-364) / UCX-F8, UCX-F32 — EVERY field the details step still
+ * needs, in the order the form shows them, as ONE list: the logistics fields,
+ * the inbound identity (sequence, Surat Jalan) and the batch of each line the
+ * form carries. The step rule and the one message read this list, so the
+ * screen never blocks **Next** without naming every gap (the two messages this
+ * replaces named one group each).
+ * `batch:<material>` entries name a line whose batch is blank.
+ * @param {Pick<AsnForm, 'carrier' | 'trackingNumber' | 'shipDate' | 'eta' | 'sequence' | 'externalId'>} form
+ * @param {Pick<AsnLinesRead, 'lines'>} read
+ * @returns {readonly string[]}
+ */
+export const missingDeliveryFields = (form, read) => [
+  ...missingLogistics(form),
+  ...missingInboundRefs(form),
+  ...read.lines
+    .filter((l) => Number.isFinite(l.input.shippedQty) && !l.input.batchNumber)
+    .map((l) => `batch:${l.line.materialCode}`)
+];
+
+/**
+ * UCX-P3 (BL-364) — the wizard's form for a DRAFT ASN its call-off opened:
+ * the values the draft stored (carrier, tracking, dates, sequence, Surat
+ * Jalan, lines) with the fixture's em-dash placeholders read as empty. A
+ * draft without a sequence takes the prefilled next free number, so the
+ * field is never blank on the step the supplier lands on.
+ * @param {ASN} asn
+ * @param {PurchaseOrder | undefined} po  The draft's PO, when the page can see it.
+ * @param {string} [sequence]  The next free sequence, used only when the draft holds none.
+ * @returns {Partial<AsnForm>}
+ */
+export function draftForm(asn, po, sequence) {
+  /** @param {string} v */
+  const real = (v) => (v && v !== '—' ? v : '');
+  /** @type {Record<string, LineEntry>} */
+  const lines = Object.fromEntries(
+    asn.lineItems.map((li) => [
+      li.materialCode,
+      {
+        qty: String(li.shippedQty),
+        batch: real(li.lotNumber),
+        expiry: li.expiryDate ?? '',
+        // MR-6 BR-04 — a stored batch keeps how it was entered; a line stored
+        // before the rule existed, with a batch, reads as typed.
+        batchSource: li.batchSource ?? (real(li.lotNumber) ? 'typed' : 'declared')
+      }
+    ])
+  );
+  return {
+    ...carrierFor(asn),
+    ...(po ? { poId: po.id } : {}),
+    trackingNumber: real(asn.trackingNumber),
+    shipDate: real(asn.shipDate ?? ''),
+    eta: real(asn.eta),
+    sequence: real(asn.sequence ?? '') || String(sequence ?? ''),
+    externalId: real(asn.externalId ?? ''),
+    lines,
+    overShipReason: asn.overShipReason ?? '',
+    ...(asn.callOffId ? { callOffId: asn.callOffId } : {}),
+    callOffFinal: asn.callOffFinal === true
+  };
+}
+
+/**
  * The form patch for picking a PO at step 1: its open lines seeded, and no
  * call-off chosen yet. The PO card and an address naming the PO both use it.
  * `receipts`:  GR-1 / BL-71 — kept-open receipts reopen their missing quantity.
@@ -129,12 +193,15 @@ export function submitLinesFor(asn, shippablePos, asns, receipts = []) {
  * @property {OpenLine[]} wizardOpenLines  That PO's open lines.
  * @property {AsnLinesRead} wizardRead  Every line through the one line rule (AR-11).
  * @property {CallOffWarning[]} wizardWarnings  What the confirm step warns about.
+ * @property {readonly string[]} sequencesInUse  UCX-P3 — the sequences the supplier's live ASNs hold, for the visible hint.
  * @property {(s: number) => boolean} isStepValid  Whether step `s` may advance.
  */
 
 /**
  * The Create-ASN wizard's derived reads: the chosen PO, its lines through the
  * one line rule the verbs call, the call-off warnings and each step's validity.
+ * `excludeAsn`:  UCX-P3 — the draft being completed, left out of its own open
+ * quantity AND of the sequence peer check (its own sequence is not a clash).
  * @param {object} args
  * @param {AsnForm} args.form  The wizard's form state.
  * @param {readonly PurchaseOrder[]} args.shippablePos  The POs an ASN may ship against.
@@ -142,6 +209,7 @@ export function submitLinesFor(asn, shippablePos, asns, receipts = []) {
  * @param {Readonly<Record<string, readonly AvailableBatch[]>>} args.declaredBatches  Batch picker options by material.
  * @param {readonly Pick<CallOffView, 'callOff' | 'delivery'>[]} args.callOffViewList  The call-off projection.
  * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [args.receipts]  GR-1 / BL-71 — kept-open receipts.
+ * @param {string} [args.excludeAsn]  UCX-P3 — the draft the wizard completes.
  * @returns {WizardRead}
  */
 export function readWizard({
@@ -150,7 +218,8 @@ export function readWizard({
   asns,
   declaredBatches,
   callOffViewList,
-  receipts = []
+  receipts = [],
+  excludeAsn
 }) {
   const selectedPO = shippablePos.find((p) => p.id === form.poId);
   // BL-140 — the released call-off the form names. A value-limit line is raised
@@ -158,11 +227,12 @@ export function readWizard({
   const selectedCallOff = form.callOffId
     ? callOffViewList.find((v) => v.callOff.id === form.callOffId)?.callOff
     : undefined;
-  const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns, undefined, receipts) : [];
+  const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns, excludeAsn, receipts) : [];
   // AR-11 — every line through the one line rule the verbs call.
   const wizardRead = readLines(form.lines, wizardOpenLines, {
     po: selectedPO,
     asns,
+    ...(excludeAsn ? { excludeAsn } : {}),
     eta: form.eta,
     sequence: form.sequence,
     externalId: form.externalId,
@@ -192,12 +262,13 @@ export function readWizard({
     : [];
   const step1Valid = form.poId !== '';
   // BR-04 required fields; `complete` carries each line's refusal, including
-  // BR-02's reason when a line ships above open.
+  // BR-02's reason when a line ships above open. UCX-P3 — the same one list
+  // the message renders decides whether Next may advance, so a blocked Next
+  // and the named gaps cannot disagree.
   const step2Valid =
-    missingLogistics(form).length === 0 &&
+    missingDeliveryFields(form, wizardRead).length === 0 &&
     // AIB-1 BR-03 / BR-04 — the sequence and the SJ, and the sequence rules
     // over the entered lines (one sequence = one ASN, AIB-D1).
-    missingInboundRefs(form).length === 0 &&
     wizardRead.sequenceRead.ok &&
     // MR-6 BR-08 — a line short on shelf life does not stop the wizard: step 3
     // asks Quality for an exception instead of submitting.
@@ -215,6 +286,7 @@ export function readWizard({
     wizardOpenLines,
     wizardRead,
     wizardWarnings,
+    sequencesInUse: sequencesInUse(asns),
     isStepValid
   };
 }

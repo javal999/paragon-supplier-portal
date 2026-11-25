@@ -17,7 +17,7 @@ import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStor
 import { callOffStore } from '@services/data/mock/stores/callOffStore';
 import { asnStore } from '@services/data/mock/stores/asnStore';
 import { POStatus } from '@services/data/types';
-import { isConfirmedAndAccepted } from '@services/transitions/callOffRules';
+import { isConfirmedAndAccepted, approvedDeliveries } from '@services/transitions/callOffRules';
 import i18n from '@lib/i18n';
 import { supplierOrdersEn, supplierOrdersId } from '@lib/i18n/supplierOrders';
 import { supplierShipmentsEn, supplierShipmentsId } from '@lib/i18n/supplierShipments';
@@ -178,19 +178,22 @@ describe('Shipments & ASN — `tab=create&po=` starts the wizard for that PO', (
   });
 });
 
-describe('Call-offs — a confirmed call-off offers its ASN (IA-S04)', () => {
-  it('links to the wizard with the PO and the call-off', async () => {
+describe('Call-offs — a confirmed call-off offers the one shipment step (UCX-P3)', () => {
+  it('offers Mark as shipped, prefilled from the call-off, and not the old ASN link', async () => {
     const c = confirmedCallOff();
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER, route: '/supplier/call-offs' });
     fireEvent.click(
       within(await screen.findByTestId(`supplier-calloff-row-${c.id}`)).getByRole('button')
     );
-    const link = await screen.findByTestId('calloff-create-asn');
-    expect(link).toHaveTextContent('Create the ASN for this call-off');
-    expect(link).toHaveAttribute(
-      'href',
-      `/supplier/shipments?tab=create&po=${c.poId}&callOff=${c.id}`
-    );
+    const mark = await screen.findByTestId('calloff-mark-shipped');
+    expect(mark).toHaveTextContent('Mark as shipped');
+    // The two controls the one step replaces are gone.
+    expect(screen.queryByTestId('calloff-create-asn')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send dispatch notice' })).toBeNull();
+    // The values start from the call-off (UCX-F9): its need date, its agreed quantity.
+    expect(screen.getByLabelText('Expected arrival')).toHaveValue(c.needDate);
+    const agreed = approvedDeliveries(c).reduce((s, d) => s + d.quantity, 0);
+    expect(screen.getByLabelText(`Quantity (${c.uom})`)).toHaveValue(String(agreed));
   });
 
   it('a seat without the ASN atoms reads the wait instead', async () => {
@@ -202,8 +205,8 @@ describe('Call-offs — a confirmed call-off offers its ASN (IA-S04)', () => {
     fireEvent.click(
       within(await screen.findByTestId(`supplier-calloff-row-${c.id}`)).getByRole('button')
     );
-    expect(await screen.findByTestId('handoff-asn-create')).toBeInTheDocument();
-    expect(screen.queryByTestId('calloff-create-asn')).toBeNull();
+    expect(await screen.findByTestId('handoff-calloff-mark-shipped')).toBeInTheDocument();
+    expect(screen.queryByTestId('calloff-mark-shipped')).toBeNull();
   });
 
   it('reads in Indonesian', async () => {
@@ -217,8 +220,8 @@ describe('Call-offs — a confirmed call-off offers its ASN (IA-S04)', () => {
       fireEvent.click(
         within(await screen.findByTestId(`supplier-calloff-row-${c.id}`)).getByRole('button')
       );
-      expect(await screen.findByTestId('calloff-create-asn')).toHaveTextContent(
-        'Buat ASN untuk call-off ini'
+      expect(await screen.findByTestId('calloff-mark-shipped')).toHaveTextContent(
+        'Tandai sudah dikirim'
       );
     } finally {
       await i18n.changeLanguage('en');
