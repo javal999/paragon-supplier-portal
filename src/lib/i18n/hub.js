@@ -190,6 +190,16 @@ export const hubEn = {
   // IA P-03 — UC1 step 2 and UC5 step 3 start from My tasks.
   'hub.home.task.requisitionsToApprove': 'Requisitions to approve',
   'hub.home.task.certsToReview': 'Declared certificates to review',
+  // UCX-P1 (BL-362) — four duties that had no My tasks row. [Proposed] labels.
+  'hub.home.task.shelfLifeExceptions': 'ASN exceptions: shelf life awaiting your decision',
+  'hub.home.task.rejectedCallOffs': 'Rejected call-offs to change and send again',
+  'hub.home.task.tradeNames': 'Trade names awaiting approval',
+  'hub.home.task.certificateRenewals': 'Certificates expiring: ask the supplier for a renewal',
+  // UCX-P1 (BL-362) — the rows of the lanes or roles the seat does not hold.
+  'hub.home.hidden.show.lanes': 'Tasks for lanes you do not hold are hidden (show {{count}})',
+  'hub.home.hidden.show.roles': 'Tasks for roles you do not hold are hidden (show {{count}})',
+  'hub.home.hidden.hide.lanes': 'Hide the rows of lanes you do not hold',
+  'hub.home.hidden.hide.roles': 'Hide the rows of roles you do not hold',
 
   'hub.home.task.sup.confirmOrders': 'Purchase orders to respond to',
   'hub.home.task.sup.shippingNotice': 'Confirmed orders without an expected completion date',
@@ -394,6 +404,19 @@ export const hubId = {
   'hub.home.task.commitmentExceptions': 'Komitmen prakiraan di luar toleransi untuk ditinjau',
   'hub.home.task.requisitionsToApprove': 'Permintaan pembelian untuk disetujui',
   'hub.home.task.certsToReview': 'Sertifikat yang dideklarasikan untuk ditinjau',
+  // UCX-P1 (BL-362) — four duties that had no My tasks row. [Proposed] labels.
+  'hub.home.task.shelfLifeExceptions': 'Pengecualian ASN: umur simpan menunggu keputusan Anda',
+  'hub.home.task.rejectedCallOffs': 'Call-off yang ditolak untuk diubah dan dikirim ulang',
+  'hub.home.task.tradeNames': 'Nama dagang yang menunggu persetujuan',
+  'hub.home.task.certificateRenewals':
+    'Sertifikat yang akan kedaluwarsa: minta pemasok memperbaruinya',
+  // UCX-P1 (BL-362) — the rows of the lanes or roles the seat does not hold.
+  'hub.home.hidden.show.lanes':
+    'Tugas untuk lane yang tidak Anda pegang disembunyikan (tampilkan {{count}})',
+  'hub.home.hidden.show.roles':
+    'Tugas untuk peran yang tidak Anda pegang disembunyikan (tampilkan {{count}})',
+  'hub.home.hidden.hide.lanes': 'Sembunyikan baris lane yang tidak Anda pegang',
+  'hub.home.hidden.hide.roles': 'Sembunyikan baris peran yang tidak Anda pegang',
 
   'hub.home.task.sup.confirmOrders': 'Pesanan pembelian yang perlu ditanggapi',
   'hub.home.task.sup.shippingNotice': 'Pesanan terkonfirmasi tanpa perkiraan tanggal selesai',

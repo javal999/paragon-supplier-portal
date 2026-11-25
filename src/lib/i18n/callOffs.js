@@ -21,6 +21,8 @@ export const callOffsEn = {
   'co.pti.filter.empty': 'No call-offs match this filter right now.',
   'co.sup.filter.toConfirm': 'Awaiting your confirmation',
   'co.sup.filter.dueSoon': 'Due soon, no notice',
+  // UCX-P1 (BL-362) — the To do's missing-ASN row opens this filter. [Proposed]
+  'co.sup.filter.missingAsn': 'Missing ASN',
   'co.umbrella.ordered': 'Ordered',
   'co.umbrella.released': 'Released',
   'co.umbrella.remaining': 'Remaining',
@@ -401,6 +403,8 @@ export const callOffsId = {
   'co.pti.filter.empty': 'Tidak ada call-off yang cocok dengan filter ini saat ini.',
   'co.sup.filter.toConfirm': 'Menunggu konfirmasi Anda',
   'co.sup.filter.dueSoon': 'Segera jatuh tempo, belum ada pemberitahuan',
+  // UCX-P1 (BL-362) — the To do's missing-ASN row opens this filter. [Proposed]
+  'co.sup.filter.missingAsn': 'ASN belum ada',
   'co.umbrella.ordered': 'Dipesan',
   'co.umbrella.released': 'Dirilis',
   'co.umbrella.remaining': 'Sisa',
