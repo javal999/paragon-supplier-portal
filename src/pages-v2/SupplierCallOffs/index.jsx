@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -26,6 +27,7 @@ import { formatDate } from '@lib/format';
 /** @import { CallOffView } from '@services/transitions/callOffRules' */
 import { isDueWithoutHeadsUp } from '@services/transitions/callOffRules';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
+import { useCallOffChase } from '@services/query/hooks';
 import { PicFilter, usePicFilter } from '../materials/picDisplay';
 import MaterialSearch, { useMaterialMatcher } from '@components/ui-v2/MaterialSearch';
 import { searchMaterials } from '@services/transitions/matchMaterial';
@@ -57,6 +59,9 @@ const SupplierCallOffs = () => {
   const { t } = useTranslation();
   const { identity } = useCurrentIdentity();
   const { views, nowIso, asns, isPending, error, refetch } = useCallOffViews();
+  // UCX-P1 (BL-362) — the To do's missing-ASN row opens `?status=missingAsn`:
+  // the call-offs with an open chase, read from the same source that counts it.
+  const missingAsn = useCallOffChase();
   const confirmAvailability = useVerbAvailability('calloff:confirm');
   const dispatchAvailability = useVerbAvailability('calloff:dispatch');
   // IA-S04 — the ASN for a confirmed call-off is made in the Create-ASN wizard,
@@ -64,7 +69,35 @@ const SupplierCallOffs = () => {
   const asnWizard = useAsnWizardAvailability();
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   const [form, setForm] = useState(EMPTY);
-  const { command, run, proposal, sendAnswer } = useCallOffResponse(form, setForm);
+  // UCX-P1 (BL-362) — a To do row counting one call-off opens its panel
+  // (`?callOff=`), as the PO row opens its order (`?po=`). The linked call-off
+  // is a DERIVED selection, not an effect: until the supplier clicks or edits,
+  // the panel reads the linked call-off and its own opening form.
+  const [formForId, setFormForId] = useState(/** @type {string | null} */ (null));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedCallOffId = searchParams.get('callOff');
+  /**
+   * The form a call-off's panel opens with.
+   * @param {CallOffView} v
+   */
+  const formFor = (v) => ({
+    ...EMPTY,
+    dispatchQty: String(
+      v.callOff.confirmation?.deliveries.reduce((s, d) => s + d.quantity, 0) ?? v.callOff.quantity
+    )
+  });
+  const linkedView = linkedCallOffId
+    ? (views.find((v) => v.callOff.id === linkedCallOffId) ?? null)
+    : null;
+  const effectiveSelectedId = selectedId ?? linkedView?.callOff.id ?? null;
+  const panelForm =
+    formForId === effectiveSelectedId ? form : linkedView ? formFor(linkedView) : EMPTY;
+  /** @param {typeof EMPTY} next */
+  const setPanelForm = (next) => {
+    setFormForId(effectiveSelectedId);
+    setForm(next);
+  };
+  const { command, run, proposal, sendAnswer } = useCallOffResponse(panelForm, setPanelForm);
   const crumb = [t('hub.nav.section.supplierOrders'), t('co.sup.title')];
   // REQ-E07-03 — the drill-through filter. The supplier's own read already
   // excludes drafts and dismissed drafts, so the predicate only narrows by PO.
@@ -77,13 +110,18 @@ const SupplierCallOffs = () => {
   const [search, setSearch] = useState('');
   const matchOf = useMaterialMatcher();
   const [statusFilter, setStatusFilter] = useState(
-    /** @type {'all' | 'toConfirm' | 'dueSoon'} */ ('all')
+    /** @type {'all' | 'toConfirm' | 'dueSoon' | 'missingAsn'} */ ('all')
   );
-  // Deep-link read: `?status=toConfirm|dueSoon` narrows to the call-offs the
-  // linking task named.
+  // Deep-link read: `?status=toConfirm|dueSoon|missingAsn` narrows to the
+  // call-offs the linking task named.
   useUrlEnumParam(
     'status',
-    /** @type {('all' | 'toConfirm' | 'dueSoon')[]} */ (['all', 'toConfirm', 'dueSoon']),
+    /** @type {('all' | 'toConfirm' | 'dueSoon' | 'missingAsn')[]} */ ([
+      'all',
+      'toConfirm',
+      'dueSoon',
+      'missingAsn'
+    ]),
     setStatusFilter
   );
 
@@ -106,14 +144,20 @@ const SupplierCallOffs = () => {
   const allRows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const toConfirm = allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
   const dueSoon = allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
+  const openChaseIds = new Set(
+    (missingAsn.data?.items ?? []).filter((r) => r.state === 'open').map((r) => r.callOffId)
+  );
+  const missingAsnCount = allRows.filter((v) => openChaseIds.has(v.callOff.id)).length;
   const rows =
     statusFilter === 'toConfirm'
       ? allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation')
       : statusFilter === 'dueSoon'
         ? allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso))
-        : allRows;
+        : statusFilter === 'missingAsn'
+          ? allRows.filter((v) => openChaseIds.has(v.callOff.id))
+          : allRows;
   /** @type {CallOffView | null} */
-  const selected = rows.find((v) => v.callOff.id === selectedId) ?? null;
+  const selected = rows.find((v) => v.callOff.id === effectiveSelectedId) ?? null;
   const listed = searchMaterials(
     search,
     rows.filter((v) => pic.matches(v.callOff.mrpController)),
@@ -128,16 +172,16 @@ const SupplierCallOffs = () => {
   /** @param {string} id */
   const open = (id) => {
     setSelectedId(id);
+    setFormForId(id);
     const v = rows.find((x) => x.callOff.id === id);
-    setForm({
-      ...EMPTY,
-      dispatchQty: v
-        ? String(
-            v.callOff.confirmation?.deliveries.reduce((s, d) => s + d.quantity, 0) ??
-              v.callOff.quantity
-          )
-        : ''
-    });
+    setForm(v ? formFor(v) : { ...EMPTY });
+  };
+  /** Close the panel and drop the `?callOff=` link that opened it. */
+  const close = () => {
+    setSelectedId(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete('callOff');
+    setSearchParams(next, { replace: true });
   };
 
   return (
@@ -193,7 +237,8 @@ const SupplierCallOffs = () => {
         options={[
           { id: 'all', label: t('co.pti.filter.all') },
           { id: 'toConfirm', label: t('co.sup.filter.toConfirm'), count: toConfirm },
-          { id: 'dueSoon', label: t('co.sup.filter.dueSoon'), count: dueSoon }
+          { id: 'dueSoon', label: t('co.sup.filter.dueSoon'), count: dueSoon },
+          { id: 'missingAsn', label: t('co.sup.filter.missingAsn'), count: missingAsnCount }
         ]}
         value={statusFilter}
         onChange={setStatusFilter}
@@ -213,9 +258,9 @@ const SupplierCallOffs = () => {
 
       <CallOffPanel
         selected={selected}
-        onClose={() => setSelectedId(null)}
-        form={form}
-        setForm={setForm}
+        onClose={close}
+        form={panelForm}
+        setForm={setPanelForm}
         busy={command.isPending}
         confirmAvailability={confirmAvailability}
         dispatchAvailability={dispatchAvailability}
