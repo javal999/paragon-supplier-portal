@@ -196,7 +196,7 @@ BL-213 removed the PTI bell's fixed count; no buyer-side read derives a notice p
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-361 | **The PTI bell has no notice source**: BL-213 left its count removed because no buyer-side read derives a notice population | A badge without a source states a figure nobody computed | S | Owner: choose the source (comm-hub replies awaiting a reply, or RFx responses awaiting evaluation) | Derive the chosen population in a shell read and show the badge; the source guard in `TopBarV2.test.jsx` refuses a hard-coded count |
+| BL-361 | **The PTI bell has no notice source**: BL-213 left its count removed because no buyer-side read derives a notice population | A badge without a source states a figure nobody computed | S | Owner: choose the source. **Recommended (my call): the buyer To-do `BuyerHome` already derives** — open POs, missing-ASN chases, ASNs due and sent call-offs with no ASN — shown as a count with a list of the same rows. Narrower alternative: comm-hub follow-ups only | Derive the chosen population in a shell read under the pages' own query keys and show the badge; the source guard in `TopBarV2.test.jsx` refuses a hard-coded count. `BuyerHome` holds the derivation today (`useUnifiedChase`, `usePurchaseOrders`, the ASN and call-off reads), so the bell can reuse it rather than invent a second population |
 
 ## 5. Other teams and later phases
 
