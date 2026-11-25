@@ -11,6 +11,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import SupplierHome from './SupplierHome';
+import SupplierCapacity from './SupplierCapacity';
 
 const Probe = () => {
   const l = useLocation();
@@ -63,10 +64,18 @@ describe('UCX-P1 — the supplier To do follows the seat', () => {
   });
 
   it('the capacity row opens the Not-started group, not the first group', async () => {
-    renderHome();
+    const { unmount } = renderHome();
     const cap = await screen.findByTestId('home-task-capacity-due', {}, { timeout: 8000 });
     fireEvent.click(cap);
-    expect(screen.getByTestId('probe').textContent).toMatch(/^\/supplier\/capacity\?group=pg-/);
+    const to = screen.getByTestId('probe').textContent ?? '';
+    expect(to).toMatch(/^\/supplier\/capacity\?group=pg-/);
+    // The destination proves which group: the page names the linked group's
+    // plan, and that status must be Not started (UCX-F23).
+    unmount();
+    renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER, route: to });
+    expect(await screen.findByTestId('capacity-status', {}, { timeout: 8000 })).toHaveTextContent(
+      'Not started'
+    );
   });
 
   it('the missing-ASN row opens the filtered call-off view, not the unfiltered list', async () => {

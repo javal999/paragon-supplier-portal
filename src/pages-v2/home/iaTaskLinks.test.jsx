@@ -268,5 +268,8 @@ describe('AIB-3 (BL-351) — the missing-ASN chase', () => {
     );
     const panel = await screen.findByRole('dialog', {}, { timeout: 8000 });
     expect(panel).toHaveTextContent(waiting?.callOffNumber ?? '');
+    // Closing drops the `?callOff=` link with the panel, so it does not reopen.
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close panel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
