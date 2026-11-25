@@ -8,6 +8,7 @@ import PageHeader from '@components/ui-v2/PageHeader';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { atomsForSeat } from '@services/transitions/customRoles';
 import {
   useASNs,
   useCallOffChase,
@@ -41,6 +42,7 @@ import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 import TaskList from './home/TaskList';
 /** @import { UnratedTask } from './home/severityDisplay' */
 import { withSeverity } from './home/severityDisplay';
+import { oneRecordOrFiltered } from './home/taskTargets';
 import { responseDeadline } from '@services/data/poResponseProjection';
 import { effectiveDeadline } from '@services/transitions/rfxRules';
 import { awaitsSupplierAnswer } from '@services/transitions/fulfilmentRules';
@@ -72,6 +74,9 @@ const SupplierHome = () => {
   const groupLabel = usePlanningGroupLabel();
   const { identity } = useCurrentIdentity();
   const supplierId = identity.supplierId;
+  // UCX-P1 (BL-362) — the rows follow the seat: its atoms, resolved through
+  // `atomsForSeat` (a custom role included), gate the list.
+  const seatAtoms = useMemo(() => atomsForSeat(identity.businessRoles), [identity.businessRoles]);
   const pos = usePurchaseOrders();
   const rfqs = useRFQs();
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx invitations and this
@@ -187,6 +192,12 @@ const SupplierHome = () => {
       const capacityDue = (capacity.data?.items ?? []).filter(
         (p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated'
       );
+      // UCX-P1 / UCX-F23 — "Confirm capacity" opens the group that is Not
+      // started, not the first group on the page. The shared value is the
+      // fallback when every due plan is merely outdated.
+      const firstCapacityGroup =
+        capacityDue.find((p) => planStatus(p) === 'notStarted')?.planningGroupId ??
+        sharedValue(capacityDue, (p) => p.planningGroupId);
       const unviewed = (forecastVersions.data?.items ?? []).filter(
         (v) =>
           v.isCurrent && v.suppliers.some((s) => s.supplierId === supplierId && s.viewedAt === null)
@@ -291,26 +302,41 @@ const SupplierHome = () => {
         {
           // REQ-E07-02 — the 1-working-day response deadline.
           id: 'confirm-orders',
+          act: 'po:confirm',
           lane: 'orders',
           label: t('hub.home.task.sup.confirmOrders'),
           count: toConfirm.length,
           deadlines: toConfirm.map((po) => responseDeadline(po).toISOString()),
           stock: coverOf(poMaterials(toConfirm)),
-          to: deepLink('/supplier/orders', { tab: 'action' })
+          // UCX-P1 (BL-362) — one PO opens that order (its panel), several open
+          // the Action tab; SupplierOrders reads `?po=` and opens the record.
+          to: oneRecordOrFiltered(
+            toConfirm,
+            (po) => deepLink('/supplier/orders', { po: po.id }),
+            () => deepLink('/supplier/orders', { tab: 'action' })
+          )
         },
         {
           // REQ-E09-03 — released call-offs waiting for this supplier's answer.
           id: 'confirm-calloffs',
+          act: 'calloff:confirm',
           lane: 'orders',
           label: t('hub.home.task.sup.callOffsConfirm'),
           count: toConfirmCallOffs.length,
           deadlines: toConfirmCallOffs.map((v) => v.deadline?.toISOString() ?? v.callOff.needDate),
           stock: coverOf(toConfirmCallOffs.map((v) => v.callOff.materialCode)),
-          to: deepLink('/supplier/call-offs', { status: 'toConfirm' })
+          // UCX-P1 (BL-362) — one call-off opens its panel (`?callOff=`),
+          // several open the To confirm filter.
+          to: oneRecordOrFiltered(
+            toConfirmCallOffs,
+            (v) => deepLink('/supplier/call-offs', { callOff: v.callOff.id }),
+            () => deepLink('/supplier/call-offs', { status: 'toConfirm' })
+          )
         },
         {
           // CR-09 — confirmed, due within 7 days, and no ASN or dispatch notice yet.
           id: 'calloffs-due',
+          act: 'calloff:dispatch',
           lane: 'orders',
           label: t('hub.home.task.sup.callOffsDue'),
           count: dueCallOffs.length,
@@ -322,18 +348,22 @@ const SupplierHome = () => {
           // AIB-3 (BL-351) — PTI has sent a call-off and no ASN is on it; the
           // chase is in the hub (email waits on the notification service, BL-26).
           id: 'calloffs-missing-asn',
+          act: 'asn:create',
           lane: 'orders',
           label: t('hub.home.task.sup.callOffsMissingAsn'),
           count: missingAsnChases.length,
           deadlines: missingAsnChases.map((r) => r.dueAt),
           stock: coverOf(missingAsnChases.map((r) => r.materialCode)),
-          to: '/supplier/call-offs'
+          // UCX-P1 / UCX-F23 — the call-offs this count is over, not the
+          // unfiltered list the row used to open.
+          to: deepLink('/supplier/call-offs', { status: 'missingAsn' })
         },
         {
           // REQ-E08-01 AC-05 — figures past their data-update SLA. S-02: only
           // for an API supplier, which has no weekly status; a manual supplier's
           // out-of-date figures are the weekly row's second line.
           id: 'stale-stock',
+          act: 'inventorydeclaration:declare',
           lane: 'stock',
           label: t('hub.home.task.sup.staleStock'),
           count: weekly === null ? stalePositions.length : 0,
@@ -344,6 +374,7 @@ const SupplierHome = () => {
         {
           // S-02 — "Weekly stock update · 2 of 4 sent · due Thu 3 Sept 23:59 WIB".
           id: 'weekly-update',
+          act: 'inventorydeclaration:declare',
           lane: 'stock',
           label: weeklyText?.headline ?? t('inv.weekly.title'),
           count: weeklyMissing.length,
@@ -362,6 +393,7 @@ const SupplierHome = () => {
           // stock update, at its cutoff; otherwise no due date is defined and the
           // first week the plan does not cover stands in.
           id: 'capacity-due',
+          act: 'capacity:confirm',
           lane: 'stock',
           label: t('hub.home.task.sup.capacityDue'),
           count: capacityDue.length,
@@ -371,16 +403,15 @@ const SupplierHome = () => {
                 (p) => p.weeks.find((w) => w.entry === null || w.needsReEntry === true)?.week
               ),
           stock: coverOf(capacityDue.flatMap((p) => p.materials)),
-          // D7 (PR #74 review): only narrow to a group when every due plan
-          // shares one.
-          to: deepLink('/supplier/capacity', {
-            group: sharedValue(capacityDue, (p) => p.planningGroupId)
-          })
+          // UCX-P1 / UCX-F23 — the group that is Not started, else a group
+          // every due plan shares (D7, PR #74 review).
+          to: deepLink('/supplier/capacity', { group: firstCapacityGroup })
         },
         {
           // REQ-E06-01 — a published version this supplier has not opened yet. No
           // view-by date exists; the version's earliest commitment deadline stands in.
           id: 'new-forecast',
+          act: 'forecast:view',
           lane: 'forecast',
           // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
           preferDue: true,
@@ -395,6 +426,7 @@ const SupplierHome = () => {
         {
           // REQ-E06-03 BR-06 — the reminder at the deadline.
           id: 'commitments-overdue',
+          act: 'requirementresponse:submit',
           lane: 'forecast',
           // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
           preferDue: true,
@@ -409,6 +441,7 @@ const SupplierHome = () => {
         {
           // REQ-E06-03 BR-06 — the reminder at half the deadline.
           id: 'commitments-due-soon',
+          act: 'requirementresponse:submit',
           lane: 'forecast',
           // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
           preferDue: true,
@@ -423,6 +456,7 @@ const SupplierHome = () => {
         {
           // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
           id: 'commitments-revision',
+          act: 'requirementresponse:submit',
           lane: 'forecast',
           // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
           preferDue: true,
@@ -438,6 +472,7 @@ const SupplierHome = () => {
         {
           // REQ-E07-05 — a confirmed order still owes its expected completion date.
           id: 'shipping-notice',
+          act: 'po:shipping-notice',
           lane: 'orders',
           label: t('hub.home.task.sup.shippingNotice'),
           count: noNotice.length,
@@ -451,6 +486,7 @@ const SupplierHome = () => {
           // Ship by the confirmed delivery date (several orders carry an empty
           // one), else the requested date.
           id: 'create-asn',
+          act: 'asn:create',
           lane: 'orders',
           label: t('hub.home.task.sup.createAsn'),
           count: readyToShip.length,
@@ -460,6 +496,7 @@ const SupplierHome = () => {
         },
         {
           id: 'receipt-discrepancies',
+          act: 'receiptdiscrepancy:respond',
           lane: 'orders',
           label: t('hub.home.task.sup.receiptDiscrepancies'),
           count: toAnswer.length,
@@ -471,6 +508,7 @@ const SupplierHome = () => {
         {
           // REQ-E07-07 — Finance returned the invoice with a reason.
           id: 'returned-invoices',
+          act: 'invoice:submit',
           lane: 'money',
           label: t('hub.home.task.sup.returnedInvoices'),
           count: returned.length,
@@ -481,6 +519,7 @@ const SupplierHome = () => {
         {
           // REQ-E03-03 BR-05 — this supplier's own deadline, extension included.
           id: 'rfq',
+          act: 'quotation:submit',
           lane: 'sourcing',
           label: t('hub.home.task.sup.rfq'),
           count: openRfqs.length,
@@ -493,6 +532,7 @@ const SupplierHome = () => {
           // REQ-E03-02 — an information request still to answer: invited, and no
           // SUBMITTED response (a draft is still "to answer").
           id: 'rfi-answer',
+          act: 'rfiresponse:answer',
           lane: 'sourcing',
           label: t('hub.home.task.rfiToAnswer'),
           count: openRfis.length,
@@ -504,6 +544,7 @@ const SupplierHome = () => {
         {
           // REQ-E03-04 — a proposal request still to answer.
           id: 'rfp-answer',
+          act: 'rfpresponse:answer',
           lane: 'sourcing',
           label: t('hub.home.task.rfpToAnswer'),
           count: openRfps.length,
@@ -516,6 +557,7 @@ const SupplierHome = () => {
           // REQ-E03-05 — PTI asked for a revised quote and this supplier has not
           // sent one. The read already narrows the round to its own thread.
           id: 'revised-quote',
+          act: 'quotation:submit',
           lane: 'sourcing',
           label: t('hub.home.task.revisedQuote'),
           count: openRounds.length,
@@ -526,6 +568,7 @@ const SupplierHome = () => {
           // An expired certificate's deadline has passed; an expiring one is due
           // on its expiry date.
           id: 'certs',
+          act: 'supplierdoc:upload',
           lane: 'money',
           label: t('hub.home.task.sup.certs'),
           count: certsDue.length,
@@ -546,6 +589,7 @@ const SupplierHome = () => {
           // IA P-03 (IA-S02) — the documents PTI asked this supplier for. No
           // deadline is recorded on the request.
           id: 'docs-requested',
+          act: 'supplierdoc:submit',
           lane: 'money',
           label: t('hub.home.task.sup.docsRequested'),
           count: docsRequested.length,
@@ -634,7 +678,7 @@ const SupplierHome = () => {
       />
       {/* Inventory UX S-04 (INV-D9) — PTI's asks first, above the To do lanes. */}
       <PtiAsksBlock supplierId={supplierId} />
-      <TaskList tasks={tasks} lanes={lanes} />
+      <TaskList tasks={tasks} lanes={lanes} seatAtoms={seatAtoms} scope="lanes" />
       {openAlerts.length > 0 && (
         <section className="mt-6" data-testid="supplier-home-alerts">
           <h2 className="text-section text-text-primary mb-2">{t('inv.alerts.sup.title')}</h2>
