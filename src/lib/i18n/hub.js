@@ -233,6 +233,10 @@ export const hubEn = {
   'topbar.notices.unreadCount': 'Notifications: {{n}} unread',
   // BL-84 — the bell's accessible name states the count its badge shows.
   'topbar.notificationsCount': 'Notifications: {{n}}',
+  // BL-361 — the PTI bell's accessible name: the derived To-do count, including
+  // 0. Open work, not notices, so it is named in To-do terms.
+  'topbar.todo.count_one': 'To-do: {{count}} open item',
+  'topbar.todo.count_other': 'To-do: {{count}} open items',
 
   // Sample data marker (SC-04)
   'hub.sample.label': 'Sample data',
@@ -428,6 +432,7 @@ export const hubId = {
   'topbar.notices.new': 'Baru',
   'topbar.notices.unreadCount': 'Notifikasi: {{n}} belum dibaca',
   'topbar.notificationsCount': 'Notifikasi: {{n}}',
+  'topbar.todo.count_other': 'Tugas: {{count}} item terbuka',
 
   'hub.sample.label': 'Data contoh',
   'hub.sample.hint':

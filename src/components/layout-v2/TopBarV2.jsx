@@ -7,14 +7,16 @@ import IdentityPanel from './IdentityPanel';
 import TopBarSearch from './TopBarSearch';
 import paragonLogo from '../../../paradise/assets/paragon-logo-primary.svg';
 import { SupplierNoticeBell } from './SupplierNotices';
+import { PtiTodoBell } from './PtiTodoBell';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 
-// BL-213 — THE PTI BELL SHOWS NO BADGE, BECAUSE NO NOTICE SOURCE EXISTS FOR
-// THAT SEAT. The fixed "3" that stood here was sample chrome (BL-84), not a
-// count: no buyer-side read derives a notice population, so any number would be
-// invented. The bell stays as the control; the badge returns when a real
-// buyer-notice read exists (the proposed source is in the MR report — a
-// pending-action read such as supplier replies on /buyer/comm-hub).
+// BL-361 — THE PTI BELL SHOWS THE BUYER'S TO-DO COUNT. BL-213 removed the fixed
+// "3" because no buyer notice source existed; the owner chose `BuyerHome`'s
+// To-do derivation on 2026-11-25. `PtiTodoBell` calls that SAME function, so the
+// bell and the page cannot disagree. It renders for a buyer seat only: a
+// supplier seat keeps its own award-notice bell, and a supplier persona with no
+// supplier id gets a plain, count-free bell rather than another tenancy's work.
+// The count is open work, not notices — there is no read/unread state.
 
 /**
  * @typedef {object} TopBarV2Props
@@ -78,19 +80,25 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <LanguageMenu />
         {/* RFx UX S-04 — a supplier seat's bell lists its award and withdrawal
-            notices, derived from its own award reads. BL-213 — the PTI bell
-            carries no badge: no buyer notice source exists (see the note above). */}
-        {identity.personaType === 'supplier' && identity.supplierId ? (
-          <SupplierNoticeBell />
+            notices, derived from its own award reads. BL-361 — a buyer seat's
+            bell counts and lists the same To-do rows `BuyerHome` derives. */}
+        {identity.personaType === 'supplier' ? (
+          identity.supplierId ? (
+            <SupplierNoticeBell />
+          ) : (
+            // A supplier persona without an id cannot scope its own data, and
+            // must never inherit the buyer's To-do. Plain control, no count.
+            <button
+              type="button"
+              aria-label={t('topbar.notifications')}
+              className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
+              data-testid="plain-notice-bell"
+            >
+              <Bell size={18} />
+            </button>
+          )
         ) : (
-          <button
-            type="button"
-            aria-label={t('topbar.notifications')}
-            className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
-            data-testid="pti-notice-bell"
-          >
-            <Bell size={18} />
-          </button>
+          <PtiTodoBell />
         )}
         {/* The avatar is now a PANEL, not a decoration: the current role and the
             scope it grants live here, because identity belongs with identity. */}
