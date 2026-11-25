@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UCX-P4 v2 One weekly page</title><style>:root{--canvas:#F8F9FD;--surface:#fff;--subtle:#EBEBEB;--line:#D6D6D6;--line-strong:#7A7A7A;--text:#2A3D4A;--text2:#5C5C5C;--muted:#ADADAD;--action:#215AA8;--action-hover:#1A4886;--tint:#D3DEEE;--data:#1E3A5F;--ok:#267346;--ok-bg:#D9F2E3;--warn:#695200;--warn-bg:#FFFBE4;--warn-line:#D97706;--bad:#B80016;--bad-bg:#FFEDEF;--info:#00347A;--info-bg:#CCDDF5;--r:4px;--r2:6px;--r3:8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--canvas:#0f1720;--surface:#18232e;--subtle:#23313e;--line:#52616e;--line-strong:#7b8995;--text:#f7f9fb;--text2:#d3dae1;--muted:#9aa8b5;--action:#7a9ccb;--action-hover:#a6bddc;--tint:#143665;--data:#cfe0f5;--ok:#8cd9ac;--ok-bg:#123825;--warn:#ffe86e;--warn-bg:#342900;--bad:#fab6be;--bad-bg:#5c000b;--info:#99c5ff;--info-bg:#062560}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;background:var(--canvas);color:var(--text);font:14px/1.45 "Helvetica Neue",Arial,system-ui,sans-serif}
+.mono,.d{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--data);font-variant-numeric:tabular-nums lining-nums;font-size:13px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+.banner{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--action);border-radius:var(--r2);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--text2)}
+.banner b{color:var(--text)}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:0 0 8px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 6px}
+.sub{color:var(--text2);margin:0 0 12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 12px;flex-wrap:wrap}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--text2);cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--action);border-bottom-color:var(--action);font-weight:600}
+.panel[hidden]{display:none}
+.btn{font:inherit;border-radius:var(--r);padding:6px 12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);cursor:pointer}
+.btn.pri{border-color:var(--action);color:var(--action);font-weight:600}.btn.pri:hover{background:var(--tint)}
+.btn[disabled]{color:var(--muted);border-color:var(--line);cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:13px}
+.chip{display:inline-block;border:1px solid var(--line);background:var(--subtle);border-radius:var(--r);padding:1px 7px;font-size:12px;color:var(--text2);white-space:nowrap}
+.chip.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}.chip.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}.chip.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}.chip.info{background:var(--info-bg);border-color:var(--info);color:var(--info)}.chip.lane{background:var(--surface)}
+table{width:100%;border-collapse:collapse}th{background:var(--subtle);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);padding:7px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border-bottom:0}
+.num{text-align:right}
+input[type=text],input[type=date],select,textarea{font:inherit;border:1px solid var(--line-strong);border-radius:var(--r);padding:5px 8px;background:var(--surface);color:var(--text);max-width:100%}
+input.n{width:96px;text-align:right}
+label.f{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);margin:0 0 3px}label.f.req::after{content:" *"}
+.field{margin-bottom:10px}
+.hint{font-size:12px;color:var(--text2)}
+.msg{border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--warn);border-radius:var(--r2);padding:8px 10px;font-size:13px}
+.note{border:1px dashed var(--line-strong);border-radius:var(--r2);padding:8px 10px;font-size:13px;color:var(--text2);background:var(--surface)}
+.tip{display:inline-block;width:16px;height:16px;border:1px solid var(--line-strong);border-radius:50%;text-align:center;font-size:11px;line-height:14px;color:var(--text2);cursor:help;margin-left:4px;position:relative}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:20px;top:-4px;z-index:5;width:240px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r2);padding:6px 8px;color:var(--text);font-size:12px;line-height:1.35}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}.wrap{padding:12px}}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:13px}.kv dt{color:var(--text2)}.kv dd{margin:0}
+.pred{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:8px 12px;font-size:13px;color:var(--text2)}
+.pred table td,.pred table th{padding:4px 8px;font-size:12px}
+.tbl-scroll{overflow-x:auto}
+.dim{color:var(--text2)}
+.chk{width:16px;height:16px}
+</style></head><body><div class="wrap"><!--title: UCX-P4 v2 One weekly page-->
+<div class="banner"><b>UCX-P4 v2 · proposed experience · mockup of the PSC-1 weekly confirmation, for the December test (Part B).</b> v2 follows the recommended answer to open question 6, which Levi has not confirmed by name: stock, in production and feedstock are confirmed once per material every week, one click per material. The one-click week of v1 stays only as a labelled probe (the "Show" list). The supplier DA view stays switched off in the portal (DRC-D10). Figures, including the demand anticipation figures, are illustrative sample data. Labels are the portal's own, except these, which are Proposed: "Confirm", "Confirm the new figures", "Confirm the week", "Last confirmed", "Last changed" and "Open capacity". This is not the built portal.</div>
+<div class="row" style="margin-bottom:10px"><label class="f" for="mode" style="margin:0">Show</label>
+<select id="mode"><option value="main">The weekly page: each material confirmed once (recommended answer to question 6)</option><option value="probe">Probe, question 6 not confirmed: one click for the whole week</option></select></div>
+
+<h1>Weekly confirmation</h1>
+<p class="sub">Published for planning week <span class="mono">W36</span> on <span class="mono">28 Aug 2026</span>. Confirm each material once, then confirm the week.</p>
+<div class="card row">
+  <span class="chip warn">Confirmation due (Wednesday 23:59 WIB) · <span class="mono">Wed 2 Sept</span></span>
+  <span class="chip">New stock data cutoff (Thursday 23:59 WIB) · <span class="mono">Thu 3 Sept</span></span>
+  <span class="sp"></span><span id="stat" class="chip warn">0 of 5 materials confirmed</span>
+</div>
+
+<div class="card tbl-scroll">
+  <h2>Stock and feedstock</h2>
+  <table>
+    <thead><tr><th>Material</th><th class="num">Published demand anticipation</th><th class="num">Stock on hand</th><th class="num">In production</th><th class="num">Feedstock</th><th>Last confirmed</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr class="mat" data-state="open"><td><span class="mono">PK-CAPF-8820</span><br><span class="hint">Flip-Top Cap 24mm</span></td><td class="num mono">30,000</td><td class="num"><input class="n edit" type="text" value="1,200" aria-label="PK-CAPF-8820 stock on hand"></td><td class="num"><input class="n edit" type="text" value="0" aria-label="PK-CAPF-8820 in production"></td><td class="num"><input class="n edit" type="text" value="4,000" aria-label="PK-CAPF-8820 feedstock"></td><td class="mono dim">27 Aug 2026</td><td class="cell"><span class="st"><span class="chip warn">To confirm</span></span> <button class="btn sm rowbtn" type="button">Confirm</button></td></tr>
+      <tr class="mat" data-state="open"><td><span class="mono">PK-PETB-8810</span><br><span class="hint">PET Bottle 250ml</span></td><td class="num mono">45,000</td><td class="num"><input class="n edit" type="text" value="8,500" aria-label="PK-PETB-8810 stock on hand"></td><td class="num"><input class="n edit" type="text" value="10,000" aria-label="PK-PETB-8810 in production"></td><td class="num"><input class="n edit" type="text" value="0" aria-label="PK-PETB-8810 feedstock"></td><td class="mono dim">13 Aug 2026</td><td class="cell"><span class="st"><span class="chip warn">To confirm</span></span> <button class="btn sm rowbtn" type="button">Confirm</button></td></tr>
+      <tr class="mat" data-state="open"><td><span class="mono">PK-PETB-8801</span><br><span class="hint">PET Bottle 200ml Frosted — Wardah Series</span></td><td class="num mono">60,000</td><td class="num"><input class="n edit" type="text" value="22,000" aria-label="PK-PETB-8801 stock on hand"></td><td class="num"><input class="n edit" type="text" value="0" aria-label="PK-PETB-8801 in production"></td><td class="num"><input class="n edit" type="text" value="12,000" aria-label="PK-PETB-8801 feedstock"></td><td class="mono dim">27 Aug 2026</td><td class="cell"><span class="st"><span class="chip warn">To confirm</span></span> <button class="btn sm rowbtn" type="button">Confirm</button></td></tr>
+      <tr class="mat" data-state="open"><td><span class="mono">PK-PETB-8802</span><br><span class="hint">PET Bottle 100ml Clear — Emina Series</span></td><td class="num mono">25,000</td><td class="num"><input class="n edit" type="text" value="5,000" aria-label="PK-PETB-8802 stock on hand"></td><td class="num"><input class="n edit" type="text" value="5,000" aria-label="PK-PETB-8802 in production"></td><td class="num"><input class="n edit" type="text" value="0" aria-label="PK-PETB-8802 feedstock"></td><td class="mono dim">13 Aug 2026</td><td class="cell"><span class="st"><span class="chip warn">To confirm</span></span> <button class="btn sm rowbtn" type="button">Confirm</button></td></tr>
+      <tr class="mat" data-state="open"><td><span class="mono">PK-CAPF-8830</span><br><span class="hint">Pump Cap 28mm <span class="chip">illustration</span></span></td><td class="num mono">18,000</td><td class="num"><input class="n edit" type="text" value="3,300" aria-label="PK-CAPF-8830 stock on hand"></td><td class="num"><input class="n edit" type="text" value="0" aria-label="PK-CAPF-8830 in production"></td><td class="num"><input class="n edit" type="text" value="1,500" aria-label="PK-CAPF-8830 feedstock"></td><td class="mono dim">27 Aug 2026</td><td class="cell"><span class="st"><span class="chip warn">To confirm</span></span> <button class="btn sm rowbtn" type="button">Confirm</button></td></tr>
+    </tbody>
+  </table>
+  <p class="hint" style="margin:8px 0 0"><span id="fromtxt">Pre-filled from your last confirmation. Check each material against your stock record. Type over a figure to change it, then confirm the material.</span> Feedstock is entered here once, not on a second tab.</p>
+</div>
+
+<div class="card tbl-scroll">
+  <h2>Capacity groups <span class="dim" style="font-weight:400">· 2 still to confirm</span></h2>
+  <table>
+    <thead><tr><th>Planning group</th><th>13 weeks</th><th>Last changed</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Rigid plastic packaging</td><td class="dim">Same weekly allocation as your last confirmation</td><td class="mono dim">17 Aug 2026</td><td><span class="chip warn">Gap</span></td><td><button class="btn sm" type="button">Open capacity</button></td></tr>
+      <tr><td>Closures</td><td class="dim">Not started</td><td class="mono dim">not yet</td><td><span class="chip">Not started</span></td><td><button class="btn sm" type="button">Open capacity</button></td></tr>
+    </tbody>
+  </table>
+  <p class="hint" style="margin:8px 0 0">Capacity stays on its own page because it holds 13 weeks per group. This page shows its status and the date of its last change, and opens it in one click. It is never carried forward.</p>
+</div>
+
+<div class="card" id="carry"><h2>Carried forward when you confirm the week</h2><p style="margin:0 0 6px" class="hint">Nothing to type for these. PTI sees them as carried forward, with who confirmed the week and when.</p>
+<dl class="kv"><dt>Demand anticipation</dt><dd>The published figures above for <span class="mono">W36</span></dd><dt>Purchase orders</dt><dd><span class="mono">2</span> open, due a response: <button class="btn sm" type="button">Confirm as requested…</button></dd><dt>Foresight commitments</dt><dd><span class="mono">2</span> periods published this week: <button class="btn sm" type="button">Open Foresight commitments</button></dd><dt>Shipping notice</dt><dd>Read only here. Expected completion date <span class="mono">03 Sept 2026</span></dd></dl></div>
+
+<div class="card row">
+  <span class="hint" id="foot">Confirm each material above, then confirm the week.</span><span class="sp"></span>
+  <button class="btn" type="button" id="submit" hidden disabled>Submit the change</button>
+  <button class="btn pri" type="button" id="confirm" disabled>Confirm the week</button>
+</div>
+<div id="ok" class="card" hidden style="border-color:var(--ok)"><span class="chip ok">Week W36 confirmed</span> <span class="hint" id="oktxt"></span></div>
+
+<script>
+(function(){
+var mode=document.getElementById('mode'),rows=[].slice.call(document.querySelectorAll('tr.mat')),conf=document.getElementById('confirm'),submit=document.getElementById('submit'),stat=document.getElementById('stat'),foot=document.getElementById('foot'),ok=document.getElementById('ok'),oktxt=document.getElementById('oktxt'),from=document.getElementById('fromtxt');
+function chip(r,cls,txt){r.querySelector('.st').innerHTML='<span class="chip '+cls+'">'+txt+'</span>'}
+function nConf(){return rows.filter(function(r){return r.dataset.state==='confirmed'||r.dataset.state==='confirmedchanged'}).length}
+function nChanged(){return rows.filter(function(r){return r.dataset.state==='changed'}).length}
+function refresh(){var probe=mode.value==='probe';ok.hidden=true;
+ rows.forEach(function(r){var b=r.querySelector('.rowbtn'),s=r.dataset.state;b.hidden=probe;
+  if(probe){if(s!=='changed'){r.dataset.state='open';chip(r,'','Unchanged')}}
+  else{if(s==='open')chip(r,'warn','To confirm');b.textContent=(s==='changed')?'Confirm the new figures':'Confirm';b.disabled=(s==='confirmed'||s==='confirmedchanged')}});
+ if(probe){stat.className='chip ok';stat.textContent='Carried forward from the last confirmation';from.textContent='Pre-filled from your last confirmation. Type over a figure to change it.';
+  submit.hidden=false;submit.disabled=nChanged()===0;conf.textContent='Confirm the week: nothing changed';conf.disabled=nChanged()>0;
+  foot.textContent='Nothing changed this week? One click confirms the week. Stock and capacity are carried forward (probe: question 6 is not confirmed).'}
+ else{var n=nConf();stat.className='chip '+(n===rows.length?'ok':'warn');stat.textContent=n+' of '+rows.length+' materials confirmed';
+  from.textContent='Pre-filled from your last confirmation. Check each material against your stock record. Type over a figure to change it, then confirm the material.';
+  submit.hidden=true;conf.textContent='Confirm the week';conf.disabled=n!==rows.length;
+  foot.textContent=n===rows.length?'All materials confirmed. Confirm the week.':'Confirm each material above, then confirm the week.'}}
+mode.addEventListener('change',function(){rows.forEach(function(r){r.dataset.state='open'});refresh()});
+rows.forEach(function(r){
+ r.querySelectorAll('.edit').forEach(function(e){e.addEventListener('input',function(){r.dataset.state='changed';chip(r,'info','Changed');refresh()})});
+ r.querySelector('.rowbtn').addEventListener('click',function(){var was=r.dataset.state;r.dataset.state=(was==='changed')?'confirmedchanged':'confirmed';chip(r,'ok',was==='changed'?'Confirmed · changed':'Confirmed');refresh()})});
+conf.addEventListener('click',function(){ok.hidden=false;oktxt.textContent=mode.value==='probe'?'PTI sees this week as carried forward, with who confirmed it and when.':'PTI sees stock, in production and feedstock confirmed today for each material, and the demand anticipation, purchase orders and Foresight periods carried forward.'});
+submit.addEventListener('click',function(){ok.hidden=false;ok.querySelector('.chip').textContent='The change for W36 submitted';oktxt.textContent=''});
+refresh();
+})();
+</script>
+</div><script>
+document.querySelectorAll('[data-tabs]').forEach(function(g){var bs=g.querySelectorAll('[role=tab]');var scope=document.querySelector(g.getAttribute('data-tabs'))||document;
+function show(id){bs.forEach(function(b){b.setAttribute('aria-selected',b.dataset.p===id)});scope.querySelectorAll(':scope > .panel').forEach(function(p){p.hidden=p.id!==id})}
+bs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.p)})});show(bs[0].dataset.p)});
+document.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var t=document.querySelector(b.dataset.toggle);if(t)t.hidden=!t.hidden})});
+</script></body></html>
