@@ -204,6 +204,16 @@ export const usePoOnHold = () =>
   useServiceQuery(['procurement', 'poOnHold'], (svc, scope) => svc.procurement.getPoOnHold(scope));
 
 /**
+ * UCX-P7 (BL-368) — the escalation records against one PO, for the buyer's PO
+ * panel. No PO open means nothing to read.
+ * @param {string | null} poId
+ */
+export const usePoEscalationRecords = (poId) =>
+  useServiceQuery(['procurement', 'poEscalation', poId], (svc, scope) =>
+    poId ? svc.procurement.getPoEscalationRecords(scope, poId) : Promise.resolve({ items: [] })
+  );
+
+/**
  * REQ-E14-02 — supplier reliability and PTI's plan-change measures. The planner
  * reads every supplier; a supplier reads only its own row (scoped in the service).
  * @param {ReliabilityWindowWeeks} [windowWeeks]

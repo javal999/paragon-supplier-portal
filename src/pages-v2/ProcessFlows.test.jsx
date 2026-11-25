@@ -203,7 +203,8 @@ describe('ProcessFlows — the lifecycle walk is honest about what it is', () =>
     // Five verbs leave `Sent` — view, acknowledge, and the three answers
     // (confirm, adjust, reject; REQ-E07-02 added the last two, which is the
     // premise change behind this count moving from three). All are offered,
-    // none is invented, and all are performable.
+    // none is invented, and all are performable. UCX-P7's three escalated-PO
+    // moves are cascades (not surfaced), so the walk does not offer them.
     expect(screen.getAllByRole('button', { name: 'Advance' })).toHaveLength(5);
     fireEvent.click(screen.getByRole('button', { name: 'Reset walk' }));
     expect(screen.getByText('not started')).toBeInTheDocument();
@@ -288,8 +289,10 @@ describe('ProcessFlows — honesty markers', () => {
     // Every PO external fact is S/4HANA's — the goods movements and the close.
     expect(screen.getAllByTestId('owner-external').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Owned by S/4HANA').length).toBeGreaterThan(0);
-    // …and the PO flow declares no `computed` act, so nothing here claims one.
-    expect(screen.queryByTestId('owner-computed')).toBeNull();
+    // UCX-P7 gave the PO three `computed` acts (the escalated-PO moves its
+    // record cascades); each says it is computed, and none names a wrong owner.
+    expect(screen.getAllByTestId('owner-computed').length).toBe(3);
+    expect(screen.queryByText('Owned by TMS')).toBeNull();
 
     // The other arm, on a machine that has both: shipment is entirely TMS.
     pick('shipment');

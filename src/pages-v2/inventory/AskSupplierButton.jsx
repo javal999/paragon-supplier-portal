@@ -60,6 +60,8 @@ import {
  * @property {string} [defaultQuestion] Replaces the topic's prefilled question.
  * @property {RiskClass} [riskClass] The class of the alert the ask comes from.
  * @property {string} [testId] Prefix for the test ids (default `ask-supplier`).
+ * @property {() => void} [onRaised] UCX-P7 — called after an ask is raised, so a
+ *   surface that owns the follow-up (the alert's close reason) can record it.
  */
 
 /**
@@ -80,7 +82,8 @@ const AskSupplierButton = ({
   topic,
   defaultQuestion,
   riskClass,
-  testId: testIdProp
+  testId: testIdProp,
+  onRaised
 }) => {
   const { t } = useTranslation();
   // A test id, not copy.
@@ -129,6 +132,7 @@ const AskSupplierButton = ({
           topic={topic}
           defaultQuestion={defaultQuestion}
           riskClass={riskClass}
+          onRaised={onRaised}
           onClose={() => setOpen(false)}
           testId={testId}
         />
@@ -144,6 +148,7 @@ const AskSupplierButton = ({
  * @property {SupplierAskTopic} topic
  * @property {string} [defaultQuestion]
  * @property {RiskClass} [riskClass]
+ * @property {() => void} [onRaised] UCX-P7 — called after the ask is recorded.
  * @property {() => void} onClose
  * @property {string} testId
  */
@@ -155,6 +160,7 @@ const AskRaiseDialog = ({
   topic: initialTopic,
   defaultQuestion,
   riskClass,
+  onRaised,
   onClose,
   testId
 }) => {
@@ -212,6 +218,7 @@ const AskRaiseDialog = ({
       return;
     }
     toast({ variant: 'success', title: t('supplierAsk.toast.raised') });
+    onRaised?.();
     onClose();
   };
 
