@@ -188,7 +188,9 @@ export const forecastCollaborationEn = {
   'fc.sup.week.confirm.prefilledNote':
     'A pre-filled quantity is PTI’s forecast, not a figure you typed. Change it on the material row if you cannot supply it.',
   'fc.sup.week.confirm.cancel': 'Cancel',
-  'fc.sup.week.refusal.capacityNotConfirmed': 'Confirm capacity for {{group}} first.',
+  // UCX-P8 (BL-369, UCX-D24) — the wait names the owner and the act.
+  'fc.sup.week.refusal.capacityNotConfirmed':
+    'Awaiting Supplier Fulfilment: capacity for {{group}}',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Above BE: choose a reason.',
   'fc.sup.week.refusal.aboveBeNoteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.sup.week.refusal.row': 'Fix the rows of this period first.',
@@ -505,8 +507,9 @@ export const forecastCollaborationId = {
   'fc.sup.week.confirm.prefilledNote':
     'Kuantitas yang terisi adalah prakiraan PTI, bukan angka yang Anda ketik. Ubah di baris material bila Anda tidak dapat memasoknya.',
   'fc.sup.week.confirm.cancel': 'Batal',
+  // UCX-P8 (BL-369, UCX-D24) — the wait names the owner and the act.
   'fc.sup.week.refusal.capacityNotConfirmed':
-    'Konfirmasikan kapasitas untuk {{group}} terlebih dahulu.',
+    'Menunggu Pemenuhan Pemasok: kapasitas untuk {{group}}',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Di atas BE: pilih alasan.',
   'fc.sup.week.refusal.aboveBeNoteRequired':
     'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',

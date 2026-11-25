@@ -50,6 +50,8 @@ export const supplierShipmentsEn = {
   'supplierShipments.col.tracking': 'Tracking',
   'supplierShipments.col.eta': 'ETA',
   'supplierShipments.col.actions': 'Actions',
+  // UCX-P8 (BL-369, UCX-D24) — the wait shown beside the Awaiting exception pill.
+  'supplierShipments.row.awaitingException': 'Awaiting PTI Quality: exception decision',
   // — Row aria / controls —
   'supplierShipments.aria.expand': 'Expand',
   'supplierShipments.aria.collapse': 'Collapse',
@@ -174,6 +176,8 @@ export const supplierShipmentsId = {
   'supplierShipments.col.tracking': 'Pelacakan',
   'supplierShipments.col.eta': 'ETA',
   'supplierShipments.col.actions': 'Tindakan',
+  // UCX-P8 (BL-369, UCX-D24) — the wait shown beside the Awaiting exception pill.
+  'supplierShipments.row.awaitingException': 'Menunggu Mutu PTI: keputusan pengecualian',
   // — Row aria / controls —
   'supplierShipments.aria.expand': 'Perluas',
   'supplierShipments.aria.collapse': 'Ciutkan',

@@ -6,6 +6,7 @@ import Button from '@components/ui-v2/Button';
 import TermLabel from '@components/ui-v2/TermLabel';
 import WeekGrid from '@components/ui-v2/WeekGrid';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { PeriodRow, ReasonLabel, WeekReason } from '../const' */
 import { LtpCheckPill, inputClass, ltpSeverity } from '../../inventory/inventoryDisplay';
@@ -53,6 +54,10 @@ const PeriodSubmitSection = ({
   onSubmitAll
 }) => {
   const { t } = useTranslation();
+  // UCX-P8 (UCX-D24) — the capacity wait's link is the owner's next act, so it
+  // renders only for a seat that holds `capacity:confirm` (the fulfilment
+  // lane). Derived through `atomsForSeat`; no lane list is written here.
+  const capacityConfirm = useVerbAvailability('capacity:confirm');
   // BL-240 — the period whose confirmation is open, by bucket, so the summary
   // reads the row as it stands now (a refusal that appears meanwhile disables confirm).
   const [confirming, setConfirming] = useState(/** @type {string | null} */ (null));
@@ -251,6 +256,18 @@ const PeriodSubmitSection = ({
                           })}
                     </span>
                   )}
+                  {/* UCX-P8 (UCX-D24) — the link to the owner's next act, only
+                      for the seat that can take it. */}
+                  {row.refusal?.kind === 'capacityNotConfirmed' &&
+                    capacityConfirm.kind === 'held' && (
+                      <Link
+                        to="/supplier/capacity"
+                        className="text-xs text-action-hover hover:underline"
+                        data-testid={`fc-week-refusal-link-${row.bucket}`}
+                      >
+                        {t('fc.sup.week.confirmCapacity')}
+                      </Link>
+                    )}
                 </div>
               ) : (
                 <HandoffNotice availability={submitAvail} testId="handoff-forecast-commit-week" />
