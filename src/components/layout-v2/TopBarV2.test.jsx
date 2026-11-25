@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
 import i18n, { LANG_STORAGE_KEY } from '@lib/i18n';
@@ -63,11 +65,22 @@ describe('TopBarV2 — ☰ opens the side-menu drawer', () => {
   });
 });
 
-describe('TopBarV2 — the notification bell states how many (BL-84)', () => {
-  it('the PTI bell carries its badge count in its accessible name', () => {
+describe('TopBarV2 — the PTI bell carries no invented count (BL-213)', () => {
+  it('renders the bell with no badge and no count in its name', () => {
     renderWithProviders(<TopBarV2 />);
-    // The badge renders 3; the name must say 3 too, not only "Notifications".
-    expect(screen.getByRole('button', { name: 'Notifications: 3' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Notifications' })).not.toBeInTheDocument();
+    const bell = screen.getByTestId('pti-notice-bell');
+    expect(bell).toHaveAccessibleName('Notifications');
+    // The fixed "3" is gone: no badge, and no digit in the bell at all.
+    expect(screen.queryByTestId('supplier-notice-badge')).toBeNull();
+    expect(bell).not.toHaveTextContent(/\d/);
+  });
+
+  it('guard — the shell source holds no hard-coded notice count', () => {
+    const source = readFileSync(join(__dirname, 'TopBarV2.jsx'), 'utf8');
+    // The constant that made BL-84's name and badge agree is the thing BL-213
+    // removed with the badge; if it returns, this fails by name.
+    expect(source).not.toContain('PTI_NOTICE_COUNT');
+    // A danger badge is the shape the fixed count had. The buyer bell has none.
+    expect(source).not.toMatch(/bg-danger/);
   });
 });

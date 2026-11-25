@@ -13,6 +13,7 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { MockCommandService } from '@services/data/mock/MockCommandService';
 import { formatDate, formatMoney } from '@lib/format';
+import { resetNoticeReads } from '@services/stores/noticeReadsStore';
 import SidebarV2 from '@components/layout-v2/SidebarV2';
 import TopBarV2 from '@components/layout-v2/TopBarV2';
 import SupplierRFQs from '../SupplierRFQs';
@@ -33,6 +34,9 @@ beforeEach(() => {
   rfqStore.reset();
   quotationStore.reset();
   sdcClock.reset();
+  // BL-213 — the bell's read marks persist in localStorage, so a test that
+  // opens it would otherwise clear the badge for the next test's seat.
+  resetNoticeReads();
 });
 
 /** @type {QueryScope} */
@@ -176,9 +180,9 @@ describe('S-04 — the award reaches the supplier: the strip on the event card, 
     renderWithProviders(<TopBarV2 />, { identity: SUP_015 });
     const bell = await screen.findByTestId('supplier-notice-bell');
     // sup-015 also holds a share of rfq-024 (seeded): the badge counts both,
-    // and BL-84 puts that count in the bell's accessible name as well.
+    // and BL-213 makes that the UNREAD count, stated in the accessible name.
     await waitFor(() => expect(bell).toHaveTextContent('2'));
-    expect(bell).toHaveAccessibleName('Notifications: 2');
+    expect(bell).toHaveAccessibleName('Notifications: 2 unread');
     fireEvent.click(bell);
     const notice = screen.getByTestId('supplier-notice-rfq:rfq-015:awarded');
     expect(notice).toHaveTextContent('Awarded to you · RFQ-2026-015 · 70% of item 1');
@@ -206,11 +210,14 @@ describe('S-04 — the award reaches the supplier: the strip on the event card, 
     );
   });
 
-  it('the PTI bell is unchanged', () => {
+  it('the PTI bell carries no fixed count (BL-213)', () => {
     renderWithProviders(<TopBarV2 />);
     expect(screen.queryByTestId('supplier-notice-bell')).toBeNull();
-    // BL-84 — its name states the count its badge shows.
-    expect(screen.getByRole('button', { name: 'Notifications: 3' })).toBeInTheDocument();
+    // No notice source exists for the PTI seat, so the badge is gone and the
+    // name says only "Notifications".
+    const bell = screen.getByTestId('pti-notice-bell');
+    expect(bell).toHaveAccessibleName('Notifications');
+    expect(bell).not.toHaveTextContent(/\d/);
   });
 });
 
