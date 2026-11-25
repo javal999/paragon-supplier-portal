@@ -721,10 +721,14 @@ export function publishRefusal(payload, ctx) {
 
 /**
  * One row of the read (`getDemandAnticipation`): the core with names for the page.
+ * `agreement`:  UCX-P6 (BL-367) — the standing agreement derived from the
+ *   publication history (UCX-D19); null when none stands. It stands until the
+ *   planner changes it, with no expiry and no re-ask.
  * @typedef {DemandAnticipationRowCore & {
  *   readonly supplierName: string;
  *   readonly materialLabel: string;
  *   readonly uom: string;
+ *   readonly agreement: import('./daAgreementRules').StandingAgreement | null;
  * }} DemandAnticipationRow
  */
 

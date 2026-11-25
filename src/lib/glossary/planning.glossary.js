@@ -20,7 +20,7 @@
 /** @import { GlossaryOf } from './types' */
 
 /** The planning terms a forecast page shows with a tip. */
-/** @typedef {'Zone Liability' | 'Zone Capacity' | 'MASC' | 'Tracking signal' | 'Reorder point' | 'P50/P90' | 'Safety stock'} PlanningTerm */
+/** @typedef {'Zone Liability' | 'Zone Capacity' | 'MASC' | 'Tracking signal' | 'Reorder point' | 'P50/P90' | 'Safety stock' | 'FG cap'} PlanningTerm */
 
 export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} */ ({
   'Zone Liability': {
@@ -50,5 +50,14 @@ export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} 
   'Safety stock': {
     en: 'Stock kept on hand to cover demand above the forecast. The plan orders so that stock does not fall below it.',
     id: 'Stok yang disimpan untuk menutup permintaan di atas prakiraan. Rencana memesan agar stok tidak turun di bawahnya.'
+  },
+  // UCX-P6 (BL-367) · PEX-8 BR-03 — the one PO On Hold term whose definition a
+  // source settles: "FG cap = (Max PTI + min(Max Supplier, SOH Supplier)) − SOH
+  // PTI, floored at 0" [Table; Owner, 2026-11-05, Q4]
+  // (SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11). PIPO and Max PTI have no
+  // definition until BL-297 (Mba Septi), so they carry no tip.
+  'FG cap': {
+    en: 'The quantity the finished-goods option can absorb at the end of the grace period: Max PTI plus the smaller of Max Supplier and the supplier’s stock on hand, less PTI’s stock on hand, never below 0.',
+    id: 'Kuantitas yang dapat diserap opsi barang jadi pada akhir masa tenggang: Max PTI ditambah yang lebih kecil antara Max Supplier dan stok pemasok, dikurangi stok PTI, tidak pernah di bawah 0.'
   }
 });

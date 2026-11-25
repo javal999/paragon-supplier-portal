@@ -106,10 +106,16 @@ export const demandAnticipationEn = {
   'demandAnt.publish.done': 'Demand anticipation published for {{week}}',
   'demandAnt.publish.failed': 'Could not publish demand anticipation',
   // The supplier's agreement to take a remainder outside the horizon [Owner A8].
+  // UCX-P6 (BL-367) · UCX-D19 — the agreement stands until the planner changes
+  // it; the date shown is its only cue that it is old (UCX-PG12). [Proposed] labels.
   'demandAnt.agree.legend': 'Supplier agreed to take the remainder after the horizon',
   'demandAnt.agree.help':
-    'Tick only where the supplier agreed. Without it the remainder goes to the last week of the horizon.',
+    'Agreements stay on record until you change them. Only a new row, or a row you untick, needs a decision.',
   'demandAnt.agree.option': '{{qty}} to {{outside}} instead of {{last}}',
+  'demandAnt.agree.summary': '{{carried}} agreements carry · {{asked}} to decide',
+  'demandAnt.agree.standing': 'Agreed {{date}}',
+  'demandAnt.agree.isNew': 'New this week: no agreement on record',
+  'demandAnt.agree.changed': 'Changed since {{date}}: was {{qty}}',
   // The filters.
   'demandAnt.filter.supplier': 'Supplier',
   'demandAnt.filter.material': 'Material',
@@ -277,8 +283,12 @@ export const demandAnticipationId = {
   'demandAnt.publish.failed': 'Demand anticipation tidak dapat dipublikasikan',
   'demandAnt.agree.legend': 'Pemasok setuju menerima sisa setelah horizon',
   'demandAnt.agree.help':
-    'Centang hanya bila pemasok setuju. Tanpa itu sisa dipindah ke minggu terakhir horizon.',
+    'Kesepakatan tetap tercatat sampai Anda mengubahnya. Hanya baris baru, atau baris yang Anda hapus centangnya, yang perlu keputusan.',
   'demandAnt.agree.option': '{{qty}} ke {{outside}}, bukan {{last}}',
+  'demandAnt.agree.summary': '{{carried}} kesepakatan berlanjut · {{asked}} perlu diputuskan',
+  'demandAnt.agree.standing': 'Disepakati {{date}}',
+  'demandAnt.agree.isNew': 'Baru minggu ini: belum ada kesepakatan',
+  'demandAnt.agree.changed': 'Berubah sejak {{date}}: sebelumnya {{qty}}',
   'demandAnt.filter.supplier': 'Pemasok',
   'demandAnt.filter.material': 'Material',
   'demandAnt.filter.all': 'Semua',

@@ -8,6 +8,7 @@
 
 import { addDays, isoWeek } from '@services/engine/dates';
 import { formatDate, formatNumber } from '@lib/format';
+import { askStateOf } from '@services/transitions/daAgreementRules';
 import { daPairsChanged, daPublished } from '@components/forecast/cycleCounts';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 
@@ -73,6 +74,17 @@ export function latestPublication(rows) {
  */
 export const agreementCandidates = (rows) =>
   rows.filter((r) => r.today.remainder > 0 && r.today.firstOutsideWeek !== null);
+
+/**
+ * UCX-P6 (BL-367) · UCX-D19 — what the confirm asks about each candidate:
+ * `new` (no standing agreement), `changed` (its remainder moved since the
+ * agreement), or `standing` (an agreement that carries, shown with its date
+ * and no decision needed).
+ * @param {DemandAnticipationRow} row
+ * @returns {'new' | 'changed' | 'standing'}
+ */
+export const askState = (row) =>
+  askStateOf({ agreement: row.agreement, remainder: row.today.remainder });
 
 /**
  * `+2,800` / `−1,000` / null for no change.

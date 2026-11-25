@@ -55,6 +55,13 @@ export const poOnHoldEn = {
   'poh.suggest.preselected': 'Pre-selected from the conditions. You can change it before sending.',
   'poh.suggest.none': 'No option fits the conditions yet. Choose one to send.',
   'poh.suggest.sent': 'Suggestion sent for {{material}}.',
+  // UCX-P6 (BL-367) · UCX-PD22 — the suggestions go out together. [Proposed] labels.
+  'poh.suggest.sendAll': 'Send the preselected suggestions together ({{count}})',
+  'poh.suggest.sendAllHint': 'You can change any line before sending.',
+  'poh.suggest.sentAll': '{{count}} suggestions sent.',
+  // UCX-P6 · UCX-F12 — FG cap is the one term a source defines (PEX-8 BR-03).
+  'poh.hint.fgCap':
+    'Max PTI plus the smaller of Max Supplier and the supplier’s stock on hand, less PTI’s stock on hand, never below 0.',
   'poh.again.note':
     'Part of this line is still on hold after the execution. Suggest again to start round {{round}}: the supplier chooses again and a new grace period starts today.',
   'poh.again.send': 'Suggest again',
@@ -194,6 +201,11 @@ export const poOnHoldId = {
     'Dipilih otomatis dari kondisinya. Anda dapat mengubahnya sebelum mengirim.',
   'poh.suggest.none': 'Belum ada opsi yang sesuai dengan kondisinya. Pilih satu untuk dikirim.',
   'poh.suggest.sent': 'Usulan terkirim untuk {{material}}.',
+  'poh.suggest.sendAll': 'Kirim usulan terpilih sekaligus ({{count}})',
+  'poh.suggest.sendAllHint': 'Anda dapat mengubah setiap baris sebelum mengirim.',
+  'poh.suggest.sentAll': '{{count}} usulan terkirim.',
+  'poh.hint.fgCap':
+    'Max PTI ditambah yang lebih kecil antara Max Supplier dan stok pemasok, dikurangi stok PTI, tidak pernah di bawah 0.',
   'poh.again.note':
     'Sebagian baris ini masih ditahan setelah eksekusi. Usulkan lagi untuk memulai putaran {{round}}: pemasok memilih lagi dan masa tenggang baru dimulai hari ini.',
   'poh.again.send': 'Usulkan lagi',
