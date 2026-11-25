@@ -65,6 +65,8 @@ import SupplierShipments from '@pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '@pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '@pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '@pages-v2/SupplierInventory';
+// UCX-P4 v2 (BL-365) — one weekly page: stock, in production, feedstock, capacity status.
+import SupplierWeekly from '@pages-v2/SupplierWeekly';
 import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
@@ -297,6 +299,8 @@ const AppRouter = () => {
             <Route path="/supplier/goods-receipts" element={<SupplierGoodsReceipts />} />
             <Route path="/supplier/invoices" element={<SupplierInvoicesV2 />} />
             <Route path="/supplier/inventory" element={<SupplierInventoryV2 />} />
+            {/* UCX-P4 v2 (BL-365) — the weekly confirmation page (PSC-1), DA view still off. */}
+            <Route path="/supplier/weekly" element={<SupplierWeekly />} />
             <Route path="/supplier/delivery-agreements" element={<SupplierDeliveryAgreements />} />
             <Route path="/supplier/call-offs" element={<SupplierCallOffs />} />
             <Route path="/supplier/capacity" element={<SupplierCapacity />} />

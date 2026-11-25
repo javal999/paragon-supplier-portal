@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Container,
   CalendarCheck,
+  CalendarRange,
   CalendarClock,
   CalendarSync,
   CalendarDays,
@@ -272,6 +273,8 @@ export const SUPPLIER_NAV = [
           ]
         : []),
       { labelKey: 'hub.nav.sup.fsReconcile', icon: Scale, path: '/supplier/fs-reconcile' },
+      // UCX-P4 v2 (BL-365) — one weekly page: the weekly confirmation in one visit.
+      { labelKey: 'hub.nav.sup.weekly', icon: CalendarRange, path: '/supplier/weekly' },
       { labelKey: 'hub.nav.sup.stock', icon: Boxes, path: '/supplier/inventory' },
       { labelKey: 'hub.nav.sup.capacity', icon: Factory, path: '/supplier/capacity' }
     ]

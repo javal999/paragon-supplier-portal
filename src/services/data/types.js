@@ -3311,6 +3311,11 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   supplier × material, the latest publication's figures per horizon week, read only. Built ahead and
  *   switched off (DRC-D10, `SUPPLIER_DA_VIEW_ENABLED`): while off, every scope reads an empty page. On,
  *   a supplier reads its own pairs only and PTI every pair.
+ * @property {(scope: QueryScope) => Promise<import('./mock/daConfirmationReadModel').SupplierWeeklyPublication | null>} getSupplierWeeklyPublication
+ *   UCX-P4 v2 (BL-365) — the weekly page's publication identity (PSC-1 BR-10): the planning
+ *   week, its publication id, the materials it holds and whether this week is already confirmed.
+ *   NO demand figures (DRC-D10): the supplier DA view stays off. Null for a buyer scope and for a
+ *   supplier no publication holds.
  * @property {(scope: QueryScope) => Promise<Page<DaHistoryRow>>} getDemandAnticipationHistory DRC-3 (BL-189) — every demand anticipation publication ever recorded,
  *   one row per publication × supplier × material, with its stamped figure, its
  *   carry-over origin and the delayed call-offs it reflects (DRC-5). PTI only:

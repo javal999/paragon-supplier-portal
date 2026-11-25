@@ -109,6 +109,8 @@ import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { adminEventCalendarEn, adminEventCalendarId } from './i18n/adminEventCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
+// — UCX-P4 v2 (BL-365) the supplier's one weekly page —
+import { weeklyConfirmationEn, weeklyConfirmationId } from './i18n/weeklyConfirmation';
 // — DRC-9a strategic buffer, DRC-9b production limit (BL-195) —
 import { drcBuffersEn, drcBuffersId } from './i18n/drcBuffers';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
@@ -265,6 +267,7 @@ export const resources = {
       ...adminEventCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
+      ...weeklyConfirmationEn,
       ...drcBuffersEn,
       ...pexPlanTraceEn,
       ...forecastCollaborationEn,
@@ -779,6 +782,7 @@ export const resources = {
       ...adminEventCalendarId,
       ...performanceId,
       ...inventoryCapacityId,
+      ...weeklyConfirmationId,
       ...drcBuffersId,
       ...pexPlanTraceId,
       ...forecastCollaborationId,
