@@ -50,6 +50,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * it. Twin of `PR_REJECT_REASON_AUTHORED` / `PR_REVISION_NOTE_AUTHORED`.
    */
   SUPPLIERDOC_REFUSAL_AUTHORED: 'supplierdoc_refusal_authored',
+  /**
+   * UCX-P5 · answer a request by its type. The COA answer verb is legal only on
+   * a row PTI asked for as a COA, and the certificate verbs are refused on a
+   * COA row. `requiredFields` cannot express this: the required FIELDS differ
+   * by kind, so the KIND has to be checked against the entity, not the payload.
+   */
+  SUPPLIERDOC_COA_REQUEST: 'supplierdoc_coa_request',
+  /** The mirror: a certificate declaration is refused on a COA request. */
+  SUPPLIERDOC_CERTIFICATE_REQUEST: 'supplierdoc_certificate_request',
   /** PO confirm: each confirmed line qty must be > 0 and ≤ the ordered qty. */
   PO_CONFIRM_QTY_WITHIN_ORDERED: 'po_confirm_qty_within_ordered',
   /** PO adjust (REQ-E07-02 AC-02): every counter-offer names a line of this PO,

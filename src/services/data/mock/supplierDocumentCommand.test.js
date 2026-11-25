@@ -383,16 +383,32 @@ describe('§82 · a refused document is not a dead end', () => {
   });
 
   it('also answers a slot the buyer opened (Awaiting Upload)', async () => {
+    // ⚠️ UCX-P5 — THE SUBJECT CHANGED BECAUSE doc-006 DID. It used to be the one
+    // seeded `Awaiting Upload` row; it is now a COA request, and the kind guard
+    // refuses a certificate declaration on it (that refusal has its own spec in
+    // `supplierDocumentByType.test.js`). The claim under test is unchanged —
+    // `_submit` answers a slot the buyer opened — so the slot is opened here by
+    // the real request verb, for a CERTIFICATE.
+    const created = await svc.dispatch(complianceSeat, {
+      transitionId: 't_supplierdoc_request',
+      entity: 'supplierDocument',
+      payload: { supplierId: 'sup-007', category: 'Quality', note: 'Please send the certificate.' }
+    });
+    expect(created.status).not.toBe('failed');
+    const id = /** @type {string} */ (created.entityId);
+    expect(
+      /** @type {import('../types').SupplierDocument} */ (supplierDocumentStore.get(id)).status
+    ).toBe('Awaiting Upload');
+
     const res = await svc.dispatch(backOffice, {
       transitionId: 't_supplierdoc_submit',
       entity: 'supplierDocument',
-      entityId: 'doc-006',
+      entityId: id,
       payload: DECLARATION
     });
     expect(res.status).not.toBe('failed');
     expect(
-      /** @type {import('../types').SupplierDocument} */ (supplierDocumentStore.get('doc-006'))
-        .status
+      /** @type {import('../types').SupplierDocument} */ (supplierDocumentStore.get(id)).status
     ).toBe('Under Review');
   });
 

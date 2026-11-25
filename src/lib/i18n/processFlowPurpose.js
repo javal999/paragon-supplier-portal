@@ -287,6 +287,10 @@ export const processFlowPurposeEn = {
     'The supplier states the details of a certificate nobody asked for — which scheme, which number, who granted it, when it runs out — so a certificate Paragon did not know to ask for can still reach the people who check it. No file is transmitted; what is recorded is what the supplier says.',
   'processFlows.purpose.t_supplierdoc_submit':
     'The supplier states the details of what was asked for. From here the delay is Paragon’s, not theirs.',
+  'processFlows.purpose.t_supplierdoc_answer_coa':
+    'Paragon asked for a certificate of analysis for a named lot, and the supplier answers with what that paper carries — which lot, which number, who issued it and when — so the record states the same facts as the document in hand.',
+  'processFlows.purpose.t_supplierdoc_renew':
+    'A certificate that is running out is renewed from its own record: the earlier details are filled in, the supplier states the new paper, and the existing record waits for Paragon to confirm it.',
   'processFlows.purpose.t_supplierdoc_verify':
     'Somebody has confirmed the paper is genuine and current. Only now does it count for anything.',
   'processFlows.purpose.t_supplierdoc_reject':
@@ -965,6 +969,10 @@ export const processFlowPurposeId = {
     'Pemasok menyatakan rincian sertifikat yang tidak diminta siapa pun — skema, nomor, penerbit, tanggal — sehingga sertifikat yang tidak Paragon ketahui pun tetap sampai ke pihak yang memeriksanya. Tidak ada berkas yang dikirim; yang dicatat adalah rinciannya.',
   'processFlows.purpose.t_supplierdoc_submit':
     'Pemasok menyatakan rincian atas apa yang diminta. Sejak titik ini keterlambatan ada di pihak Paragon, bukan pada mereka.',
+  'processFlows.purpose.t_supplierdoc_answer_coa':
+    'Paragon meminta sertifikat analisis untuk lot tertentu, dan pemasok menjawab dengan isi berkas itu — lot, nomor, penerbit, dan tanggalnya — sehingga catatan memuat fakta yang sama dengan dokumen yang dipegang.',
+  'processFlows.purpose.t_supplierdoc_renew':
+    'Sertifikat yang hampir habis diperbarui dari catatannya sendiri: rincian lama terisi, pemasok menyatakan berkas baru, dan catatan yang ada menunggu konfirmasi Paragon.',
   'processFlows.purpose.t_supplierdoc_verify':
     'Ada yang sudah memastikan berkasnya asli dan masih berlaku. Baru sekaranglah ia berarti sesuatu.',
   'processFlows.purpose.t_supplierdoc_reject':

@@ -75,11 +75,21 @@ export const DECLARATION_FIELDS = Object.freeze(
 /** @type {FlowDefinition} */
 export const supplierDocumentFlow = {
   entity: 'supplierDocument',
-  version: 2,
+  version: 3,
   states: ['Awaiting Upload', 'Under Review', 'Valid', 'Rejected'],
   initial: 'Awaiting Upload',
-  /** PF-0 · D-2 — `Rejected` is NOT terminal; `_submit` leaves it. */
-  terminals: ['Valid'],
+  /**
+   * PF-0 · D-2 — `Rejected` is NOT terminal; `_submit` leaves it.
+   *
+   * ⚠️ **AND `Valid` LEFT THE TERMINAL SET AT UCX-P5, BECAUSE THE MACHINE NOW
+   * SAYS SO.** The validator refuses a terminal that any transition leaves, and
+   * `t_supplierdoc_renew` legitimately leaves `Valid` for `Under Review` — a
+   * certificate inside its expiry window has a next act. No state of this
+   * machine is an ending: a refused document can be re-declared, a valid one
+   * renewed, a reviewed one confirmed or refused. `[]` is the honest set, and
+   * the expiry words (`Expiring Soon`, `Expired`) stay read-time projections.
+   */
+  terminals: [],
   transitions: [
     {
       id: 't_supplierdoc_request',
@@ -118,9 +128,42 @@ export const supplierDocumentFlow = {
       trigger: 'user',
       requiredRole: 'supplierdoc:submit',
       requiredFields: [...DECLARATION_FIELDS],
-      policyHooks: [],
+      // UCX-P5 — answer a request by its type: a certificate declaration is
+      // refused on a row PTI asked for as a COA.
+      policyHooks: [POLICY_HOOKS.SUPPLIERDOC_CERTIFICATE_REQUEST],
       surfaceable: { surfaced: true },
-      version: 2
+      version: 3
+    },
+    {
+      // UCX-P5 (BL-366) · UCX-D23 — the COA request's own form, its own fields:
+      // batch, number, issuer, date. No certificate scheme is required or
+      // stored; the request's own kind decides the record shape.
+      id: 't_supplierdoc_answer_coa',
+      from: ['Awaiting Upload', 'Rejected'],
+      to: 'Under Review',
+      trigger: 'user',
+      requiredRole: 'supplierdoc:submit',
+      requiredFields: ['batch', 'coaNumber', 'issuer', 'issuedOn'],
+      // The kind guard: this verb is legal ONLY on a row PTI asked for as a COA.
+      policyHooks: [POLICY_HOOKS.SUPPLIERDOC_COA_REQUEST],
+      surfaceable: { surfaced: true },
+      version: 1
+    },
+    {
+      // UCX-P5 · UCX-F21 — "Renew" opens the declaration filled from the
+      // expiring record and lands THAT record Under Review, so the certificate
+      // inside 180 days of expiry has a newer declaration (UCX-SG10). From
+      // `Valid` only: a document still awaiting an answer is renewed by
+      // answering it, not by this verb.
+      id: 't_supplierdoc_renew',
+      from: ['Valid'],
+      to: 'Under Review',
+      trigger: 'user',
+      requiredRole: 'supplierdoc:upload',
+      requiredFields: [...DECLARATION_FIELDS],
+      policyHooks: [POLICY_HOOKS.SUPPLIERDOC_CERTIFICATE_REQUEST],
+      surfaceable: { surfaced: true },
+      version: 1
     },
     {
       // Compliance accepts the declaration. `user`, on a screen — §82.
