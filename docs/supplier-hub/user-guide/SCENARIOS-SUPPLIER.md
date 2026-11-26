@@ -135,7 +135,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Start:** To do → "New forecast version to review", or Planning → **Foresight commitments**, tab **Commitments**.
 - **Expected path:** per row **Commitment ({uom})**, optional **Upside ({uom})** → for the short row, **Reason below forecast** → **Choose a reason** (Capacity, Material, Logistics, Quality, Force Majeure, Discontinued, Other) → **Save draft** → under "Submit by period", **Submit all**. On forecast-zone rows, **Acknowledge** (`lib/i18n/forecastCollaboration.js:59-67,83,122-126,144,156`).
 - **Pass when:** the period shows submitted, the short row carries a reason, and forecast-zone rows are acknowledged.
-- **Watch for:** whether the participant expects a per-row submit; whether "Draft saved (not visible to PTI)" is noticed; whether "Confirm capacity for {group} first." blocks them and they find **Confirm capacity**.
+- **Watch for:** whether the participant expects a per-row submit; whether "Draft saved (not visible to PTI)" is noticed; whether the wait "Awaiting Supplier Fulfilment: capacity for {group}" blocks them and they find **Confirm capacity**.
 - **Ask after:** "What does 'Upside' mean to you? What does 'Firm' vs 'Trade-off' mean?"
 
 ### T6 Submit capacity (UC3, UC5)
