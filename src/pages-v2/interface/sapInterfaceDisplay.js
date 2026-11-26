@@ -77,6 +77,48 @@ const entityOfTransition = (transitionId) => TRANSITION_ENTITY.get(transitionId)
  */
 
 /**
+ * The monitor's objects for one set of reads and the current message stores.
+ * BL-361 — the hook below and the top bar's PTI bell both call this, so the
+ * bell's "SAP messages failed" task and the monitor cannot disagree. The
+ * message stores are process singletons, read at call time; a caller that
+ * needs a retry to show re-renders, which is what `useSapInterface`'s `tick`
+ * is for.
+ * @param {{
+ *   purchaseOrders: ReturnType<typeof usePurchaseOrders>['data'];
+ *   goodsReceipts: ReturnType<typeof useGoodsReceipts>['data'];
+ *   asns: ReturnType<typeof useASNs>['data'];
+ *   invoices: ReturnType<typeof useBuyerInvoices>['data'];
+ *   nowIso: string;
+ * }} input
+ * @returns {ReturnType<typeof sapMonitor>}
+ */
+export function sapInterfaceObjects({ purchaseOrders, goodsReceipts, asns, invoices, nowIso }) {
+  const cleared = sapMessageStore.clearedAt();
+  /** @type {Partial<Record<SapObjectId, string | null>>} */
+  const lastSeen = {
+    umbrellaPo: newestInstant((purchaseOrders?.items ?? []).map((p) => asInstant(p.orderDate))),
+    goodsReceipt: newestInstant([
+      ...(goodsReceipts?.items ?? []).map((g) => asInstant(g.receivedDate)),
+      ...cleared.map((c) => c.at)
+    ]),
+    invoiceStatus: newestInstant([
+      ...(invoices?.items ?? []).map((i) => asInstant(i.paymentDate ?? i.receivedDate)),
+      ...cleared.map((c) => c.at)
+    ]),
+    poResponse: newestInstant(
+      (purchaseOrders?.items ?? []).map((p) => p.response?.respondedAt ?? null)
+    ),
+    inboundDelivery: newestInstant((asns?.items ?? []).map((a) => asInstant(a.shipDate ?? a.eta))),
+    invoiceOut: newestInstant((invoices?.items ?? []).map((i) => asInstant(i.receivedDate)))
+  };
+  const messages = [
+    ...sapMessageStore.open(),
+    ...failuresFromEvents(commandAuditSink.all(), entityOfTransition, nowIso)
+  ];
+  return sapMonitor({ lastSeen, messages });
+}
+
+/**
  * The whole monitor for the current scope.
  * @returns {SapInterfaceRead}
  */
@@ -91,36 +133,20 @@ export function useSapInterface() {
   // immediately, and nothing here is expensive.
   const [tick, setTick] = React.useState(0);
 
-  const objects = React.useMemo(() => {
-    const cleared = sapMessageStore.clearedAt();
-    /** @type {Partial<Record<SapObjectId, string | null>>} */
-    const lastSeen = {
-      umbrellaPo: newestInstant((pos.data?.items ?? []).map((p) => asInstant(p.orderDate))),
-      goodsReceipt: newestInstant([
-        ...(receipts.data?.items ?? []).map((g) => asInstant(g.receivedDate)),
-        ...cleared.map((c) => c.at)
-      ]),
-      invoiceStatus: newestInstant([
-        ...(invoices.data?.items ?? []).map((i) => asInstant(i.paymentDate ?? i.receivedDate)),
-        ...cleared.map((c) => c.at)
-      ]),
-      poResponse: newestInstant(
-        (pos.data?.items ?? []).map((p) => p.response?.respondedAt ?? null)
-      ),
-      inboundDelivery: newestInstant(
-        (asns.data?.items ?? []).map((a) => asInstant(a.shipDate ?? a.eta))
-      ),
-      invoiceOut: newestInstant((invoices.data?.items ?? []).map((i) => asInstant(i.receivedDate)))
-    };
-    const messages = [
-      ...sapMessageStore.open(),
-      ...failuresFromEvents(commandAuditSink.all(), entityOfTransition, nowIso)
-    ];
-    return sapMonitor({ lastSeen, messages });
+  const objects = React.useMemo(
+    () =>
+      sapInterfaceObjects({
+        purchaseOrders: pos.data,
+        goodsReceipts: receipts.data,
+        asns: asns.data,
+        invoices: invoices.data,
+        nowIso
+      }),
     // `tick` is the retry signal: the stores are singletons, so nothing else in
     // this dependency list changes when a message clears.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `tick` is the retry signal; the stores are singletons
-  }, [pos.data, receipts.data, asns.data, invoices.data, tick]);
+    [pos.data, receipts.data, asns.data, invoices.data, tick]
+  );
 
   return {
     objects,
