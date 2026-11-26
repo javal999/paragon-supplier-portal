@@ -47,6 +47,27 @@ export const supplierOrdersEn = {
   'supplierOrders.col.status': 'Status',
   'supplierOrders.col.action': 'Action',
   'supplierOrders.table.empty': 'No orders in this category.',
+  // UCX-P2 v2 (BL-363) — the bulk "confirm as requested" bar and its review
+  // dialog. Safeguard 1: nothing starts ticked. [Proposed] labels.
+  'supplierOrders.bulk.colTick': 'Select for confirm',
+  'supplierOrders.bulk.tickRow': 'Select {{po}} for a bulk confirm',
+  'supplierOrders.bulk.selectAll': 'Select all that can be confirmed as requested',
+  'supplierOrders.bulk.selected': '{{count}} selected',
+  'supplierOrders.bulk.open': 'Confirm as requested…',
+  'supplierOrders.bulk.dialog.title': 'Confirm {{count}} purchase orders as requested',
+  'supplierOrders.bulk.dialog.intro':
+    'Each order is confirmed exactly as requested: the ordered quantity per line and the requested delivery date.',
+  'supplierOrders.bulk.confirm': 'Confirm {{count}} purchase orders',
+  'supplierOrders.bulk.requested': 'requested {{date}}',
+  'supplierOrders.bulk.reason.escalated':
+    'Escalated: the supplier is past the deadline, so this order needs a decision',
+  'supplierOrders.bulk.reason.valueLimit':
+    'A value-limit line: the order commits a value, so there is no quantity to confirm',
+  'supplierOrders.bulk.reason.answered': 'Already answered',
+  // Shared by the review dialog on both pages.
+  'bulk.confirm.done': '{{count}} confirmed',
+  'bulk.confirm.refused': '{{record}} was refused: {{reason}}',
+  'bulk.confirm.close': 'Close',
   // — Row / footer actions —
   'supplierOrders.action.confirm': 'Confirm',
   'supplierOrders.action.createAsn': 'Create ASN',
@@ -159,6 +180,24 @@ export const supplierOrdersId = {
   'supplierOrders.col.status': 'Status',
   'supplierOrders.col.action': 'Tindakan',
   'supplierOrders.table.empty': 'Tidak ada pesanan dalam kategori ini.',
+  'supplierOrders.bulk.colTick': 'Pilih untuk konfirmasi',
+  'supplierOrders.bulk.tickRow': 'Pilih {{po}} untuk konfirmasi massal',
+  'supplierOrders.bulk.selectAll': 'Pilih semua yang dapat dikonfirmasi sesuai permintaan',
+  'supplierOrders.bulk.selected': '{{count}} dipilih',
+  'supplierOrders.bulk.open': 'Konfirmasi sesuai permintaan…',
+  'supplierOrders.bulk.dialog.title': 'Konfirmasi {{count}} pesanan pembelian sesuai permintaan',
+  'supplierOrders.bulk.dialog.intro':
+    'Setiap pesanan dikonfirmasi persis sesuai permintaan: kuantitas yang dipesan per baris dan tanggal pengiriman yang diminta.',
+  'supplierOrders.bulk.confirm': 'Konfirmasi {{count}} pesanan pembelian',
+  'supplierOrders.bulk.requested': 'diminta {{date}}',
+  'supplierOrders.bulk.reason.escalated':
+    'Eskalasi: pemasok melewati tenggat, sehingga pesanan ini memerlukan keputusan',
+  'supplierOrders.bulk.reason.valueLimit':
+    'Baris batas nilai: pesanan berkomitmen pada nilai, sehingga tidak ada kuantitas untuk dikonfirmasi',
+  'supplierOrders.bulk.reason.answered': 'Sudah dijawab',
+  'bulk.confirm.done': '{{count}} terkonfirmasi',
+  'bulk.confirm.refused': '{{record}} ditolak: {{reason}}',
+  'bulk.confirm.close': 'Tutup',
   // — Row / footer actions —
   'supplierOrders.action.confirm': 'Konfirmasi',
   'supplierOrders.action.createAsn': 'Buat ASN',
