@@ -108,16 +108,16 @@ add({
   notes: 'Pass: names 3 waiting items and opens one. Watch: is "PTI has … questions" noticed? Evidence: src/lib/i18n/hub.js:137-139,188-204.'
 });
 add({
-  type: 'step', kicker: task('T2', 'Confirm a PO and create its ASN'), title: 'Acknowledge and confirm the PO',
+  type: 'step', kicker: task('T2', 'Confirm a PO and create its ASN'), title: 'Confirm the PO',
   menu: 'Orders → Purchase orders',
   shot: 'UC2-1-supplier.png', route: '/supplier/orders', seat: 'Supplier', record: 'PO-2026-00121 Sent',
   steps: [
     S('Open PO-2026-00121'),
-    S('Acknowledge receipt'),
     S('Confirm order with the confirmed quantity and date'),
+    S('Acknowledge receipt is optional: not needed before Confirm'),
     S('Cannot deliver as ordered? Adjust or Reject instead')
   ],
-  statusAfter: 'Sent → Acknowledged → Confirmed',
+  statusAfter: 'Sent → Confirmed (acknowledge is optional)',
   testId: 'T2 part 1',
   test: '"Paragon sent you a new PO. Let them know you received it, then confirm you can deliver it."',
   notes: 'Watch: are "acknowledge" and "confirm" read as two acts? Evidence: src/lib/i18n/supplierOrders.js:65; src/pages-v2/SupplierOrders/components/PanelFooter.jsx:94-103,125-126,146-192; src/data/mockPurchaseOrders/sup007Walkthrough.js:21-35.'

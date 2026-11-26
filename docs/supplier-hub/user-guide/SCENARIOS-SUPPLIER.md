@@ -102,7 +102,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 
 - **Prompt:** "Paragon sent you a new purchase order. Let them know you received it, confirm you can deliver it, then tell them what you are shipping for an order you already confirmed."
 - **Start:** To do → "Purchase orders to respond to", or Orders → **Purchase orders**. Records: PO-2026-00121 (Sent); PO-2026-00127 (Confirmed, nothing shipped) (`data/mockPurchaseOrders/sup007Walkthrough.js:21-35`).
-- **Expected path:** open PO-2026-00121 → **Acknowledge receipt** → **Confirm order** with qty and date → status Confirmed. Then PO-2026-00127 → **Create ASN** → ASN wizard on **Shipments & ASN** → **Submit ASN** (`lib/i18n/supplierOrders.js:58,65`; `pages-v2/SupplierOrders/index.jsx:338-354`).
+- **Expected path:** open PO-2026-00121 → **Confirm order** with qty and date → status Confirmed. **Acknowledge receipt** is optional beside it: Confirm is allowed straight from Sent, so the acknowledgement is not needed first. Then PO-2026-00127 → **Create ASN** → ASN wizard on **Shipments & ASN** → **Submit ASN** (`lib/i18n/supplierOrders.js:58,65`; `pages-v2/SupplierOrders/index.jsx:338-354`).
 - **Pass when:** PO-2026-00121 shows Confirmed and an ASN for PO-2026-00127 shows Submitted.
 - **Watch for:** whether "acknowledge" and "confirm" read as two different acts; whether **Adjust** or **Reject** is tried by mistake; whether the ASN wizard's lines are understood.
 - **Ask after:** "Today, how do you confirm a PO to Paragon? What is faster or slower here?"
