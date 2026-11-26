@@ -83,6 +83,11 @@ const ChangeSection = ({
                 </option>
               ))}
             </select>
+            {/* UCX-P9 (BL-370) — the two option names explained under the
+                select (a visible hint; no (i) on a form field, UCX-D30). */}
+            <p className="mt-1 text-xs text-text-tertiary" data-testid="calloff-reason-hint">
+              {t('co.change.reasonHint')}
+            </p>
             {delay ? (
               <p className="mt-1 text-xs text-text-tertiary" data-testid="calloff-delay-hint">
                 {t('co.change.delayHint')}

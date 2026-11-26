@@ -131,6 +131,11 @@ export const supplierDocumentsEn = {
   'supplierDocuments.field.certType': 'Certificate scheme',
   'supplierDocuments.field.certType.hint':
     'What you state here is a claim until Paragon’s compliance team confirms it.',
+  // UCX-P9 (BL-370) — the scheme names decoded under the field (a visible
+  // hint; a form field never takes an (i), UCX-D30). Wording from the
+  // in-repo certificate-type definitions (`governance.glossary.js`).
+  'supplierDocuments.field.certType.schemes':
+    'BPJPH is the Indonesian state body that issues halal certificates now. MUI issued them before BPJPH; its certificates stay valid on a fixed transitional term. BPOM is the Indonesian food and drug authority, which registers products.',
   'supplierDocuments.field.certNumber': 'Certificate number',
   'supplierDocuments.field.issuer': 'Granted by',
   'supplierDocuments.field.issuedOn': 'Granted on',
@@ -288,6 +293,8 @@ export const supplierDocumentsId = {
   'supplierDocuments.field.certType': 'Skema sertifikat',
   'supplierDocuments.field.certType.hint':
     'Yang Anda nyatakan di sini adalah klaim sampai tim kepatuhan Paragon mengonfirmasinya.',
+  'supplierDocuments.field.certType.schemes':
+    'BPJPH adalah badan negara Indonesia yang kini menerbitkan sertifikat halal. MUI menerbitkannya sebelum BPJPH; sertifikatnya tetap berlaku dengan jangka transisi tetap. BPOM adalah otoritas obat dan makanan Indonesia, yang meregistrasi produk.',
   'supplierDocuments.field.certNumber': 'Nomor sertifikat',
   'supplierDocuments.field.issuer': 'Diterbitkan oleh',
   'supplierDocuments.field.issuedOn': 'Tanggal terbit',

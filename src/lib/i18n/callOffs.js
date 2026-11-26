@@ -50,7 +50,7 @@ export const callOffsEn = {
   // CAP-9 (BL-178) — blanket PO run-out and "new PO needed by".
   'co.runOut.title': 'Blanket POs running out',
   'co.runOut.subtitle':
-    'What remains on each blanket PO, drawn down week by week from this week by the LTP, as if call-offs follow the plan. Several POs for one supplier and material are used one after another, oldest first. Soonest "new PO needed by" first.',
+    'What remains on each blanket PO, drawn down week by week from this week by the LTP (PTI’s latest forecast for the material), as if call-offs follow the plan. Several POs for one supplier and material are used one after another, oldest first. Soonest "new PO needed by" first. "Raise the next PO" marks a line whose "new PO needed by" week is within 4 weeks, so PTI Procurement raises the next blanket PO in SAP before the balance runs out. "Next in line" names the PO that will cover the line once this one is used up.',
   'co.runOut.empty': 'No blanket PO runs out within the forecast horizon ({{weeks}} wk).',
   'co.runOut.col.po': 'Blanket PO',
   'co.runOut.col.material': 'Material',
@@ -253,6 +253,10 @@ export const callOffsEn = {
   'co.changeReason.ltp-dropped': 'LTP dropped',
   'co.change.reasonCode': 'Reason type',
   'co.change.reasonCodeNone': 'Not coded',
+  // UCX-P9 (BL-370) — the two option names explained where the select is
+  // (a visible hint; the field never takes an (i), UCX-D30).
+  'co.change.reasonHint':
+    'Not coded: no reason code applies; the typed reason still says why. LTP dropped: PTI’s latest forecast (LTP) fell, so the need date moves later and the supplier approves it.',
   'co.change.delayHint':
     'LTP dropped: choose a later need date and keep the quantity. The need date moves only when the supplier approves; until then the call-off stays on its current date and in the demand anticipation.',
   'co.delay.title': 'Delay for an LTP drop',
@@ -265,6 +269,10 @@ export const callOffsEn = {
   'co.delay.unattributed': 'not attributed to a person',
   'co.delay.sup.intro':
     'PTI proposes to move this call-off from {{from}} to {{to}} because the LTP dropped. The need date changes only if you approve.',
+  // UCX-P9 (BL-370) — LTP explained where the supplier meets it (a sentence,
+  // not an (i): the drawer is a form, UCX-D30).
+  'co.delay.sup.ltp':
+    'LTP is PTI’s latest forecast for this material, published each week. When it drops, PTI may ask to move a call-off to a later date; the quantity stays.',
   'co.delay.sup.reason': 'PTI’s reason',
   'co.delay.sup.approve': 'Approve the delay',
   'co.delay.sup.reject': 'Reject the delay, keep {{from}}',
@@ -456,7 +464,7 @@ export const callOffsId = {
   // CAP-9 (BL-178) — habisnya PO induk dan "PO baru diperlukan paling lambat".
   'co.runOut.title': 'PO induk yang akan habis',
   'co.runOut.subtitle':
-    'Sisa setiap PO induk, dikurangi LTP minggu demi minggu mulai minggu ini, dengan anggapan call-off mengikuti rencana. Beberapa PO untuk satu pemasok dan material dipakai berurutan, yang terlama lebih dulu. "PO baru diperlukan paling lambat" yang paling dekat lebih dulu.',
+    'Sisa setiap PO induk, dikurangi LTP (prakiraan terbaru PTI untuk material itu) minggu demi minggu mulai minggu ini, dengan anggapan call-off mengikuti rencana. Beberapa PO untuk satu pemasok dan material dipakai berurutan, yang terlama lebih dulu. "PO baru diperlukan paling lambat" yang paling dekat lebih dulu. "Buat PO berikutnya" menandai baris yang minggu "PO baru diperlukan paling lambat"-nya dalam 4 minggu, sehingga Procurement PTI membuat PO induk berikutnya di SAP sebelum saldonya habis. "Berikutnya" menamai PO yang akan menutup baris itu setelah PO ini terpakai.',
   'co.runOut.empty': 'Tidak ada PO induk yang habis dalam horizon prakiraan ({{weeks}} mgg).',
   'co.runOut.col.po': 'PO induk',
   'co.runOut.col.material': 'Material',
@@ -654,6 +662,8 @@ export const callOffsId = {
   'co.changeReason.ltp-dropped': 'LTP turun',
   'co.change.reasonCode': 'Jenis alasan',
   'co.change.reasonCodeNone': 'Tanpa kode',
+  'co.change.reasonHint':
+    'Tanpa kode: tidak ada kode alasan yang berlaku; alasan tertulis tetap menjelaskan sebabnya. LTP turun: prakiraan terbaru (LTP) PTI menurun, sehingga tanggal kebutuhan bergeser lebih lambat dan pemasok menyetujuinya.',
   'co.change.delayHint':
     'LTP turun: pilih tanggal kebutuhan yang lebih lambat dan pertahankan kuantitasnya. Tanggal kebutuhan baru berubah bila pemasok menyetujui; sampai itu call-off tetap pada tanggalnya sekarang dan dalam demand anticipation.',
   'co.delay.title': 'Penundaan karena LTP turun',
@@ -665,6 +675,8 @@ export const callOffsId = {
   'co.delay.unattributed': 'tidak diatribusikan ke seseorang',
   'co.delay.sup.intro':
     'PTI mengusulkan memindahkan call-off ini dari {{from}} ke {{to}} karena LTP turun. Tanggal kebutuhan hanya berubah bila Anda menyetujui.',
+  'co.delay.sup.ltp':
+    'LTP adalah prakiraan terbaru PTI untuk material ini, terbit tiap minggu. Bila turun, PTI dapat meminta call-off dipindah ke tanggal yang lebih lambat; kuantitasnya tetap.',
   'co.delay.sup.reason': 'Alasan PTI',
   'co.delay.sup.approve': 'Setujui penundaan',
   'co.delay.sup.reject': 'Tolak penundaan, tetap {{from}}',

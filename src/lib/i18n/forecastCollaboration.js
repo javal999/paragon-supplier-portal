@@ -292,6 +292,10 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.panel.reassignHint':
     'Only suppliers that supply this material are listed. Each quantity becomes new demand for that supplier in a new forecast version, and the supplier confirms it like any other demand.',
   'fc.pti.gaps.move.shortfall': 'Shortfall',
+  // UCX-P9 (BL-370) — the panel names the zone and the shortfall; both are
+  // defined here in one sentence (body copy, not a header tip).
+  'fc.pti.gaps.move.terms':
+    'Zone Liability is the weeks the supplier commits to; Zone Capacity is the later weeks, where changes are damped and kept inside an agreed band. Shortfall is the forecast minus the commitment: the most you can move.',
   'fc.pti.gaps.move.supplier': 'Supplier',
   'fc.pti.gaps.move.qty': 'Quantity to move',
   'fc.pti.gaps.move.qtyFor': 'Quantity to move to {{supplier}}',
@@ -613,6 +617,8 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.panel.reassignHint':
     'Hanya pemasok yang memasok material ini yang ditampilkan. Setiap kuantitas menjadi kebutuhan baru bagi pemasok itu dalam versi prakiraan baru, dan pemasok mengonfirmasinya seperti kebutuhan lain.',
   'fc.pti.gaps.move.shortfall': 'Kekurangan',
+  'fc.pti.gaps.move.terms':
+    'Zone Liability adalah minggu-minggu yang menjadi komitmen pemasok; Zone Capacity adalah minggu-minggu setelahnya, yang perubahannya diredam dan dijaga dalam rentang yang disepakati. Kekurangan (shortfall) adalah prakiraan dikurangi komitmen: jumlah paling banyak yang dapat Anda pindahkan.',
   'fc.pti.gaps.move.supplier': 'Pemasok',
   'fc.pti.gaps.move.qty': 'Kuantitas yang dipindahkan',
   'fc.pti.gaps.move.qtyFor': 'Kuantitas yang dipindahkan ke {{supplier}}',

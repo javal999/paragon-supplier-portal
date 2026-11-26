@@ -578,7 +578,7 @@ const PoOnHoldPanel = ({ persona }) => {
             limit: limit ?? ''
           })}
         </span>
-        <span className={note}>{t('poh.rec.proposed')}</span>
+        <span className={note}>{t(isPti ? 'poh.rec.proposed' : 'poh.rec.proposedSupplier')}</span>
       </div>
     );
   };
@@ -595,7 +595,9 @@ const PoOnHoldPanel = ({ persona }) => {
     return (
       <div className="mt-2" data-testid={`poh-cancel-${r.key}`}>
         <span className={`${note} font-medium`}>{t('poh.cancel.title')}</span>
-        <span className={note}>{t('poh.cancel.proposed')}</span>
+        <span className={note}>
+          {t(isPti ? 'poh.cancel.proposed' : 'poh.cancel.proposedSupplier')}
+        </span>
         {items.map((c) => {
           const rq = c.request;
           const requestedAt = rq?.history[0]?.at;

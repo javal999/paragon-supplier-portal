@@ -24,6 +24,10 @@ export const demandAnticipationEn = {
   'ltpIn.title': 'LTP inputs',
   'ltpIn.intro':
     'Upload LTP A, LTP Festive and LTP B per material, one file per series or as a batch file below. Until LTP A is uploaded, the forecast quantity stands in for it.',
+  // UCX-P9 (BL-370) — the three series defined where the planner uploads them
+  // (one sentence of body copy; the section has no column header to tip).
+  'ltpIn.seriesExplained':
+    'LTP A is the base forecast for the week and the series demand anticipation reads. LTP Festive is the forecast when a festive window applies; the strategic buffer is LTP Festive minus LTP A. LTP B is the forecast with extra protection; the protection buffer is LTP B minus LTP A.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pick a material',
   'ltpIn.choice': 'LTP in use',
@@ -204,6 +208,8 @@ export const demandAnticipationId = {
   'ltpIn.title': 'Input LTP',
   'ltpIn.intro':
     'Unggah LTP A, LTP Festive dan LTP B per material, satu berkas per seri atau sebagai berkas batch di bawah. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
+  'ltpIn.seriesExplained':
+    'LTP A adalah prakiraan dasar untuk minggu itu dan seri yang dibaca demand anticipation. LTP Festive adalah prakiraan bila ada periode festive; strategic buffer adalah LTP Festive dikurangi LTP A. LTP B adalah prakiraan dengan perlindungan tambahan; protection buffer adalah LTP B dikurangi LTP A.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pilih material',
   'ltpIn.choice': 'LTP yang dipakai',

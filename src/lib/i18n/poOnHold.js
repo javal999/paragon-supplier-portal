@@ -117,6 +117,10 @@ export const poOnHoldEn = {
   'poh.rec.title': 'Recommended action',
   'poh.rec.proposed':
     'Proposed: awaiting owner review (PEX-12). Read only: nothing runs by itself.',
+  // UCX-P9 (BL-370) · UCX-F25 — the supplier reads the same state without the
+  // internal code; the PTI note keeps it (PTI screens may keep codes).
+  'poh.rec.proposedSupplier':
+    'Proposed: waiting for Paragon’s decision. Read only: nothing runs by itself.',
   'poh.rec.action.autoAbsorb': 'Auto absorb',
   'poh.rec.action.autoCarryOver': 'Auto carry-over',
   'poh.rec.action.manual': 'Manual',
@@ -140,6 +144,8 @@ export const poOnHoldEn = {
   'poh.cancel.title': 'PO cancellation',
   'poh.cancel.proposed':
     'Proposed: awaiting owner review (PEX-12). Request only, not sent to SAP: the PO keeps its status.',
+  'poh.cancel.proposedSupplier':
+    'Proposed: waiting for Paragon’s decision. A request only: the PO keeps its status.',
   'poh.cancel.request': 'Request cancellation',
   'poh.cancel.reason': 'Reason (at least 10 characters)',
   'poh.cancel.send': 'Send request',
@@ -263,6 +269,8 @@ export const poOnHoldId = {
   'poh.rec.title': 'Tindakan yang disarankan',
   'poh.rec.proposed':
     'Usulan: menunggu tinjauan pemilik (PEX-12). Hanya baca: tidak ada yang berjalan sendiri.',
+  'poh.rec.proposedSupplier':
+    'Usulan: menunggu keputusan Paragon. Hanya baca: tidak ada yang berjalan sendiri.',
   'poh.rec.action.autoAbsorb': 'Serap otomatis',
   'poh.rec.action.autoCarryOver': 'Geser otomatis',
   'poh.rec.action.manual': 'Manual',
@@ -285,6 +293,8 @@ export const poOnHoldId = {
   'poh.cancel.title': 'Pembatalan PO',
   'poh.cancel.proposed':
     'Usulan: menunggu tinjauan pemilik (PEX-12). Hanya permintaan, tidak dikirim ke SAP: status PO tidak berubah.',
+  'poh.cancel.proposedSupplier':
+    'Usulan: menunggu keputusan Paragon. Hanya permintaan: status PO tidak berubah.',
   'poh.cancel.request': 'Minta pembatalan',
   'poh.cancel.reason': 'Alasan (minimal 10 karakter)',
   'poh.cancel.send': 'Kirim permintaan',

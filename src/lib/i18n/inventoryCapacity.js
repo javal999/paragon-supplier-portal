@@ -598,7 +598,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.basis.ptiNone': 'No PTI stock figure',
   'inv.alerts.basis.short': 'Short by {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Supplier cover {{cover}} days · lead time {{lead}} days',
-  'inv.alerts.basis.supplierCoverBands': 'Supplier cover {{cover}} days · day bands: {{band}}',
+  'inv.alerts.basis.supplierCoverBands':
+    'Supplier cover {{cover}} days · day bands: {{band}} (Critical under 14 days, Warning 14 to 29, Healthy 30 to 60, Excess above 60)',
   'inv.alerts.basis.firm': 'Zone Liability period short',
   'inv.alerts.basis.tradeOff': 'Zone Capacity period short',
   // INV-D9 — "Ask supplier": PTI's hub ask, and the supplier's "PTI is asking"
@@ -1337,7 +1338,7 @@ export const inventoryCapacityId = {
   'inv.alerts.basis.short': 'Kurang {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Cakupan stok pemasok {{cover}} hari · lead time {{lead}} hari',
   'inv.alerts.basis.supplierCoverBands':
-    'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}}',
+    'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}} (Kritis di bawah 14 hari, Waspada 14 sampai 29, Sehat 30 sampai 60, Berlebih di atas 60)',
   'inv.alerts.basis.firm': 'Periode Zone Liability kurang',
   'inv.alerts.basis.tradeOff': 'Periode Zone Capacity kurang',
   // INV-D9 — "Tanyakan ke pemasok" dan blok "PTI bertanya" (S-04).

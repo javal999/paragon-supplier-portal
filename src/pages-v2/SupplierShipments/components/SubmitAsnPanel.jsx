@@ -160,10 +160,17 @@ const SubmitAsnPanel = ({
             />
           </label>
           {/* AIB-1 BR-03 / BR-04 (BL-348) — the sequence and the Surat Jalan
-              (External ID) the inbound upload carries. */}
-          <label className="block">
-            <span className={`${labelClass} after:content-['_*']`}>{t('fc.asn.sequence')}</span>
+              (External ID) the inbound upload carries.
+              UCX-P9 (BL-370) — the drawer gives the same visible hint the
+              wizard gives: a form field takes a hint, never an (i) tip
+              (UCX-D30; TL-D4). The hint sits OUTSIDE the label so the field's
+              accessible name stays its label alone. */}
+          <div>
+            <label className={`${labelClass} after:content-['_*']`} htmlFor="asn-submit-sequence">
+              {t('fc.asn.sequence')}
+            </label>
             <input
+              id="asn-submit-sequence"
               type="text"
               inputMode="numeric"
               aria-required="true"
@@ -171,17 +178,32 @@ const SubmitAsnPanel = ({
               onChange={(e) => setSubmitForm((f) => ({ ...f, sequence: e.target.value }))}
               className={inputClass}
             />
-          </label>
-          <label className="block">
-            <span className={`${labelClass} after:content-['_*']`}>{t('fc.asn.externalId')}</span>
+            <p className="mt-1 text-xs text-text-tertiary" data-testid="asn-submit-sequence-hint">
+              {t('fc.asn.sequence.hint')}
+            </p>
+          </div>
+          <div>
+            <label
+              className={`${labelClass} after:content-['_*']`}
+              htmlFor="asn-submit-external-id"
+            >
+              {t('fc.asn.externalId')}
+            </label>
             <input
+              id="asn-submit-external-id"
               type="text"
               aria-required="true"
               value={submitForm.externalId}
               onChange={(e) => setSubmitForm((f) => ({ ...f, externalId: e.target.value }))}
               className={inputClass}
             />
-          </label>
+            <p
+              className="mt-1 text-xs text-text-tertiary"
+              data-testid="asn-submit-external-id-hint"
+            >
+              {t('fc.asn.externalId.hint')}
+            </p>
+          </div>
           {submitRead?.sequenceRead?.alreadyUsedBy ? (
             <p className="text-xs text-danger" role="alert" data-testid="asn-submit-sequence-used">
               {t('fc.asn.sequence.used', {
