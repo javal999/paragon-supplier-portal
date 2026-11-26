@@ -532,7 +532,7 @@ describe('receipt discrepancy — acknowledge, dispute, resolve (AC-03)', () => 
       transitionId: 't_receiptdiscrepancy_resolve',
       entity: 'receiptDiscrepancy',
       entityId: 'gr-006',
-      payload: { resolutionComment: 'self-resolved' }
+      payload: { resolutionComment: 'self-resolved', resolution: 'receiptStands' }
     });
     expect(supplierResolves.reason).toMatch(/ROLE_NOT_PERMITTED/);
 
@@ -548,7 +548,10 @@ describe('receipt discrepancy — acknowledge, dispute, resolve (AC-03)', () => 
       transitionId: 't_receiptdiscrepancy_resolve',
       entity: 'receiptDiscrepancy',
       entityId: 'gr-006',
-      payload: { resolutionComment: 'Retest confirmed 5,000 out of spec.' }
+      payload: {
+        resolutionComment: 'Retest confirmed 5,000 out of spec.',
+        resolution: 'supplierRight'
+      }
     });
     expect(resolved.status).toBe('done');
 

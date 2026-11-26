@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { inputClass, labelClass } from '../../callOffs/callOffDisplay';
+import PairFacts from '../../orders/PairFacts';
 
 /**
  * @typedef {object} ReviewSectionProps
@@ -33,6 +34,10 @@ const ReviewSection = ({ c, form, setForm, busy, reviewHeld, reviewAvailability,
       <h3 className="text-label text-text-tertiary uppercase">{t('co.review.title')}</h3>
       {reviewHeld ? (
         <>
+          {/* UCX-P7 · UCX-F16 — the figures that decide the approval. */}
+          <div className="mb-2" data-testid="calloff-review-facts">
+            <PairFacts supplierId={c.supplierId} materialCode={c.materialCode} />
+          </div>
           <p className="text-sm text-text-secondary">{t('co.review.intro')}</p>
           <label htmlFor="co-review-comment" className={labelClass}>
             {t('co.review.comment')}

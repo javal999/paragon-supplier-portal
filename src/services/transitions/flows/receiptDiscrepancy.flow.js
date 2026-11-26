@@ -57,7 +57,7 @@ export const receiptDiscrepancyFlow = {
       to: 'Resolved',
       trigger: 'user',
       requiredRole: 'receiptdiscrepancy:resolve',
-      requiredFields: ['resolutionComment'],
+      requiredFields: ['resolutionComment', 'resolution'],
       policyHooks: [POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED],
       surfaceable: { surfaced: true },
       version: 1

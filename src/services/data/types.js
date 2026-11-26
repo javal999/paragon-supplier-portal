@@ -3336,6 +3336,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   planner reads every supplier; a supplier reads only its own rows (scoped in the service).
  * @property {(scope: QueryScope) => Promise<Page<PoOnHoldRow>>} getPoOnHold PEX-7 / PEX-8 — the PO On Hold lines: open PO quantity DA does not absorb, per supplier × material,
  *   with the grace period and the decision. The planner reads every supplier; a supplier reads only its own (scoped in the service).
+ * @property {(scope: QueryScope, poId: string) => Promise<Page<import('./mock/stores/poEscalationStore').PoEscalationRecord>>} getPoEscalationRecords UCX-P7 (BL-368) — the acts PTI recorded on one escalated PO
+ *   (the ask and the four decisions). Scoped in the service: the panel is the buyer's.
  * @property {(scope: QueryScope, windowWeeks?: ReliabilityWindowWeeks) => Promise<Page<SupplierReliabilityView>>} getSupplierReliability REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
  *   trailing window, computed by the forecast engine on its (SIMULATED)
  *   dataset. The planner sees every supplier; a supplier sees ONLY its own row,
