@@ -304,10 +304,11 @@ const HARVEST_GATED = {
     source: 'MDM SAP feed'
   },
   // Material A2 — the SAP-copied material fields are fixture values until the
-  // MDM material feed (BL-103) runs. Same note as the engine dataset: both
-  // wait on the same team's SAP feed.
+  // MDM material feed (BL-103) runs. Its own note, not the engine dataset's:
+  // the owner ruled one plain sentence for both personas on 2026-11-26
+  // (DECISION-GUIDE 1.54) — the data is sample data and not from SAP.
   materialMasterSap: {
-    readinessNoteKey: 'widget.honesty.awaitingMdmFeed',
+    readinessNoteKey: 'widget.honesty.sampleNotFromSap',
     source: 'MDM SAP material feed'
   },
   // Material B2 — the 2-hour scheduled pull needs Stage F and an API contract

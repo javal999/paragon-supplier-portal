@@ -255,14 +255,15 @@ describe('LivenessRegistry — harvest gate (LIVENESS-DATASOURCE-01, gate-2)', (
     expect(isLive('engineDataset')).toBe(false);
   });
 
-  it('materialMasterSap (Material A2): SIMULATED on both gates, and the note names the MDM feed', () => {
+  it('materialMasterSap (Material A2): SIMULATED on both gates, and the note says sample data, not from SAP', () => {
     // MRP controller and minimum shelf life are SAP copies held as fixture
-    // values until the MDM material feed runs (MR-5 BR-05, plan AR-19).
+    // values until the MDM material feed runs (MR-5 BR-05, plan AR-19). The
+    // owner ruled this pill's wording on 2026-11-26 (DECISION-GUIDE 1.54).
     expect(capabilityBacking.materialMasterSap).toBeNull();
     expect(liveness('materialMasterSap')).toBe('SIMULATED');
     expect(awaitsHarvest('materialMasterSap')).toBe(true);
     const note = readinessNote('materialMasterSap');
-    expect(note?.readinessNoteKey).toBe('widget.honesty.awaitingMdmFeed');
+    expect(note?.readinessNoteKey).toBe('widget.honesty.sampleNotFromSap');
     expect(note?.source).toBe('MDM SAP material feed');
     expect(isLive('materialMasterSap')).toBe(false);
   });
