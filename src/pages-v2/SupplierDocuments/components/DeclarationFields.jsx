@@ -85,6 +85,11 @@ const DeclarationFields = ({ form, setForm }) => {
             ))}
           </select>
           <span className={FIELD_HINT}>{t('supplierDocuments.field.certType.hint')}</span>
+          {/* UCX-P9 (BL-370) — BPJPH, MUI and BPOM decoded at the select that
+              lists them (a visible hint; UCX-D30 keeps the (i) off a form). */}
+          <span className={FIELD_HINT} data-testid="declare-certType-schemes">
+            {t('supplierDocuments.field.certType.schemes')}
+          </span>
         </label>
 
         <label className="block">

@@ -24,6 +24,11 @@ const DelayAnswerForm = ({ view, comment, setComment, busy, onAnswer }) => {
       <p className="text-sm text-text-primary">
         {t('co.delay.sup.intro', { from, to: formatDate(d.toNeedDate) })}
       </p>
+      {/* UCX-P9 (BL-370) — LTP explained where the supplier meets it, as a
+          sentence (a drawer is a form; UCX-D30 keeps the (i) off it). */}
+      <p className="text-xs text-text-tertiary" data-testid="supplier-calloff-delay-ltp">
+        {t('co.delay.sup.ltp')}
+      </p>
       {d.reason ? (
         <p className="text-sm text-text-secondary">
           <span className="text-text-tertiary">{t('co.delay.sup.reason')}: </span>“{d.reason}”
