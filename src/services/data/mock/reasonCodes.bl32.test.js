@@ -172,7 +172,9 @@ describe('BL32-RSN-POP · the coded reason lists, derived', () => {
       ]);
     }
     // MR-9 BR-05 — the alert close reasons; "Other" is the one that needs a note.
+    // UCX-P7 (BL-368) · UCX-D21 adds "asked-supplier" (the alert's own ask).
     expect(STARTER_REASON_CODES.alertClose).toEqual([
+      'asked-supplier',
       'calloff-raised',
       'po-raised',
       'supplier-updated',

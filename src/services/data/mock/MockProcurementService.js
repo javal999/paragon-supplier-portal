@@ -15,6 +15,7 @@ import {
   suppliersWithAssignments
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { poEscalationStore } from './stores/poEscalationStore';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
@@ -819,6 +820,18 @@ export class MockProcurementService {
     // first time anyone looks (no timer; the same pattern as the command layer).
     await runDuePoOnHoldExecutions();
     return { items: applySupplierScope(scope, allPoOnHold()) };
+  }
+
+  /**
+   * UCX-P7 (BL-368) · UCX-D22 — the escalation records made against one PO,
+   * oldest first (the ask and PTI's decisions). A supplier seat reads only its
+   * own rows through `applySupplierScope`; the panel is the buyer's.
+   * @param {QueryScope} scope
+   * @param {string} poId
+   * @returns {Promise<Page<import('./stores/poEscalationStore').PoEscalationRecord>>}
+   */
+  async getPoEscalationRecords(scope, poId) {
+    return { items: [...applySupplierScope(scope, poEscalationStore.forPo(poId))] };
   }
 
   /**

@@ -34,6 +34,7 @@ export * from './rfxRules';
 export * from './forecastRules';
 export * from './cascades';
 export { purchaseOrderFlow } from './flows/purchaseOrder.flow';
+export { poEscalationFlow } from './flows/poEscalation.flow';
 export { advanceShipNoticeFlow } from './flows/advanceShipNotice.flow';
 export { goodsReceiptFlow } from './flows/goodsReceipt.flow';
 export { goodsReceiptLineFlow } from './flows/goodsReceiptLine.flow';
@@ -169,6 +170,7 @@ import { supplierAskFlow } from './flows/supplierAsk.flow';
 import { capacityDecisionFlow } from './flows/capacityDecision.flow';
 import { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
 import { poCancellationFlow } from './flows/poCancellation.flow';
+import { poEscalationFlow } from './flows/poEscalation.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -181,6 +183,7 @@ import { rfpIntentFlow } from './flows/rfpIntent.flow';
 
 // Seed the shipped flows onto the singleton.
 flowRegistry.register(purchaseOrderFlow); // Step 3.1 — PO
+flowRegistry.register(poEscalationFlow); // UCX-P7 (BL-368) — the escalated-PO record
 flowRegistry.register(advanceShipNoticeFlow); // Step 4 (i) — ASN
 flowRegistry.register(goodsReceiptFlow); // Step 4 (ii) — GR header
 flowRegistry.register(goodsReceiptLineFlow); // Step 4 (ii) — GR line sub-flow (census G2)
