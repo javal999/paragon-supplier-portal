@@ -19,7 +19,9 @@ import {
   useRequisitions,
   useDocuments,
   useNpdReviews,
-  useRopFisikPrRecommendations
+  useRopFisikPrRecommendations,
+  useMaterialNames,
+  useComplianceRegistry
 } from '@services/query/hooks';
 import { useUnifiedChase } from '@services/query/chaseHooks';
 import { useHubRole } from '@components/layout-v2/hubRole';
@@ -48,7 +50,10 @@ const BuyerHome = () => {
   // so its To-Do is shown to a seat that holds `inbound:acknowledge` (a new
   // PTI seat, holdable from the identity panel and not seeded).
   const { identity } = useCurrentIdentity();
-  const holdsInboundAck = atomsForSeat(identity.businessRoles).includes('inbound:acknowledge');
+  // UCX-P1 (BL-362) — the rows follow the seat: its atoms, resolved through
+  // `atomsForSeat` (a custom role included), gate the list.
+  const seatAtoms = useMemo(() => atomsForSeat(identity.businessRoles), [identity.businessRoles]);
+  const holdsInboundAck = seatAtoms.includes('inbound:acknowledge');
   const invoices = useBuyerInvoices();
   const pos = usePurchaseOrders();
   const rfqs = useRFQs();
@@ -78,6 +83,9 @@ const BuyerHome = () => {
   const npdReviews = useNpdReviews();
   // BL-199 (DRC-13 BR-02) — materials at ROP Fisik with no umbrella PO balance left.
   const ropFisikPrs = useRopFisikPrRecommendations();
+  // UCX-P1 (BL-362) — the two new Planning/Compliance task sources.
+  const tradeNames = useMaterialNames();
+  const registry = useComplianceRegistry();
 
   const tasks = /** @type {HomeTask[]} */ (
     useMemo(() => {
@@ -111,7 +119,9 @@ const BuyerHome = () => {
           negotiationRounds: rounds.data,
           sapFailures: sap.failures,
           npdReviews: npdReviews.data,
-          ropFisikPrs: ropFisikPrs.data
+          ropFisikPrs: ropFisikPrs.data,
+          tradeNames: tradeNames.data,
+          registry: registry.data
         }),
         nowIso,
         t
@@ -136,6 +146,8 @@ const BuyerHome = () => {
       sap.failures,
       npdReviews.data,
       ropFisikPrs.data,
+      tradeNames.data,
+      registry.data,
       t
     ])
   );
@@ -156,7 +168,7 @@ const BuyerHome = () => {
       <div className="mb-4">
         <SampleDataBadge />
       </div>
-      <TaskList tasks={tasks} />
+      <TaskList tasks={tasks} seatAtoms={seatAtoms} scope="roles" />
     </AppShellV2>
   );
 };

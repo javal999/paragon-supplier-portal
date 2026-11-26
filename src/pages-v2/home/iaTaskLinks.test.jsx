@@ -4,6 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { setHubRole } from '@components/layout-v2/hubRole';
 import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
+import { callOffStore } from '@services/data/mock/stores/callOffStore';
 import BuyerHome from '../BuyerHome';
 import SupplierHome from '../SupplierHome';
 import BuyerSourcing from '../BuyerSourcing';
@@ -13,6 +14,7 @@ import BuyerRequisitions from '../BuyerRequisitions';
 import BuyerCompliance from '../BuyerCompliance';
 import BuyerCallOffs from '../BuyerCallOffs';
 import SupplierDocuments from '../SupplierDocuments';
+import SupplierCallOffs from '../SupplierCallOffs';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IA evaluation 2026-10, P-03 and P-08 — every My tasks / To do item lands
@@ -244,9 +246,30 @@ describe('AIB-3 (BL-351) — the missing-ASN chase', () => {
     expect(screen.getAllByTestId(/^calloff-chase-row-/)).toHaveLength(count);
   });
 
-  it("the supplier's task opens its call-offs and carries the same chase", async () => {
+  it("the supplier's task opens the missing-ASN filter, which lists exactly the count (UCX-P1)", async () => {
     const { count, to } = await follow('supplier', 'calloffs-missing-asn');
     expect(count).toBeGreaterThan(0);
-    expect(to).toBe('/supplier/call-offs');
+    expect(to).toBe('/supplier/call-offs?status=missingAsn');
+    land(<SupplierCallOffs />, '/supplier/call-offs', to, 'supplier');
+    const rows = await screen.findAllByTestId(/^supplier-calloff-row-/, {}, { timeout: 8000 });
+    expect(rows).toHaveLength(count);
+  });
+
+  it('`?callOff=<id>` opens that call-off panel, as a count of one does (UCX-P1)', async () => {
+    const waiting = callOffStore
+      .all()
+      .find((c) => c.supplierId === SUPPLIER.supplierId && c.status === 'Awaiting Confirmation');
+    expect(waiting).toBeTruthy();
+    land(
+      <SupplierCallOffs />,
+      '/supplier/call-offs',
+      waiting ? `/supplier/call-offs?callOff=${waiting.id}` : '/supplier/call-offs',
+      'supplier'
+    );
+    const panel = await screen.findByRole('dialog', {}, { timeout: 8000 });
+    expect(panel).toHaveTextContent(waiting?.callOffNumber ?? '');
+    // Closing drops the `?callOff=` link with the panel, so it does not reopen.
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close panel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });

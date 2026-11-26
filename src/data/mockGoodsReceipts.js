@@ -75,6 +75,8 @@ import { shiftFields } from '@services/data/fixturePresent';
  * @property {string} comment -  The supplier's comment (required for both answers).
  * @property {string} respondedAt
  * @property {string} [resolutionComment] -  PTI's comment when it resolved a dispute.
+ * @property {import('../services/transitions/receiptDiscrepancyRules').ReceiptDisputeOutcome} [resolution] UCX-P7 — the OUTCOME
+ *   PTI chose (supplierRight / receiptStands / recount), recorded with the comment.
  * @property {string} [resolvedAt]
  */
 

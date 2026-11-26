@@ -4,8 +4,8 @@
 // CAP-1 wave 3 (BL-343) renders it through the shared `WeekGrid`: a real
 // table, the four measures as rows, the periods as its columns.
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { screen, within } from '@testing-library/react';
+import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import PeriodSubmitSection from './SupplierForecastCommitments/components/PeriodSubmitSection';
 
 /** @type {any} */
@@ -23,21 +23,22 @@ const W2 = '2026-11-09';
 
 describe('PEX-2 BR-05 — Submit by period as columns', () => {
   it('renders one column per period under four pinned row labels, and the per-period controls in their own column', () => {
-    render(
-      <MemoryRouter>
-        <PeriodSubmitSection
-          periodRows={[mk(W1, false), mk(W2, true)]}
-          periodLabel={(b) => `P ${b}`}
-          canCommit
-          pending={false}
-          submitAvail={/** @type {any} */ ({ available: true })}
-          commitmentReasons={[]}
-          reasonLabel={() => 'x'}
-          groupLabel={(g) => g}
-          setWeekReasons={() => {}}
-          onSubmitAll={async () => {}}
-        />
-      </MemoryRouter>
+    // UCX-P8: the section reads the seat for the capacity wait's link, so the
+    // render needs the identity provider (the house helper supplies it).
+    renderWithProviders(
+      <PeriodSubmitSection
+        periodRows={[mk(W1, false), mk(W2, true)]}
+        periodLabel={(b) => `P ${b}`}
+        canCommit
+        pending={false}
+        submitAvail={/** @type {any} */ ({ available: true })}
+        commitmentReasons={[]}
+        reasonLabel={() => 'x'}
+        groupLabel={(g) => g}
+        setWeekReasons={() => {}}
+        onSubmitAll={async () => {}}
+      />,
+      { identity: SUPPLIER }
     );
     // A real table (G-15), one column per period, oldest first.
     const grid = screen.getByTestId('fc-sup-weeks-grid');

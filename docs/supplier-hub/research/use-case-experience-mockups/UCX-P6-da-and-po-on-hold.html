@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UCX-P6 DA and PO On Hold</title><style>:root{--canvas:#F8F9FD;--surface:#fff;--subtle:#EBEBEB;--line:#D6D6D6;--line-strong:#7A7A7A;--text:#2A3D4A;--text2:#5C5C5C;--muted:#ADADAD;--action:#215AA8;--action-hover:#1A4886;--tint:#D3DEEE;--data:#1E3A5F;--ok:#267346;--ok-bg:#D9F2E3;--warn:#695200;--warn-bg:#FFFBE4;--warn-line:#D97706;--bad:#B80016;--bad-bg:#FFEDEF;--info:#00347A;--info-bg:#CCDDF5;--r:4px;--r2:6px;--r3:8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--canvas:#0f1720;--surface:#18232e;--subtle:#23313e;--line:#52616e;--line-strong:#7b8995;--text:#f7f9fb;--text2:#d3dae1;--muted:#9aa8b5;--action:#7a9ccb;--action-hover:#a6bddc;--tint:#143665;--data:#cfe0f5;--ok:#8cd9ac;--ok-bg:#123825;--warn:#ffe86e;--warn-bg:#342900;--bad:#fab6be;--bad-bg:#5c000b;--info:#99c5ff;--info-bg:#062560}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;background:var(--canvas);color:var(--text);font:14px/1.45 "Helvetica Neue",Arial,system-ui,sans-serif}
+.mono,.d{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--data);font-variant-numeric:tabular-nums lining-nums;font-size:13px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+.banner{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--action);border-radius:var(--r2);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--text2)}
+.banner b{color:var(--text)}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:0 0 8px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 6px}
+.sub{color:var(--text2);margin:0 0 12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 12px;flex-wrap:wrap}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--text2);cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--action);border-bottom-color:var(--action);font-weight:600}
+.panel[hidden]{display:none}
+.btn{font:inherit;border-radius:var(--r);padding:6px 12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);cursor:pointer}
+.btn.pri{border-color:var(--action);color:var(--action);font-weight:600}.btn.pri:hover{background:var(--tint)}
+.btn[disabled]{color:var(--muted);border-color:var(--line);cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:13px}
+.chip{display:inline-block;border:1px solid var(--line);background:var(--subtle);border-radius:var(--r);padding:1px 7px;font-size:12px;color:var(--text2);white-space:nowrap}
+.chip.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}.chip.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}.chip.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}.chip.info{background:var(--info-bg);border-color:var(--info);color:var(--info)}.chip.lane{background:var(--surface)}
+table{width:100%;border-collapse:collapse}th{background:var(--subtle);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);padding:7px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border-bottom:0}
+.num{text-align:right}
+input[type=text],input[type=date],select,textarea{font:inherit;border:1px solid var(--line-strong);border-radius:var(--r);padding:5px 8px;background:var(--surface);color:var(--text);max-width:100%}
+input.n{width:96px;text-align:right}
+label.f{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);margin:0 0 3px}label.f.req::after{content:" *"}
+.field{margin-bottom:10px}
+.hint{font-size:12px;color:var(--text2)}
+.msg{border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--warn);border-radius:var(--r2);padding:8px 10px;font-size:13px}
+.note{border:1px dashed var(--line-strong);border-radius:var(--r2);padding:8px 10px;font-size:13px;color:var(--text2);background:var(--surface)}
+.tip{display:inline-block;width:16px;height:16px;border:1px solid var(--line-strong);border-radius:50%;text-align:center;font-size:11px;line-height:14px;color:var(--text2);cursor:help;margin-left:4px;position:relative}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:20px;top:-4px;z-index:5;width:240px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r2);padding:6px 8px;color:var(--text);font-size:12px;line-height:1.35}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}.wrap{padding:12px}}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:13px}.kv dt{color:var(--text2)}.kv dd{margin:0}
+.pred{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:8px 12px;font-size:13px;color:var(--text2)}
+.pred table td,.pred table th{padding:4px 8px;font-size:12px}
+.tbl-scroll{overflow-x:auto}
+.dim{color:var(--text2)}
+.chk{width:16px;height:16px}
+</style></head><body><div class="wrap"><!--title: UCX-P6 DA and PO On Hold-->
+<div class="banner"><b>UCX-P6 · proposed experience · mockup.</b> PTI Planning seat. Rows other than "PO On Hold: 5,000 KG" are illustrations. Labels are the portal's own, except these, which are Proposed: "On record", "Send the preselected suggestions together" and "Send 3 suggestions". The tip texts that wait for a ruling say so (BL-297). This is not the built portal.</div>
+<div class="tabs" role="tablist" data-tabs="#v"><button role="tab" data-p="a">Publish demand anticipation (DA)</button><button role="tab" data-p="b">PO On Hold</button></div>
+<div id="v">
+
+<div class="panel" id="a">
+  <div class="card">
+    <h2>Publish demand anticipation (DA) · <span class="mono">W36</span></h2>
+    <p class="hint">Agreements stay on record until you change them. Only a new row, or a row you untick, needs a decision.</p>
+    <div class="row" style="margin-bottom:8px"><span class="chip ok">3 agreements carried from last week</span><span class="chip warn">1 new row</span><span class="chip">0 supplier × materials differ in figures</span></div>
+    <table>
+      <thead><tr><th>Supplier × material</th><th class="num">Remainder after the horizon</th><th>Supplier agreed to take the remainder after the horizon</th><th>On record</th></tr></thead>
+      <tbody>
+        <tr><td>PT Sample Packaging Indonesia × <span class="mono">PK-PETB-8801</span></td><td class="num mono">4,000</td><td><input class="chk" type="checkbox" checked aria-label="Agreed, PK-PETB-8801"></td><td><span class="chip ok">Agreed 24 Aug 2026</span></td></tr>
+        <tr><td>PT Sample Packaging Indonesia × <span class="mono">PK-PETB-8802</span></td><td class="num mono">2,500</td><td><input class="chk" type="checkbox" checked aria-label="Agreed, PK-PETB-8802"></td><td><span class="chip ok">Agreed 24 Aug 2026</span></td></tr>
+        <tr><td>PT Sample Carton Packaging × <span class="mono">PK-CAPF-8820</span></td><td class="num mono">1,200</td><td><input class="chk" type="checkbox" checked aria-label="Agreed, PK-CAPF-8820"></td><td><span class="chip ok">Agreed 17 Aug 2026</span></td></tr>
+        <tr><td>PT Sample Preform Works × <span class="mono">PK-PETB-8810</span></td><td class="num mono">3,000</td><td><input class="chk" type="checkbox" aria-label="Agreed, PK-PETB-8810"></td><td><span class="chip warn">New this week: no agreement on record</span></td></tr>
+      </tbody>
+    </table>
+    <div class="row" style="margin-top:10px"><span class="hint">Where the supplier gives this agreement in the hub (the DA view is off), the tick fills itself.</span><span class="sp"></span><button class="btn" type="button">Cancel</button><button class="btn pri" type="button">Publish</button></div>
+  </div>
+</div>
+
+<div class="panel" id="b" hidden>
+  <div class="card">
+    <h2>PO On Hold: <span class="mono">5,000 KG</span></h2>
+    <p class="hint">DA does not absorb this open quantity. Suggest what the supplier can choose from. The supplier decides before the grace period ends.</p>
+    <p class="hint" style="margin:0 0 6px">PIPO, Max PTI and the FG cap decide whether "Absorb as finished goods (FG)" is offered. Material Planning confirms their definitions (BL-297).</p>
+    <div style="margin-bottom:8px">
+      <span class="chip">PIPO flag not set: counted as not PIPO <span class="tip" tabindex="0" data-tip="PIPO: definition to be confirmed by Material Planning (BL-297). Until then the hub counts a material as not PIPO.">i</span></span>
+      <span class="chip">No stock movement on record</span>
+      <span class="chip warn">Max PTI not on record <span class="tip" tabindex="0" data-tip="Max PTI sets the FG cap. When it is not on record the FG cap cannot be calculated, so FG absorbs nothing. Definition: BL-297, to be confirmed by Material Planning.">i</span></span>
+      <span class="chip">FG cap <span class="tip" tabindex="0" data-tip="The limit for 'Absorb as finished goods (FG)'. It is computed from Max PTI.">i</span></span>
+    </div>
+    <label style="display:block;margin-bottom:6px"><input type="radio" name="o1" checked> <b>FS + spread</b> <span class="chip info">preselected</span><br><span class="hint">At the end of the grace period the remainder is spread over the next weeks’ call-offs, following DA.</span></label>
+    <label style="display:block;margin-bottom:6px"><input type="radio" name="o1"> <b>Feedstock (FS) only</b><br><span class="hint">At the end of the grace period the whole remainder is taken as feedstock in one call-off.</span></label>
+    <label style="display:block;margin-bottom:6px"><input type="radio" name="o1" disabled> <b>Absorb as finished goods (FG)</b> <span class="chip">Not offered: Max PTI not on record</span></label>
+  </div>
+  <div class="card tbl-scroll">
+    <h2>Send the preselected suggestions together</h2>
+    <p class="hint">Three lines wait for a suggestion. Change any option, or send them all as shown.</p>
+    <table>
+      <thead><tr><th>Line</th><th>Suggested option</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>PO On Hold: <span class="mono">5,000 KG</span></td><td><select><option>FS + spread</option><option>Feedstock (FS) only</option></select></td><td class="dim">No stock movement on record</td></tr>
+        <tr><td>PO On Hold: <span class="mono">2,000 KG</span></td><td><select><option>Feedstock (FS) only</option><option>FS + spread</option></select></td><td class="dim">From the hub's conditions</td></tr>
+        <tr><td>PO On Hold: <span class="mono">800 KG</span></td><td><select><option>FS + spread</option><option>Feedstock (FS) only</option></select></td><td class="dim">No stock movement on record</td></tr>
+      </tbody>
+    </table>
+    <div class="row" style="margin-top:10px"><span class="sp"></span><button class="btn pri" type="button" data-toggle="#sent">Send 3 suggestions</button></div>
+    <div id="sent" hidden class="row" style="margin-top:10px"><span class="chip ok">Sent</span><span class="hint">Each line reads "Suggested: … Waiting for the supplier."</span></div>
+  </div>
+</div>
+</div>
+</div><script>
+document.querySelectorAll('[data-tabs]').forEach(function(g){var bs=g.querySelectorAll('[role=tab]');var scope=document.querySelector(g.getAttribute('data-tabs'))||document;
+function show(id){bs.forEach(function(b){b.setAttribute('aria-selected',b.dataset.p===id)});scope.querySelectorAll(':scope > .panel').forEach(function(p){p.hidden=p.id!==id})}
+bs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.p)})});show(bs[0].dataset.p)});
+document.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var t=document.querySelector(b.dataset.toggle);if(t)t.hidden=!t.hidden})});
+</script></body></html>

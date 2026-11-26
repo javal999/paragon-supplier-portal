@@ -47,6 +47,8 @@ export function withSeverity(tasks, nowIso, t) {
       label: task.label,
       count: task.count,
       to: task.to,
+      // UCX-P1 (BL-362) — the row's act survives rating; the list gates on it.
+      ...(task.act === undefined ? {} : { act: task.act }),
       // X-02 — the lane a grouped list (Supplier Home) files the row under, and
       // the oldest deadline the lane orders by. Absent lane: a flat list.
       ...(task.lane === undefined ? {} : { lane: task.lane }),

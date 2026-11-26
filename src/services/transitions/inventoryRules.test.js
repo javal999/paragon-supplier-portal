@@ -241,7 +241,12 @@ describe('incoming (BR-05, BR-06) — production vs transit, next date', () => {
         asn({}),
         asn({ asnNumber: 'A2', status: 'Cancelled' }),
         asn({ asnNumber: 'A3', status: 'Delivered' }),
-        asn({ asnNumber: 'A4', status: 'Submitted' })
+        asn({ asnNumber: 'A4', status: 'Submitted' }),
+        // UCX-P3 (BL-364) — a Draft is not In Transit: "Mark as shipped" opens
+        // it before the supplier confirms the details, and PTI's in-transit
+        // figure must not count a shipment nobody has sent yet.
+        asn({ asnNumber: 'A5', status: 'Draft' }),
+        asn({ asnNumber: 'A6', status: 'Awaiting exception' })
       ],
       []
     );

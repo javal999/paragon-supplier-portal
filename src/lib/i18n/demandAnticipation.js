@@ -24,6 +24,10 @@ export const demandAnticipationEn = {
   'ltpIn.title': 'LTP inputs',
   'ltpIn.intro':
     'Upload LTP A, LTP Festive and LTP B per material, one file per series or as a batch file below. Until LTP A is uploaded, the forecast quantity stands in for it.',
+  // UCX-P9 (BL-370) — the three series defined where the planner uploads them
+  // (one sentence of body copy; the section has no column header to tip).
+  'ltpIn.seriesExplained':
+    'LTP A is the base forecast for the week and the series demand anticipation reads. LTP Festive is the forecast when a festive window applies; the strategic buffer is LTP Festive minus LTP A. LTP B is the forecast with extra protection; the protection buffer is LTP B minus LTP A.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pick a material',
   'ltpIn.choice': 'LTP in use',
@@ -106,10 +110,16 @@ export const demandAnticipationEn = {
   'demandAnt.publish.done': 'Demand anticipation published for {{week}}',
   'demandAnt.publish.failed': 'Could not publish demand anticipation',
   // The supplier's agreement to take a remainder outside the horizon [Owner A8].
+  // UCX-P6 (BL-367) · UCX-D19 — the agreement stands until the planner changes
+  // it; the date shown is its only cue that it is old (UCX-PG12). [Proposed] labels.
   'demandAnt.agree.legend': 'Supplier agreed to take the remainder after the horizon',
   'demandAnt.agree.help':
-    'Tick only where the supplier agreed. Without it the remainder goes to the last week of the horizon.',
+    'Agreements stay on record until you change them. Only a new row, or a row you untick, needs a decision.',
   'demandAnt.agree.option': '{{qty}} to {{outside}} instead of {{last}}',
+  'demandAnt.agree.summary': '{{carried}} agreements carry · {{asked}} to decide',
+  'demandAnt.agree.standing': 'Agreed {{date}}',
+  'demandAnt.agree.isNew': 'New this week: no agreement on record',
+  'demandAnt.agree.changed': 'Changed since {{date}}: was {{qty}}',
   // The filters.
   'demandAnt.filter.supplier': 'Supplier',
   'demandAnt.filter.material': 'Material',
@@ -198,6 +208,8 @@ export const demandAnticipationId = {
   'ltpIn.title': 'Input LTP',
   'ltpIn.intro':
     'Unggah LTP A, LTP Festive dan LTP B per material, satu berkas per seri atau sebagai berkas batch di bawah. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
+  'ltpIn.seriesExplained':
+    'LTP A adalah prakiraan dasar untuk minggu itu dan seri yang dibaca demand anticipation. LTP Festive adalah prakiraan bila ada periode festive; strategic buffer adalah LTP Festive dikurangi LTP A. LTP B adalah prakiraan dengan perlindungan tambahan; protection buffer adalah LTP B dikurangi LTP A.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pilih material',
   'ltpIn.choice': 'LTP yang dipakai',
@@ -277,8 +289,12 @@ export const demandAnticipationId = {
   'demandAnt.publish.failed': 'Demand anticipation tidak dapat dipublikasikan',
   'demandAnt.agree.legend': 'Pemasok setuju menerima sisa setelah horizon',
   'demandAnt.agree.help':
-    'Centang hanya bila pemasok setuju. Tanpa itu sisa dipindah ke minggu terakhir horizon.',
+    'Kesepakatan tetap tercatat sampai Anda mengubahnya. Hanya baris baru, atau baris yang Anda hapus centangnya, yang perlu keputusan.',
   'demandAnt.agree.option': '{{qty}} ke {{outside}}, bukan {{last}}',
+  'demandAnt.agree.summary': '{{carried}} kesepakatan berlanjut · {{asked}} perlu diputuskan',
+  'demandAnt.agree.standing': 'Disepakati {{date}}',
+  'demandAnt.agree.isNew': 'Baru minggu ini: belum ada kesepakatan',
+  'demandAnt.agree.changed': 'Berubah sejak {{date}}: sebelumnya {{qty}}',
   'demandAnt.filter.supplier': 'Pemasok',
   'demandAnt.filter.material': 'Material',
   'demandAnt.filter.all': 'Semua',

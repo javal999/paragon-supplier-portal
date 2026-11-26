@@ -11,6 +11,8 @@ import RegistryRow from './RegistryRow';
  * @typedef {object} ComplianceRegistryTableProps
  * @property {Row[]} filtered The registry rows left after the page's filters.
  * @property {UseToastReturn['toast']} toast The page's toast function, for the Remind action.
+ * @property {boolean} canAskRenewal UCX-P5 — the seat holds `supplierdoc:request`.
+ * @property {(row: Row) => void} onAskRenewal UCX-P5 — opens the renewal ask from a row.
  * @property {TFunction} t
  */
 
@@ -21,7 +23,7 @@ import RegistryRow from './RegistryRow';
  * change).
  * @type {React.FC<ComplianceRegistryTableProps>}
  */
-const ComplianceRegistryTable = ({ filtered, toast, t }) => (
+const ComplianceRegistryTable = ({ filtered, toast, canAskRenewal, onAskRenewal, t }) => (
   <>
     {/* ── THE COLUMN'S ONE-LINE EXPLANATION, AND WHY IT IS NOT A BANNER ──
         Two banners already sit above (data readiness, and the BPJPH date), and
@@ -59,7 +61,14 @@ const ComplianceRegistryTable = ({ filtered, toast, t }) => (
         </TableHeader>
         <tbody>
           {filtered.map((row) => (
-            <RegistryRow key={row.entry.id} row={row} toast={toast} t={t} />
+            <RegistryRow
+              key={row.entry.id}
+              row={row}
+              toast={toast}
+              canAskRenewal={canAskRenewal}
+              onAskRenewal={onAskRenewal}
+              t={t}
+            />
           ))}
           {filtered.length === 0 && (
             <tr>

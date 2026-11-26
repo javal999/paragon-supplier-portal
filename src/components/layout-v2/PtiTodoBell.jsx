@@ -130,6 +130,18 @@ const useShellRopFisikPrs = () =>
     (svc, scope) => svc.procurement.getRopFisikPrRecommendations(scope),
     SHELL
   );
+const useShellMaterialNames = () =>
+  useServiceQuery(
+    ['procurement', 'materialNames'],
+    (svc, scope) => svc.procurement.getMaterialNames(scope),
+    SHELL
+  );
+const useShellComplianceRegistry = () =>
+  useServiceQuery(
+    ['risk', 'complianceRegistry'],
+    (svc, scope) => svc.risk.getComplianceRegistry(scope),
+    SHELL
+  );
 // Same key and shape as `useUnifiedChase()`; the cast is the one chaseHooks uses
 // because the fetcher unwraps `.items`.
 const useShellUnifiedChase = () =>
@@ -148,7 +160,11 @@ function usePtiTodoRows() {
   const { t } = useTranslation();
   const [role] = useHubRole();
   const { identity } = useCurrentIdentity();
-  const holdsInboundAck = atomsForSeat(identity.businessRoles).includes('inbound:acknowledge');
+  // UCX-P1 (BL-362) — the bell follows the seat exactly as the page's list
+  // does: the seat's atoms gate the rows it counts, so the count never names
+  // work this seat cannot act on.
+  const seatAtoms = useMemo(() => atomsForSeat(identity.businessRoles), [identity.businessRoles]);
+  const holdsInboundAck = seatAtoms.includes('inbound:acknowledge');
   const pos = useShellPurchaseOrders();
   const invoices = useShellBuyerInvoices();
   const rfqs = useShellRfqs();
@@ -165,6 +181,8 @@ function usePtiTodoRows() {
   const rounds = useShellNegotiationRounds();
   const npdReviews = useShellNpdReviews();
   const ropFisikPrs = useShellRopFisikPrs();
+  const tradeNames = useShellMaterialNames();
+  const registry = useShellComplianceRegistry();
 
   // REQ-E09-03 / REQ-E09-04 — the view projection BuyerHome's `useCallOffViews`
   // computes, over the shell's reads.
@@ -194,6 +212,8 @@ function usePtiTodoRows() {
 
   return useMemo(() => {
     const nowIso = ordersNow();
+    // UCX-P1 (BL-362) — the same gate `TaskList` applies on the page's default
+    // view: a row whose act the seat does not hold is not counted here.
     return sortTasks(
       withSeverity(
         buyerTodoTasks({
@@ -217,16 +237,19 @@ function usePtiTodoRows() {
           negotiationRounds: rounds.data,
           sapFailures,
           npdReviews: npdReviews.data,
-          ropFisikPrs: ropFisikPrs.data
+          ropFisikPrs: ropFisikPrs.data,
+          tradeNames: tradeNames.data,
+          registry: registry.data
         }),
         nowIso,
         t
-      )
+      ).filter((task) => task.act === undefined || seatAtoms.includes(task.act))
     );
   }, [
     t,
     role,
     holdsInboundAck,
+    seatAtoms,
     pos.data,
     invoices.data,
     rfqs.data,
@@ -243,7 +266,9 @@ function usePtiTodoRows() {
     rounds.data,
     sapFailures,
     npdReviews.data,
-    ropFisikPrs.data
+    ropFisikPrs.data,
+    tradeNames.data,
+    registry.data
   ]);
 }
 

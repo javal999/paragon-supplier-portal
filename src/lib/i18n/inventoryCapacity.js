@@ -480,6 +480,7 @@ export const inventoryCapacityEn = {
   'inv.capacity.reason.discontinued': 'Discontinued',
   'inv.capacity.reason.other': 'Other',
   // MR-9 BR-05 — the starter reasons for closing an alert (list `alertClose`).
+  'inv.alerts.closeReason.asked-supplier': 'Asked the supplier',
   'inv.alerts.closeReason.calloff-raised': 'Call-off raised or brought forward',
   'inv.alerts.closeReason.po-raised': 'PO raised',
   'inv.alerts.closeReason.supplier-updated': 'Supplier updated its data',
@@ -597,7 +598,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.basis.ptiNone': 'No PTI stock figure',
   'inv.alerts.basis.short': 'Short by {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Supplier cover {{cover}} days · lead time {{lead}} days',
-  'inv.alerts.basis.supplierCoverBands': 'Supplier cover {{cover}} days · day bands: {{band}}',
+  'inv.alerts.basis.supplierCoverBands':
+    'Supplier cover {{cover}} days · day bands: {{band}} (Critical under 14 days, Warning 14 to 29, Healthy 30 to 60, Excess above 60)',
   'inv.alerts.basis.firm': 'Zone Liability period short',
   'inv.alerts.basis.tradeOff': 'Zone Capacity period short',
   // INV-D9 — "Ask supplier": PTI's hub ask, and the supplier's "PTI is asking"
@@ -709,6 +711,7 @@ export const inventoryCapacityEn = {
   'inv.weekly.missingTitle': 'Still missing this cycle',
   'inv.weekly.enter': 'Enter stock',
   'inv.weekly.enterFor': 'Enter stock for {{material}}',
+  'inv.weekly.openWeekly': 'Open the weekly page',
   'inv.weekly.allDone': 'Every material is updated for this cycle.',
   'inv.weekly.alsoDue': 'Also due by the same cutoff',
   'inv.weekly.capacity': 'Capacity',
@@ -1213,6 +1216,7 @@ export const inventoryCapacityId = {
   'inv.capacity.reason.force-majeure': 'Keadaan kahar',
   'inv.capacity.reason.discontinued': 'Dihentikan',
   'inv.capacity.reason.other': 'Lainnya',
+  'inv.alerts.closeReason.asked-supplier': 'Menanyakan ke pemasok',
   'inv.alerts.closeReason.calloff-raised': 'Call-off dibuat atau dimajukan',
   'inv.alerts.closeReason.po-raised': 'PO dibuat',
   'inv.alerts.closeReason.supplier-updated': 'Pemasok memperbarui datanya',
@@ -1334,7 +1338,7 @@ export const inventoryCapacityId = {
   'inv.alerts.basis.short': 'Kurang {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Cakupan stok pemasok {{cover}} hari · lead time {{lead}} hari',
   'inv.alerts.basis.supplierCoverBands':
-    'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}}',
+    'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}} (Kritis di bawah 14 hari, Waspada 14 sampai 29, Sehat 30 sampai 60, Berlebih di atas 60)',
   'inv.alerts.basis.firm': 'Periode Zone Liability kurang',
   'inv.alerts.basis.tradeOff': 'Periode Zone Capacity kurang',
   // INV-D9 — "Tanyakan ke pemasok" dan blok "PTI bertanya" (S-04).
@@ -1442,6 +1446,7 @@ export const inventoryCapacityId = {
   'inv.weekly.missingTitle': 'Belum diperbarui siklus ini',
   'inv.weekly.enter': 'Isi stok',
   'inv.weekly.enterFor': 'Isi stok untuk {{material}}',
+  'inv.weekly.openWeekly': 'Buka halaman mingguan',
   'inv.weekly.allDone': 'Semua material sudah diperbarui untuk siklus ini.',
   'inv.weekly.alsoDue': 'Juga jatuh tempo pada batas waktu yang sama',
   'inv.weekly.capacity': 'Kapasitas',

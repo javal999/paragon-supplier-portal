@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -23,15 +24,23 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import { formatDate } from '@lib/format';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 /** @import { CallOffView } from '@services/transitions/callOffRules' */
 import { isDueWithoutHeadsUp } from '@services/transitions/callOffRules';
+import { callOffShipment, draftForCallOff } from '@services/transitions/shipmentNotice';
+import { useAdvanceShipNoticeCreate } from '@services/query/commandHooks';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
+import { useCallOffChase } from '@services/query/hooks';
 import { PicFilter, usePicFilter } from '../materials/picDisplay';
 import MaterialSearch, { useMaterialMatcher } from '@components/ui-v2/MaterialSearch';
 import { searchMaterials } from '@services/transitions/matchMaterial';
 import { useAsnWizardAvailability } from '../shipments/asnWizardEntry';
 import { EMPTY } from './const';
+import Button from '@components/ui-v2/Button';
+import BulkReviewDialog from '../orders/BulkReviewDialog';
+import { callOffBulkEligible, callOffNeedsDecision } from './bulkConfirm';
 import { useCallOffResponse } from './hooks/useCallOffResponse';
+import { useMarkShipped } from './hooks/useMarkShipped';
 import CallOffTable from './components/CallOffTable';
 import CallOffPanel from './components/CallOffPanel';
 
@@ -57,14 +66,56 @@ const SupplierCallOffs = () => {
   const { t } = useTranslation();
   const { identity } = useCurrentIdentity();
   const { views, nowIso, asns, isPending, error, refetch } = useCallOffViews();
+  // UCX-P1 (BL-362) — the To do's missing-ASN row opens `?status=missingAsn`:
+  // the call-offs with an open chase, read from the same source that counts it.
+  const missingAsn = useCallOffChase();
   const confirmAvailability = useVerbAvailability('calloff:confirm');
   const dispatchAvailability = useVerbAvailability('calloff:dispatch');
   // IA-S04 — the ASN for a confirmed call-off is made in the Create-ASN wizard,
   // which needs both ASN atoms.
   const asnWizard = useAsnWizardAvailability();
+  // UCX-P3 (BL-364) — "Mark as shipped" sends the notice AND opens the draft
+  // ASN, so the page holds the ASN create mutation for that one act.
+  const createAsnMutation = useAdvanceShipNoticeCreate();
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   const [form, setForm] = useState(EMPTY);
-  const { command, run, proposal, sendAnswer } = useCallOffResponse(form, setForm);
+  // UCX-P1 (BL-362) — a To do row counting one call-off opens its panel
+  // (`?callOff=`), as the PO row opens its order (`?po=`). The linked call-off
+  // is a DERIVED selection, not an effect: until the supplier clicks or edits,
+  // the panel reads the linked call-off and its own opening form.
+  const [formForId, setFormForId] = useState(/** @type {string | null} */ (null));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedCallOffId = searchParams.get('callOff');
+  /**
+   * The form a call-off's panel opens with. UCX-P3 (BL-364) — the mark step
+   * starts from the call-off's own values (UCX-F9): the shipped date is the
+   * hub's today, the arrival its need date, and the quantity its agreed
+   * figure. All three stay editable.
+   * @param {CallOffView} v
+   */
+  const formFor = (v) => {
+    const { quantity, expectedArrival } = callOffShipment(v.callOff, DECLARED_PRESENT);
+    return {
+      ...EMPTY,
+      shippedDate: DECLARED_PRESENT,
+      expectedArrival,
+      dispatchQty: String(quantity)
+    };
+  };
+  const linkedView = linkedCallOffId
+    ? (views.find((v) => v.callOff.id === linkedCallOffId) ?? null)
+    : null;
+  const effectiveSelectedId = selectedId ?? linkedView?.callOff.id ?? null;
+  const panelForm =
+    formForId === effectiveSelectedId ? form : linkedView ? formFor(linkedView) : EMPTY;
+  /** @param {typeof EMPTY} next */
+  const setPanelForm = (next) => {
+    setFormForId(effectiveSelectedId);
+    setForm(next);
+  };
+  const { command, run, proposal, sendAnswer } = useCallOffResponse(panelForm, setPanelForm);
+  // UCX-P3 (BL-364) — the one-step shipment notice: notice + draft ASN.
+  const mark = useMarkShipped({ asns, createAsnMutation });
   const crumb = [t('hub.nav.section.supplierOrders'), t('co.sup.title')];
   // REQ-E07-03 — the drill-through filter. The supplier's own read already
   // excludes drafts and dismissed drafts, so the predicate only narrows by PO.
@@ -75,15 +126,28 @@ const SupplierCallOffs = () => {
   // Material C3 — the one material search (MR-3 BR-04); a supplier's names
   // are its own (narrowed in the read model, MAT-R4).
   const [search, setSearch] = useState('');
+  // UCX-P2 v2 (BL-363) — the bulk "confirm as requested" selection. Nothing
+  // starts ticked; a call-off with a PTI delay waiting needs its own answer.
+  const [bulkTicked, setBulkTicked] = useState(/** @type {Set<string>} */ (new Set()));
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkResult, setBulkResult] = useState(
+    /** @type {import('../orders/BulkReviewDialog').BulkReviewResult | null} */ (null)
+  );
   const matchOf = useMaterialMatcher();
   const [statusFilter, setStatusFilter] = useState(
-    /** @type {'all' | 'toConfirm' | 'dueSoon'} */ ('all')
+    /** @type {'all' | 'toConfirm' | 'dueSoon' | 'missingAsn'} */ ('all')
   );
-  // Deep-link read: `?status=toConfirm|dueSoon` narrows to the call-offs the
-  // linking task named.
+  // Deep-link read: `?status=toConfirm|dueSoon|missingAsn` narrows to the
+  // call-offs the linking task named.
   useUrlEnumParam(
     'status',
-    /** @type {('all' | 'toConfirm' | 'dueSoon')[]} */ (['all', 'toConfirm', 'dueSoon']),
+    /** @type {('all' | 'toConfirm' | 'dueSoon' | 'missingAsn')[]} */ ([
+      'all',
+      'toConfirm',
+      'dueSoon',
+      'missingAsn'
+    ]),
     setStatusFilter
   );
 
@@ -106,14 +170,22 @@ const SupplierCallOffs = () => {
   const allRows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const toConfirm = allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
   const dueSoon = allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
+  const openChaseIds = new Set(
+    (missingAsn.data?.items ?? []).filter((r) => r.state === 'open').map((r) => r.callOffId)
+  );
+  const missingAsnCount = allRows.filter((v) => openChaseIds.has(v.callOff.id)).length;
   const rows =
     statusFilter === 'toConfirm'
       ? allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation')
       : statusFilter === 'dueSoon'
         ? allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso))
-        : allRows;
+        : statusFilter === 'missingAsn'
+          ? allRows.filter((v) => openChaseIds.has(v.callOff.id))
+          : allRows;
   /** @type {CallOffView | null} */
-  const selected = rows.find((v) => v.callOff.id === selectedId) ?? null;
+  const selected = rows.find((v) => v.callOff.id === effectiveSelectedId) ?? null;
+  // UCX-P3 — the open draft this call-off's mark step already created, if any.
+  const draftAsn = selected ? draftForCallOff(asns, selected.callOff.id) : null;
   const listed = searchMaterials(
     search,
     rows.filter((v) => pic.matches(v.callOff.mrpController)),
@@ -125,19 +197,61 @@ const SupplierCallOffs = () => {
     matchOf
   );
 
+  /** @param {CallOffView} v */
+  const eligibleCallOff = (v) => callOffBulkEligible(v);
+  const tickedViews = rows.filter((v) => bulkTicked.has(v.callOff.id) && eligibleCallOff(v));
+  const eligibleViews = rows.filter(eligibleCallOff);
+  const allTicked =
+    eligibleViews.length > 0 && eligibleViews.every((v) => bulkTicked.has(v.callOff.id));
+  /** @param {CallOffView} v */
+  const toggleBulk = (v) => {
+    if (!eligibleCallOff(v)) return;
+    setBulkTicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(v.callOff.id)) next.delete(v.callOff.id);
+      else next.add(v.callOff.id);
+      return next;
+    });
+  };
+  const toggleAll = () =>
+    setBulkTicked(allTicked ? new Set() : new Set(eligibleViews.map((v) => v.callOff.id)));
+  /** @param {CallOffView} v */
+  const bulkReasonOf = (v) => {
+    const why = callOffNeedsDecision(v);
+    return why ? t(`co.bulk.reason.${why}`) : '';
+  };
+  const runBulkConfirm = async () => {
+    setBulkBusy(true);
+    const done = [];
+    const refused = [];
+    for (const v of tickedViews) {
+      const result = await command.mutateAsync({ verb: 'confirm', id: v.callOff.id });
+      if (result.status === 'failed')
+        refused.push({ title: v.callOff.callOffNumber, reason: String(result.reason ?? '') });
+      else done.push(v.callOff.callOffNumber);
+    }
+    setBulkBusy(false);
+    setBulkResult({ done, refused });
+    setBulkTicked((prev) => {
+      const next = new Set(prev);
+      for (const v of tickedViews) next.delete(v.callOff.id);
+      return next;
+    });
+  };
+
   /** @param {string} id */
   const open = (id) => {
     setSelectedId(id);
+    setFormForId(id);
     const v = rows.find((x) => x.callOff.id === id);
-    setForm({
-      ...EMPTY,
-      dispatchQty: v
-        ? String(
-            v.callOff.confirmation?.deliveries.reduce((s, d) => s + d.quantity, 0) ??
-              v.callOff.quantity
-          )
-        : ''
-    });
+    setForm(v ? formFor(v) : { ...EMPTY });
+  };
+  /** Close the panel and drop the `?callOff=` link that opened it. */
+  const close = () => {
+    setSelectedId(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete('callOff');
+    setSearchParams(next, { replace: true });
   };
 
   return (
@@ -193,7 +307,8 @@ const SupplierCallOffs = () => {
         options={[
           { id: 'all', label: t('co.pti.filter.all') },
           { id: 'toConfirm', label: t('co.sup.filter.toConfirm'), count: toConfirm },
-          { id: 'dueSoon', label: t('co.sup.filter.dueSoon'), count: dueSoon }
+          { id: 'dueSoon', label: t('co.sup.filter.dueSoon'), count: dueSoon },
+          { id: 'missingAsn', label: t('co.sup.filter.missingAsn'), count: missingAsnCount }
         ]}
         value={statusFilter}
         onChange={setStatusFilter}
@@ -209,18 +324,74 @@ const SupplierCallOffs = () => {
         </p>
       )}
 
-      <CallOffTable listed={listed} onOpen={open} />
+      {confirmAvailability.kind === 'held' && eligibleViews.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-3" data-testid="calloffs-bulk-bar">
+          <label className="flex items-center gap-2 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              checked={allTicked}
+              onChange={toggleAll}
+              data-testid="calloffs-bulk-select-all"
+            />
+            {t('co.bulk.selectAll')}
+          </label>
+          <span className="text-xs text-text-tertiary" data-testid="calloffs-bulk-count">
+            {t('co.bulk.selected', { count: tickedViews.length })}
+          </span>
+          <Button
+            variant="outline"
+            disabled={tickedViews.length === 0}
+            onClick={() => {
+              setBulkResult(null);
+              setBulkOpen(true);
+            }}
+            data-testid="calloffs-bulk-open"
+          >
+            {t('co.bulk.open')}
+          </Button>
+        </div>
+      )}
+
+      <CallOffTable
+        listed={listed}
+        onOpen={open}
+        bulkFor={(v) => ({
+          ticked: bulkTicked.has(v.callOff.id),
+          eligible: eligibleCallOff(v),
+          reason: bulkReasonOf(v),
+          onToggle: () => toggleBulk(v)
+        })}
+      />
+
+      <BulkReviewDialog
+        open={bulkOpen}
+        title={t('co.bulk.dialog.title', { count: tickedViews.length })}
+        intro={t('co.bulk.dialog.intro')}
+        rows={tickedViews.map((v) => ({
+          key: v.callOff.id,
+          title: v.callOff.callOffNumber,
+          facts: [
+            `${v.callOff.materialCode} · ${v.callOff.quantity} ${v.callOff.uom} · ${t('co.bulk.needBy', { date: formatDate(v.callOff.needDate) })}`
+          ]
+        }))}
+        confirmLabel={t('co.bulk.confirm', { count: tickedViews.length })}
+        onConfirm={() => void runBulkConfirm()}
+        onClose={() => setBulkOpen(false)}
+        busy={bulkBusy}
+        result={bulkResult}
+      />
 
       <CallOffPanel
         selected={selected}
-        onClose={() => setSelectedId(null)}
-        form={form}
-        setForm={setForm}
-        busy={command.isPending}
+        onClose={close}
+        form={panelForm}
+        setForm={setPanelForm}
+        busy={command.isPending || mark.pending}
         confirmAvailability={confirmAvailability}
         dispatchAvailability={dispatchAvailability}
         asnWizard={asnWizard}
-        asns={asns}
+        draftAsn={draftAsn}
+        markShipped={mark.markShipped}
         run={run}
         proposal={proposal}
         sendAnswer={sendAnswer}

@@ -34,7 +34,22 @@ const AsnRow = ({ asn, isOpen, asnVerbs, onToggleExpand, onSubmitAsn, onCancelAs
         <Data>{asn.poReference}</Data>
       </TableCell>
       <TableCell pin="left">
-        <StatusPill variant={STATUS_VARIANT[asn.status]}>{asn.status}</StatusPill>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <StatusPill variant={STATUS_VARIANT[asn.status]}>{asn.status}</StatusPill>
+          {/* UCX-P8 (BL-369, UCX-D24) — while PTI Quality decides, the row names
+              the owner and the act BESIDE the agreed status words. The status
+              value and its tone do not change; this sentence is display only.
+              "PTI Quality" is the ruling's word for the compliance lane that
+              holds `asn:approve-shelf-life`. */}
+          {asn.status === 'Awaiting exception' && (
+            <span
+              className="text-xs text-text-tertiary"
+              data-testid={`asn-awaiting-owner-${asn.asnNumber}`}
+            >
+              {t('supplierShipments.row.awaitingException')}
+            </span>
+          )}
+        </div>
       </TableCell>
       <TableCell className="text-text-secondary whitespace-nowrap">{asn.carrier}</TableCell>
       <TableCell className="text-xs text-text-tertiary whitespace-nowrap">

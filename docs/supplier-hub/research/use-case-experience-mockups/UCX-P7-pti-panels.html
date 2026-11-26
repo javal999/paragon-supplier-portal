@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UCX-P7 PTI decision panels</title><style>:root{--canvas:#F8F9FD;--surface:#fff;--subtle:#EBEBEB;--line:#D6D6D6;--line-strong:#7A7A7A;--text:#2A3D4A;--text2:#5C5C5C;--muted:#ADADAD;--action:#215AA8;--action-hover:#1A4886;--tint:#D3DEEE;--data:#1E3A5F;--ok:#267346;--ok-bg:#D9F2E3;--warn:#695200;--warn-bg:#FFFBE4;--warn-line:#D97706;--bad:#B80016;--bad-bg:#FFEDEF;--info:#00347A;--info-bg:#CCDDF5;--r:4px;--r2:6px;--r3:8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--canvas:#0f1720;--surface:#18232e;--subtle:#23313e;--line:#52616e;--line-strong:#7b8995;--text:#f7f9fb;--text2:#d3dae1;--muted:#9aa8b5;--action:#7a9ccb;--action-hover:#a6bddc;--tint:#143665;--data:#cfe0f5;--ok:#8cd9ac;--ok-bg:#123825;--warn:#ffe86e;--warn-bg:#342900;--bad:#fab6be;--bad-bg:#5c000b;--info:#99c5ff;--info-bg:#062560}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;background:var(--canvas);color:var(--text);font:14px/1.45 "Helvetica Neue",Arial,system-ui,sans-serif}
+.mono,.d{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--data);font-variant-numeric:tabular-nums lining-nums;font-size:13px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+.banner{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--action);border-radius:var(--r2);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--text2)}
+.banner b{color:var(--text)}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:0 0 8px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 6px}
+.sub{color:var(--text2);margin:0 0 12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 12px;flex-wrap:wrap}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--text2);cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--action);border-bottom-color:var(--action);font-weight:600}
+.panel[hidden]{display:none}
+.btn{font:inherit;border-radius:var(--r);padding:6px 12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);cursor:pointer}
+.btn.pri{border-color:var(--action);color:var(--action);font-weight:600}.btn.pri:hover{background:var(--tint)}
+.btn[disabled]{color:var(--muted);border-color:var(--line);cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:13px}
+.chip{display:inline-block;border:1px solid var(--line);background:var(--subtle);border-radius:var(--r);padding:1px 7px;font-size:12px;color:var(--text2);white-space:nowrap}
+.chip.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}.chip.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}.chip.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}.chip.info{background:var(--info-bg);border-color:var(--info);color:var(--info)}.chip.lane{background:var(--surface)}
+table{width:100%;border-collapse:collapse}th{background:var(--subtle);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);padding:7px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border-bottom:0}
+.num{text-align:right}
+input[type=text],input[type=date],select,textarea{font:inherit;border:1px solid var(--line-strong);border-radius:var(--r);padding:5px 8px;background:var(--surface);color:var(--text);max-width:100%}
+input.n{width:96px;text-align:right}
+label.f{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);margin:0 0 3px}label.f.req::after{content:" *"}
+.field{margin-bottom:10px}
+.hint{font-size:12px;color:var(--text2)}
+.msg{border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--warn);border-radius:var(--r2);padding:8px 10px;font-size:13px}
+.note{border:1px dashed var(--line-strong);border-radius:var(--r2);padding:8px 10px;font-size:13px;color:var(--text2);background:var(--surface)}
+.tip{display:inline-block;width:16px;height:16px;border:1px solid var(--line-strong);border-radius:50%;text-align:center;font-size:11px;line-height:14px;color:var(--text2);cursor:help;margin-left:4px;position:relative}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:20px;top:-4px;z-index:5;width:240px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r2);padding:6px 8px;color:var(--text);font-size:12px;line-height:1.35}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}.wrap{padding:12px}}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:13px}.kv dt{color:var(--text2)}.kv dd{margin:0}
+.pred{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:8px 12px;font-size:13px;color:var(--text2)}
+.pred table td,.pred table th{padding:4px 8px;font-size:12px}
+.tbl-scroll{overflow-x:auto}
+.dim{color:var(--text2)}
+.chk{width:16px;height:16px}
+</style></head><body><div class="wrap"><!--title: UCX-P7 PTI decision panels-->
+<div class="banner"><b>UCX-P7 · proposed experience · mockup.</b> PTI side. Figures that the review demo does not hold are illustrations. Labels are the portal's own, except these, which are Proposed: "Ask the supplier to confirm", "Record what PTI did", "Record the decision", "Ask for a production date" as an action on the alert, "Close alert (only if you stop watching it)" and the reason "Asked the supplier". The SAP step is a prompt only: there is no SAP link yet (BL-24). This is not the built portal.</div>
+<div class="tabs" role="tablist" data-tabs="#v"><button role="tab" data-p="a">Counter-offer</button><button role="tab" data-p="b">Escalated PO</button><button role="tab" data-p="c">Receipt discrepancy</button><button role="tab" data-p="d">Alert</button></div>
+<div id="v">
+
+<div class="panel" id="a">
+  <div class="card" style="max-width:640px">
+    <div class="row"><h2 style="margin:0">PO <span class="mono">PO-2026-00122</span></h2><span class="chip warn">Adjusted</span></div>
+    <h3 style="margin-top:10px">Review the counter-offer</h3>
+    <table>
+      <thead><tr><th></th><th class="num">Ordered</th><th class="num">Supplier offers</th></tr></thead>
+      <tbody><tr><td>Quantity</td><td class="num mono">90,000 PCS</td><td class="num mono">60,000 PCS</td></tr><tr><td>Delivery</td><td class="num mono">28 Sept 2026</td><td class="num mono">28 Sept 2026</td></tr><tr><td>Reason</td><td colspan="2" class="num">Capacity</td></tr></tbody>
+    </table>
+    <div class="note" style="margin:10px 0"><b>What decides this</b> (illustrative figures)<dl class="kv" style="margin-top:6px"><dt>PTI stock cover</dt><dd class="mono">12 days · Lead time 14 days</dd><dt>Still to arrive on this line</dt><dd class="mono">90,000 PCS</dd><dt>Shortfall if accepted</dt><dd class="mono">30,000 PCS</dd></dl></div>
+    <div class="row"><button class="btn" type="button">Reject counter-offer</button><span class="sp"></span><button class="btn pri" type="button" data-toggle="#acc">Accept counter-offer</button></div>
+    <div id="acc" hidden class="msg" style="margin-top:10px">Accepted. The PO in SAP still reads <span class="mono">90,000 PCS</span>. Change the line to <span class="mono">60,000 PCS</span> in SAP. The hub does not change it.</div>
+  </div>
+</div>
+
+<div class="panel" id="b" hidden>
+  <div class="card" style="max-width:640px">
+    <div class="row"><h2 style="margin:0">PO <span class="mono">PO-2025-00104</span></h2><span class="chip bad">Escalated</span></div>
+    <p class="msg" style="margin:10px 0">No response by the deadline. PTI needs to act.</p>
+    <dl class="kv"><dt>Respond by</dt><dd class="mono">Due 03 Aug 2026 · Overdue 28 days</dd><dt>Owner</dt><dd>Procurement</dd></dl>
+    <h3 style="margin-top:12px">What PTI can do now</h3>
+    <div class="row"><button class="btn pri" type="button">Ask the supplier to confirm</button><span class="hint">Opens an ask the supplier answers on To do</span></div>
+    <div class="field" style="margin-top:12px"><label class="f req" for="dec">Record what PTI did</label>
+      <select id="dec"><option>Choose…</option><option>The supplier confirmed outside the hub</option><option>Sourcing elsewhere</option><option>Cancelling the PO in SAP</option><option>Still waiting for the supplier</option></select></div>
+    <div class="field"><label class="f" for="nt">Note</label><input id="nt" type="text" style="width:100%"></div>
+    <div class="row"><span class="sp"></span><button class="btn pri" type="button" data-toggle="#rec">Record the decision</button></div>
+    <div id="rec" hidden class="row" style="margin-top:10px"><span class="chip ok">PTI decision recorded</span><span class="hint">Escalated, now with a PTI decision. Recorded by the Procurement role, 31 Aug 2026.</span></div>
+  </div>
+</div>
+
+<div class="panel" id="c" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Shipment discrepancies</h2>
+      <table>
+        <thead><tr><th>ASN</th><th class="num">ASN qty</th><th class="num">Received</th><th class="num">Short</th><th>Supplier answer</th><th></th></tr></thead>
+        <tbody><tr><td class="mono">ASN-2025-00201</td><td class="num mono">5,000</td><td class="num mono">4,200</td><td class="num mono">800</td><td><span class="chip warn">Disputed</span><div class="hint">"Our load count was 5,000."</div></td><td><button class="btn sm pri" type="button">Reconcile</button></td></tr></tbody>
+      </table>
+      <p class="hint" style="margin:8px 0 0">Illustrative figures. The row now shows the quantities and the supplier's answer, so the receiver judges the discrepancy on the screen.</p>
+    </div>
+    <div class="card">
+      <h2>Resolve dispute on <span class="mono">GR-2026-016</span></h2>
+      <div class="field"><label class="f req">Outcome</label>
+        <label style="display:block"><input type="radio" name="out" checked> Uphold the rejection: the received quantity stands</label>
+        <label style="display:block"><input type="radio" name="out"> Withdraw the rejection: accept the supplier's count</label></div>
+      <div class="field"><label class="f req">Comment the supplier reads</label><textarea rows="2" style="width:100%"></textarea></div>
+      <div class="row"><span class="sp"></span><button class="btn pri" type="button">Resolve dispute</button></div>
+      <p class="hint" style="margin:8px 0 0">The outcome is a choice, so the receipt quantities can follow it. Today the panel records a comment only.</p>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="d" hidden>
+  <div class="card" style="max-width:720px">
+    <div class="row"><span class="chip bad">High</span><b>Supplier stock and incoming do not cover the next 30 days of demand</b></div>
+    <p class="hint" style="margin:6px 0 10px"><span class="mono">PK-PETB-8802</span> · PT Sample Packaging Indonesia · Cover 4 days · Lead time 14 days</p>
+    <div class="row"><span class="dim">Next step</span><button class="btn pri" type="button" data-toggle="#askf">Ask for a production date</button><button class="btn" type="button">Open stock simulation</button></div>
+    <div id="askf" hidden class="note" style="margin-top:12px"><div class="field"><label class="f">Topic</label>Production date <span class="hint">(from the alert)</span></div><div class="field"><label class="f">Question</label><input type="text" style="width:100%" value="When can you produce PK-PETB-8802, and how many PCS?"></div><div class="row"><span class="sp"></span><button class="btn pri" type="button" data-toggle="#after">Send ask</button></div></div>
+    <div id="after" hidden style="margin-top:12px">
+      <div class="note"><span class="chip ok">Ask sent</span> The hub records the action on this alert: asked the supplier for a production date on <span class="mono">31 Aug 2026</span>. The alert moves to "Handled, waiting for the supplier". It leaves the open list when the condition clears.</div>
+      <div class="field" style="margin-top:10px"><label class="f req">Close alert (only if you stop watching it)</label>
+        <select><option>Asked the supplier</option><option>Supplier updated its data</option><option>Other (note required)</option></select><div class="hint">The reason is filled in from the action you took. "Asked the supplier" is a new reason code: Proposed.</div></div>
+      <div class="row"><span class="sp"></span><button class="btn" type="button">Close alert</button></div>
+    </div>
+  </div>
+</div>
+</div>
+</div><script>
+document.querySelectorAll('[data-tabs]').forEach(function(g){var bs=g.querySelectorAll('[role=tab]');var scope=document.querySelector(g.getAttribute('data-tabs'))||document;
+function show(id){bs.forEach(function(b){b.setAttribute('aria-selected',b.dataset.p===id)});scope.querySelectorAll(':scope > .panel').forEach(function(p){p.hidden=p.id!==id})}
+bs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.p)})});show(bs[0].dataset.p)});
+document.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var t=document.querySelector(b.dataset.toggle);if(t)t.hidden=!t.hidden})});
+</script></body></html>

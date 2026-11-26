@@ -47,7 +47,9 @@ const emptyInput = {
   negotiationRounds: undefined,
   sapFailures: [],
   npdReviews: undefined,
-  ropFisikPrs: undefined
+  ropFisikPrs: undefined,
+  tradeNames: undefined,
+  registry: undefined
 };
 
 /** @param {string} id */

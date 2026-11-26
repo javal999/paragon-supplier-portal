@@ -106,6 +106,9 @@ export const STARTER_REASON_CODES = Object.freeze({
   ]),
   // MR-9 BR-05 — the starter list for closing an alert.
   alertClose: Object.freeze([
+    // UCX-P7 (BL-368) · UCX-D21 — the planner asked the supplier (the alert's
+    // own action) and closes on that.
+    'asked-supplier',
     'calloff-raised',
     'po-raised',
     'supplier-updated',

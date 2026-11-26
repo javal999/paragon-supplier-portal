@@ -15,7 +15,9 @@
  *   useForecastCommitments,
  *   useNegotiationRounds,
  *   useNpdReviews,
- *   useRopFisikPrRecommendations
+ *   useRopFisikPrRecommendations,
+ *   useMaterialNames,
+ *   useComplianceRegistry
  * } from '@services/query/hooks' */
 /** @import { useUnifiedChase } from '@services/query/chaseHooks' */
 /** @import { callOffViews } from '@services/transitions/callOffRules' */
@@ -23,6 +25,7 @@
 
 import { deepLink, sharedValue } from '@lib/deepLink';
 import { POStatus } from '@services/data/types';
+import { computeStatus } from '@services/data/complianceProjection';
 import {
   completionMovedLater,
   isEscalated,
@@ -32,6 +35,7 @@ import { isRetryable } from '@services/data/sapInterfaceRules';
 import { isOpenDispute } from '@services/transitions/fulfilmentRules';
 import { inboundRows, outstandingInbounds } from '@services/transitions/inboundRules';
 import { deliveryDrift, isDriftResult } from '@services/transitions/callOffRules';
+/** @import { TransitionRole } from '@services/transitions/schema' */
 import { gapWeeks, planStatus } from '@services/transitions/capacityRules';
 import { deadlineState } from '@services/transitions/forecastRules';
 import { sdcClock } from '@services/sdc/clock';
@@ -60,7 +64,9 @@ const DAY_MS = 86_400_000;
 
 /**
  * A task before its severity is known, and the PTI roles it is shown to.
- * @typedef {UnratedTask & { readonly roles: readonly Exclude<HubRole, 'ALL'>[] }} RoleTask
+ * `act` is UCX-P1 (BL-362)'s seat gate: the atom the row asks for, resolved
+ * through `atomsForSeat`; a row with no act is a read and always shows.
+ * @typedef {UnratedTask & { readonly roles: readonly Exclude<HubRole, 'ALL'>[]; readonly act?: TransitionRole }} RoleTask
  */
 
 /**
@@ -91,6 +97,8 @@ const DAY_MS = 86_400_000;
  * @property {ReturnType<typeof useSapInterface>['failures']} sapFailures
  * @property {ReturnType<typeof useNpdReviews>['data']} npdReviews
  * @property {ReturnType<typeof useRopFisikPrRecommendations>['data']} ropFisikPrs
+ * @property {ReturnType<typeof useMaterialNames>['data']} tradeNames
+ * @property {ReturnType<typeof useComplianceRegistry>['data']} registry
  */
 
 /**
@@ -120,7 +128,9 @@ export function buyerTodoTasks({
   negotiationRounds,
   sapFailures,
   npdReviews,
-  ropFisikPrs
+  ropFisikPrs,
+  tradeNames,
+  registry
 }) {
   const poItems = purchaseOrders?.items ?? [];
   const invItems = buyerInvoices?.items ?? [];
@@ -167,6 +177,15 @@ export function buyerTodoTasks({
   const declarationsToReview = (documents?.items ?? []).filter(
     (doc) => doc.status === 'Under Review'
   );
+  // UCX-P1 (BL-362) — the four duties that had no My tasks row.
+  const awaitingException = asnItems.filter((a) => a.status === 'Awaiting exception');
+  const rejectedCallOffs = views.filter((v) => v.callOff.status === 'Rejected');
+  const tradeEntries = (tradeNames?.items ?? [])
+    .flatMap((row) => row.history)
+    .filter((name) => name.state === 'Awaiting approval');
+  const expiringCerts = (registry?.items ?? []).filter(
+    (entry) => computeStatus(entry, sdcClock.now()) === 'Expiring'
+  );
   /**
    * The record a count of one names, else `undefined`.
    * @template T
@@ -190,6 +209,7 @@ export function buyerTodoTasks({
       // REQ-E07-02 BR-09 — no response by the 1-working-day deadline. Derived
       // from the clock at read time, never stored.
       id: 'escalated-po',
+      act: 'po:review-response',
       roles: ['MP'],
       label: t('hub.home.task.escalatedPo'),
       count: escalatedPos.length,
@@ -199,6 +219,7 @@ export function buyerTodoTasks({
     {
       // REQ-E07-02 BR-08 — a rejection is PTI's to act on.
       id: 'rejected-po',
+      act: 'po:review-response',
       roles: ['MP'],
       label: t('hub.home.task.rejectedPo'),
       count: rejectedPos.length,
@@ -207,6 +228,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'counter-offers',
+      act: 'po:review-response',
       roles: ['MP'],
       label: t('hub.home.task.counterOffers'),
       count: adjustedPos.length,
@@ -216,6 +238,7 @@ export function buyerTodoTasks({
     {
       // REQ-E07-05 — the supplier moved the expected completion date later.
       id: 'completion-moved',
+      act: 'po:review-response',
       roles: ['MP'],
       label: t('hub.home.task.completionMoved'),
       count: movedPos.length,
@@ -231,6 +254,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'calloffs-approval',
+      act: 'calloff:review',
       roles: ['MP'],
       label: t('hub.home.task.callOffsApproval'),
       count: awaitingCallOffs.length,
@@ -239,6 +263,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'calloffs-escalated',
+      act: 'calloff:review',
       roles: ['MP'],
       label: t('hub.home.task.callOffsEscalated'),
       count: escalatedCallOffs.length,
@@ -247,6 +272,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'calloffs-at-risk',
+      act: 'calloff:plan',
       roles: ['MP'],
       label: t('hub.home.task.callOffsAtRisk'),
       count: atRiskCallOffs.length,
@@ -255,6 +281,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'calloffs-drift',
+      act: 'calloff:plan',
       roles: ['MP'],
       label: t('hub.home.task.callOffsDrift'),
       count: drift.length,
@@ -268,6 +295,7 @@ export function buyerTodoTasks({
       // AIB-3 (BL-351) — a call-off the planner sent with no ASN, chased
       // from the next working day. CR-09's 7-day reminder is separate (BR-02).
       id: 'calloffs-missing-asn',
+      act: 'calloffchase:close',
       roles: ['MP'],
       label: t('hub.home.task.callOffsMissingAsn'),
       count: missingAsnChases.length,
@@ -276,6 +304,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'inventory-high-alerts',
+      act: 'inventoryalert:close',
       roles: ['MP'],
       label: t('hub.home.task.inventoryHighAlerts'),
       count: highAlerts.length,
@@ -294,6 +323,7 @@ export function buyerTodoTasks({
     {
       // REQ-E08-04 edge case — a submitted update that creates a gap notifies the planner.
       id: 'capacity-gaps',
+      act: 'capacitydecision:accept',
       roles: ['MP'],
       label: t('hub.home.task.capacityGaps'),
       count: gapPlans.length,
@@ -307,6 +337,7 @@ export function buyerTodoTasks({
       // link opens the material on Safety stock targets when every counted
       // material is the same one, else the page unfiltered.
       id: 'npd-rop-review',
+      act: 'osiplevel:set',
       roles: ['MP'],
       label: t('hub.home.task.npdRopReview'),
       count: reviews.length,
@@ -336,6 +367,7 @@ export function buyerTodoTasks({
     {
       // REQ-E06-03 BR-06 — after the deadline, a missing commitment escalates to the planner.
       id: 'missing-commitments',
+      act: 'requirementresponse:review',
       roles: ['MP'],
       label: t('hub.home.task.missingCommitments'),
       count: missingLines.length,
@@ -352,6 +384,7 @@ export function buyerTodoTasks({
       // planner. The supplier already answered, so the date that matters is the
       // start of the period the commitment covers.
       id: 'commitment-exceptions',
+      act: 'requirementresponse:review',
       roles: ['MP'],
       label: t('hub.home.task.commitmentExceptions'),
       count: exceptionLines.length,
@@ -362,6 +395,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'chase',
+      act: 'supplierask:raise',
       roles: ['MP'],
       label: t('hub.home.task.chase'),
       count: chaseRows.length,
@@ -373,6 +407,7 @@ export function buyerTodoTasks({
     {
       // No deadline is recorded on a goods receipt to review.
       id: 'receipts',
+      act: 'gr:inspect',
       roles: ['MP'],
       label: t('hub.home.task.receipts'),
       count: receiptsToReview.length,
@@ -388,6 +423,7 @@ export function buyerTodoTasks({
       // REQ-E07-06 — a supplier disputed a receipt discrepancy; the planner
       // resolves it on the goods receipt page. No deadline is recorded.
       id: 'disputed-receipts',
+      act: 'receiptdiscrepancy:resolve',
       roles: ['MP'],
       label: t('hub.home.task.disputedReceipts'),
       count: disputedReceipts.length,
@@ -397,6 +433,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'inbound-asn',
+      act: 'gr:receive',
       roles: ['MP'],
       label: t('hub.home.task.inboundAsn'),
       count: asnsDue.length,
@@ -413,6 +450,7 @@ export function buyerTodoTasks({
       ? [
           {
             id: 'inbound-acknowledgment',
+            act: 'inbound:acknowledge',
             roles: /** @type {const} */ (['MP']),
             label: t('hub.home.task.inboundAcknowledgment'),
             count: inboundDue.length,
@@ -425,6 +463,7 @@ export function buyerTodoTasks({
       // REQ-E03-05 BR-03 — a round whose deadline is close and whose invitees
       // have not all answered. Derived from the clock at read (law 0.5).
       id: 'negotiation-closing',
+      act: 'rfq:negotiate',
       roles: ['BUY'],
       label: t('hub.home.task.negotiationClosing'),
       count: closingRounds.length,
@@ -439,6 +478,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'rfq-award',
+      act: 'rfq:award',
       roles: ['BUY'],
       label: t('hub.home.task.rfqAward'),
       count: awardRfqs.length,
@@ -452,6 +492,7 @@ export function buyerTodoTasks({
     {
       // IA P-03 (IA-B01) — UC1 step 2: a requisition waiting for Procurement's approval.
       id: 'requisitions-to-approve',
+      act: 'pr:approve',
       roles: ['BUY'],
       label: t('hub.home.task.requisitionsToApprove'),
       count: prsToApprove.length,
@@ -466,11 +507,55 @@ export function buyerTodoTasks({
       // IA P-03 (IA-B02) — UC5 step 3: a certificate a supplier declared,
       // waiting for PTI to verify or reject it. No deadline is recorded.
       id: 'certs-to-review',
+      act: 'supplierdoc:verify',
       roles: ['BUY'],
       label: t('hub.home.task.certsToReview'),
       count: declarationsToReview.length,
       deadlines: [],
       to: deepLink('/buyer/compliance', { section: 'review' })
+    },
+    {
+      // UCX-P1 (BL-362) — UCX-PD6: a shelf-life exception waits for Quality.
+      id: 'shelf-life-exceptions',
+      act: 'asn:approve-shelf-life',
+      roles: ['BUY'],
+      label: t('hub.home.task.shelfLifeExceptions'),
+      count: awaitingException.length,
+      deadlines: [],
+      noDeadlineAmber: true,
+      to: '/buyer/shipments'
+    },
+    {
+      // UCX-P1 (BL-362) — UCX-PD10: the supplier rejected; PTI changes and resends.
+      id: 'rejected-calloffs',
+      act: 'calloff:plan',
+      roles: ['MP'],
+      label: t('hub.home.task.rejectedCallOffs'),
+      count: rejectedCallOffs.length,
+      deadlines: [],
+      noDeadlineAmber: true,
+      to: '/buyer/call-offs'
+    },
+    {
+      // UCX-P1 (BL-362) — UCX-PD24: a trade name waits for Material Planning.
+      id: 'trade-names',
+      act: 'materialname:review',
+      roles: ['MP'],
+      label: t('hub.home.task.tradeNames'),
+      count: tradeEntries.length,
+      deadlines: [],
+      noDeadlineAmber: true,
+      to: '/buyer/materials/trade-names'
+    },
+    {
+      // UCX-P1 (BL-362) — UCX-PD14: an expiring certificate needs a renewal ask.
+      id: 'certificate-renewals',
+      act: 'supplierdoc:request',
+      roles: ['BUY'],
+      label: t('hub.home.task.certificateRenewals'),
+      count: expiringCerts.length,
+      deadlines: expiringCerts.flatMap((e) => (e.expiryDate ? [e.expiryDate] : [])),
+      to: '/buyer/compliance'
     },
     {
       // REQ-E07-08 AC-02 — only a RETRYABLE failure is a task: a business
@@ -484,6 +569,7 @@ export function buyerTodoTasks({
     },
     {
       id: 'overdue-invoices',
+      act: 'invoice:pay',
       roles: ['FIN'],
       label: t('hub.home.task.overdueInvoices'),
       count: overdueInv.length,

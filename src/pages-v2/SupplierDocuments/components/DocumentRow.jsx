@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 /** @import { SupplierDocument } from '@services/data/types' */
 /** @import { UseToastReturn } from '@hooks/useToast' */
-import { Eye, RefreshCw, Upload } from 'lucide-react';
+import { Eye, FileText, RefreshCw, Upload } from 'lucide-react';
 import StatusPill from '@components/ui-v2/StatusPill';
 import TableRow from '@components/ui-v2/TableRow';
 import TableCell from '@components/ui-v2/TableCell';
@@ -23,20 +23,26 @@ import RefusalBlock from './RefusalBlock';
  * @property {string} nowIso  The page's ONE clock read; every expiry figure on
  *   the row is answered against it.
  * @property {(doc: SupplierDocument) => void} openUploadFor  Opens the
- *   declaration panel for this document (awaiting upload or refused).
- * @property {(open: boolean) => void} setLessonOpen  Opens the halal-renewal walkthrough
- *   (page state: the BPJPH notice opens it too).
+ *   certificate declaration panel (awaiting upload or refused).
+ * @property {(doc: SupplierDocument) => void} openAnswerFor  UCX-P5 — opens the
+ *   COA form for a row PTI asked for as a COA.
+ * @property {(doc: SupplierDocument) => void} openRenewFor  UCX-P5 — opens the
+ *   declaration filled from this expiring record.
  * @property {UseToastReturn['toast']} toast  The page's toast function ("View").
  */
 
 /**
  * One document row: name, notes, refusal block and linked-to line; category,
  * issuer, issued date, expiry with days remaining, the computed status badge,
- * version, and the declare / view / renew actions. Moved out of
+ * version, and the answer / declare / view / renew actions. Moved out of
  * `SupplierDocuments.jsx` by the Phase 5 page split (no behaviour change).
+ *
+ * UCX-P5 — "Renew" opens the declaration filled from this record (it used to
+ * open a read-only guide that could not be submitted), and a COA request's
+ * remedy is "Answer", which opens the COA form rather than the certificate one.
  * @type {React.FC<DocumentRowProps>}
  */
-const DocumentRow = ({ doc, nowIso, openUploadFor, setLessonOpen, toast }) => {
+const DocumentRow = ({ doc, nowIso, openUploadFor, openAnswerFor, openRenewFor, toast }) => {
   const { t } = useTranslation();
   const days = daysUntil(doc.expiryDate, nowIso);
   // ONE decision per row, read by the badge below. Every surface
@@ -131,11 +137,20 @@ const DocumentRow = ({ doc, nowIso, openUploadFor, setLessonOpen, toast }) => {
               handler — `t_supplierdoc_submit` accepts `Rejected` as
               a `from` precisely so a refusal is not a dead end. */}
           {doc.status === 'Awaiting Upload' || doc.status === 'Rejected' ? (
-            <Button variant="outline" icon={Upload} onClick={() => openUploadFor(doc)}>
-              {doc.status === 'Rejected'
-                ? t('supplierDocuments.action.redeclare')
-                : t('supplierDocuments.action.declare')}
-            </Button>
+            doc.requestKind === 'COA' ? (
+              // UCX-P5 · UCX-F14 — a COA request's remedy is its own form: batch,
+              // number, issuer, date. "Declare again" would reopen the certificate
+              // form and repeat the finding.
+              <Button variant="outline" icon={FileText} onClick={() => openAnswerFor(doc)}>
+                {t('supplierDocuments.action.answer')}
+              </Button>
+            ) : (
+              <Button variant="outline" icon={Upload} onClick={() => openUploadFor(doc)}>
+                {doc.status === 'Rejected'
+                  ? t('supplierDocuments.action.redeclare')
+                  : t('supplierDocuments.action.declare')}
+              </Button>
+            )
           ) : (
             <Button
               variant="secondary"
@@ -152,12 +167,20 @@ const DocumentRow = ({ doc, nowIso, openUploadFor, setLessonOpen, toast }) => {
             </Button>
           )}
           {/* ⚠️ `180` STOOD HERE AS A LITERAL, a fourth clock
-              opinion on one page. Same window, one declaration. */}
-          {doc.expiryDate && days !== null && days <= DOCUMENT_EXPIRING_WINDOW_DAYS && (
-            <Button variant="secondary" onClick={() => setLessonOpen(true)}>
-              {t('supplierDocuments.action.renew')}
-            </Button>
-          )}
+              opinion on one page. Same window, one declaration.
+              ⚠️ UCX-P5 — THE CONTROL CHECKS THE COMPUTED STATE, not the raw day
+              count: after a renewal the record reads `under-review` and the
+              declaration already exists, so a second "Renew" would open a form
+              the verb refuses. Before the renewal the state is expiring/expired
+              and the control is offered (UCX-F21). */}
+          {doc.expiryDate &&
+            days !== null &&
+            days <= DOCUMENT_EXPIRING_WINDOW_DAYS &&
+            (display === 'expiring' || display === 'expired') && (
+              <Button variant="secondary" onClick={() => openRenewFor(doc)}>
+                {t('supplierDocuments.action.renew')}
+              </Button>
+            )}
         </div>
       </TableCell>
     </TableRow>

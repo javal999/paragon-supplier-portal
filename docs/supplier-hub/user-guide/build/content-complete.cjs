@@ -359,7 +359,7 @@ add({
   shot: 'UC4-2-supplier.png', route: '/supplier/forecasts', seat: 'Supplier', record: '–',
   steps: [
     S('Commercial: Submit all, once per period, every material together'),
-    S('Blocked? "Confirm capacity for {group} first." → Confirm capacity'),
+    S('Blocked? "Awaiting Supplier Fulfilment: capacity for {group}" → Confirm capacity'),
     S('Back Office: Acknowledge on Forecast-zone rows (no commitment needed)'),
     S('A new version: the Changes sub-tab lists what moved')
   ],
@@ -385,7 +385,7 @@ add({
   colW: [3.4, 4.3, 2.2, 2.23],
   rows: [
     ['Commitment below forecast', 'Outside tolerance; a reason is required', 'Planning: Accept or Move demand', 'Foresight commitments'],
-    ['Capacity not confirmed', 'Submit all blocked: "Confirm capacity for {group} first."', 'Supplier Fulfilment: Submit capacity', 'Capacity'],
+    ['Capacity not confirmed', 'Submit all blocked: "Awaiting Supplier Fulfilment: capacity for {group}"', 'Supplier Fulfilment: Submit capacity', 'Capacity'],
     ['Move demand above a supplier\'s headroom', 'Warns; a total above the shortfall is refused', 'Planning', 'Foresight commitments'],
     ['New forecast version', 'Unchanged periods carry forward; others go back to awaiting', 'Supplier Commercial', 'Foresight commitments'],
     ['Firm vs Trade-off line', 'Firm: any shortfall is an exception. Trade-off: up to 10% short accepted.', 'Planning', 'Foresight commitments'],

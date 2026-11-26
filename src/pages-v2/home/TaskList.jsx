@@ -1,9 +1,11 @@
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
 import Data from '@components/ui-v2/Data';
 /** @import { FlagSeverity } from '@components/ui-v2/ExpandableWidget' */
+/** @import { TransitionRole } from '@services/transitions/schema' */
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Home task list (SC-01): what needs the user's action, most urgent first.
@@ -20,6 +22,9 @@ import Data from '@components/ui-v2/Data';
  * `lane`:  RFx UX X-02 — the lane (section) a grouped list files the row under.
  * `deadline`:  The oldest deadline the row counts (`YYYY-MM-DD`), or null; a
  *              lane orders its rows by it.
+ * `act`:  UCX-P1 (BL-362) — the atom the row asks for. The seat sees the row
+ *         only when `atomsForSeat` holds it; a row with no act is a read and
+ *         always shows. The derivation lives in the pages; the list only gates.
  *
  * @typedef {{
  *     readonly id: string;
@@ -32,6 +37,7 @@ import Data from '@components/ui-v2/Data';
  *     readonly rank?: number;
  *     readonly lane?: string;
  *     readonly deadline?: string | null;
+ *     readonly act?: TransitionRole;
  *   }} HomeTask
  */
 
@@ -135,14 +141,45 @@ function byDeadline(a, b) {
 /**
  * The To do list. Flat and ranked (`sortTasks`) by default; grouped into lane
  * sections (`groupTasksByLane`) when `lanes` is given.
- * @type {React.FC<{ tasks: readonly HomeTask[]; lanes?: readonly TaskLane[] }>}
+ *
+ * UCX-P1 (BL-362) — when `seatAtoms` is given, a row whose `act` the seat does
+ * not hold is hidden behind a link. A row with no act is a read and always
+ * shows. The count on the link is the hidden rows with something in them, so it
+ * matches what pressing it adds.
+ * @type {React.FC<{
+ *   tasks: readonly HomeTask[];
+ *   lanes?: readonly TaskLane[];
+ *   seatAtoms?: readonly string[];
+ *   scope?: 'lanes' | 'roles';
+ * }>}
  */
-const TaskList = ({ tasks, lanes }) => {
+const TaskList = ({ tasks, lanes, seatAtoms, scope = 'lanes' }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const sorted = sortTasks(tasks);
+  const [showHidden, setShowHidden] = useState(false);
+  const hidden = seatAtoms
+    ? tasks.filter(
+        (task) => task.act !== undefined && !seatAtoms.includes(task.act) && task.count > 0
+      )
+    : [];
+  const shown =
+    showHidden || hidden.length === 0 ? tasks : tasks.filter((task) => !hidden.includes(task));
+  const sorted = sortTasks(shown);
+  const toggle =
+    hidden.length > 0 ? (
+      <button
+        type="button"
+        onClick={() => setShowHidden((v) => !v)}
+        data-testid="home-hidden-toggle"
+        className="text-sm text-action hover:underline"
+      >
+        {showHidden
+          ? t(`hub.home.hidden.hide.${scope}`)
+          : t(`hub.home.hidden.show.${scope}`, { count: hidden.length })}
+      </button>
+    ) : null;
 
-  if (sorted.length === 0) {
+  if (sorted.length === 0 && toggle === null) {
     return (
       <div
         data-testid="home-empty"
@@ -196,25 +233,26 @@ const TaskList = ({ tasks, lanes }) => {
     );
   };
 
-  if (lanes) {
-    return (
-      <div className="space-y-5" data-testid="home-tasks">
-        {groupTasksByLane(tasks, lanes).map(({ lane, tasks: laneTasks }) => (
-          <section key={lane.id || 'other'} data-testid={`home-lane-${lane.id || 'other'}`}>
-            {lane.label ? (
-              <h2 className="text-label uppercase text-text-tertiary mb-2">{lane.label}</h2>
-            ) : null}
-            <ul className="space-y-2">{laneTasks.map(row)}</ul>
-          </section>
-        ))}
-      </div>
-    );
-  }
+  const list = lanes ? (
+    <>
+      {groupTasksByLane(shown, lanes).map(({ lane, tasks: laneTasks }) => (
+        <section key={lane.id || 'other'} data-testid={`home-lane-${lane.id || 'other'}`}>
+          {lane.label ? (
+            <h2 className="text-label uppercase text-text-tertiary mb-2">{lane.label}</h2>
+          ) : null}
+          <ul className="space-y-2">{laneTasks.map(row)}</ul>
+        </section>
+      ))}
+    </>
+  ) : (
+    <ul className="space-y-2">{sorted.map(row)}</ul>
+  );
 
   return (
-    <ul className="space-y-2" data-testid="home-tasks">
-      {sorted.map(row)}
-    </ul>
+    <div className="space-y-5" data-testid="home-tasks">
+      {list}
+      {toggle}
+    </div>
   );
 };
 

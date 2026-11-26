@@ -50,6 +50,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * it. Twin of `PR_REJECT_REASON_AUTHORED` / `PR_REVISION_NOTE_AUTHORED`.
    */
   SUPPLIERDOC_REFUSAL_AUTHORED: 'supplierdoc_refusal_authored',
+  /**
+   * UCX-P5 · answer a request by its type. The COA answer verb is legal only on
+   * a row PTI asked for as a COA, and the certificate verbs are refused on a
+   * COA row. `requiredFields` cannot express this: the required FIELDS differ
+   * by kind, so the KIND has to be checked against the entity, not the payload.
+   */
+  SUPPLIERDOC_COA_REQUEST: 'supplierdoc_coa_request',
+  /** The mirror: a certificate declaration is refused on a COA request. */
+  SUPPLIERDOC_CERTIFICATE_REQUEST: 'supplierdoc_certificate_request',
   /** PO confirm: each confirmed line qty must be > 0 and ≤ the ordered qty. */
   PO_CONFIRM_QTY_WITHIN_ORDERED: 'po_confirm_qty_within_ordered',
   /** PO adjust (REQ-E07-02 AC-02): every counter-offer names a line of this PO,
@@ -61,6 +70,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   PO_REJECT_CAUSE_GIVEN: 'po_reject_cause_given',
   /** Counter-offer rejected by the planner: the comment is substance, not presence. */
   PO_COUNTER_REVIEW_COMMENT_AUTHORED: 'po_counter_review_comment_authored',
+  /** UCX-P7 (BL-368) · UCX-D22 — an escalation act names a PO that exists and
+   *  still awaits the supplier's answer (Sent / Viewed / Acknowledged). */
+  PO_ESCALATION_TARGET_AWAITING: 'po_escalation_target_awaiting',
   /** Shipping notice: the expected completion date is a real `YYYY-MM-DD` date. */
   PO_SHIPPING_NOTICE_DATE_VALID: 'po_shipping_notice_date_valid',
   /** ASN create (REQ-E07-04 BR-01): the parent PO (payload.poReference) must be

@@ -114,6 +114,11 @@ const ActionPanelBody = ({
       )}
       {action.kind === 'reassign' && move !== null ? (
         <div data-testid="fc-move">
+          {/* UCX-P9 (BL-370) — "Zone Liability", "Zone Capacity" and
+              "Shortfall" defined where the panel shows them. */}
+          <p className="text-xs text-text-tertiary" data-testid="fc-move-terms">
+            {t('fc.pti.gaps.move.terms')}
+          </p>
           <p className="text-sm text-text-primary" data-testid="fc-move-shortfall">
             {t('fc.pti.gaps.move.shortfall')} <Data>{`${qtyText(move.shortfall)} ${unit}`}</Data>
           </p>

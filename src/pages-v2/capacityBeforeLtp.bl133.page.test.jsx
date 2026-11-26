@@ -46,6 +46,11 @@ const SUP_002 = {
   businessRoles: SEEDED_SEAT_ROLES.supplier,
   actor: NO_PERSON
 };
+/** sup-002 with the fulfilment lane removed — it may submit, not confirm capacity. */
+const SUP_002_NO_FULFILMENT = {
+  ...SUP_002,
+  businessRoles: SEEDED_SEAT_ROLES.supplier.filter((r) => r !== 'fulfilment')
+};
 /**
  * @param {string} supplierId
  * @param {string} period
@@ -200,12 +205,39 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     );
     fireEvent.change(qty, { target: { value: '3000' } });
     expect(screen.getByTestId(`fc-week-submit-${M[1]}`)).toBeDisabled();
-    expect(screen.getByTestId(`fc-week-refusal-${M[1]}`)).toHaveTextContent('Confirm capacity for');
+    // UCX-P8 (BL-369, UCX-D24) — the wait names the owner and the act.
+    expect(screen.getByTestId(`fc-week-refusal-${M[1]}`)).toHaveTextContent(
+      'Awaiting Supplier Fulfilment: capacity for'
+    );
+    // The wait's link is the owner's next act; this seeded seat holds every
+    // supplier lane, so it renders here.
+    expect(
+      within(submitCell('actions', M[1])).getByTestId(`fc-week-refusal-link-${M[1]}`)
+    ).toHaveAttribute('href', expect.stringContaining('/supplier/capacity'));
     // Scoping: no other supplier's group or period on this page.
     // (BL-282: raw-material periods are weeks too, so a week id can be shared;
     // the other supplier's packaging group is what must be absent.)
     expect(screen.queryByTestId('fc-sup-material-PK-PETB-8801')).toBeNull();
     expect(screen.queryByText('PK-PETB-8801')).toBeNull();
+  });
+
+  it('capacity not confirmed: the wait is the same, but no link shows to a seat without the fulfilment lane (UCX-P8)', async () => {
+    renderWithProviders(<SupplierForecastCommitments />, {
+      identity: SUP_002_NO_FULFILMENT,
+      route: '/supplier/forecasts'
+    });
+    await screen.findByTestId(`fc-week-${M[1]}`);
+    const qty = within(screen.getByTestId('fc-sup-material-RM-STEAR-7300')).getByLabelText(
+      `Commitment quantity for Week of ${formatDate(M[1])}`
+    );
+    fireEvent.change(qty, { target: { value: '3000' } });
+    expect(screen.getByTestId(`fc-week-submit-${M[1]}`)).toBeDisabled();
+    expect(screen.getByTestId(`fc-week-refusal-${M[1]}`)).toHaveTextContent(
+      'Awaiting Supplier Fulfilment: capacity for'
+    );
+    // The commercial lane cannot confirm capacity: the wait names who can, and
+    // offers no link this seat cannot use.
+    expect(screen.queryByTestId(`fc-week-refusal-link-${M[1]}`)).toBeNull();
   });
 });
 

@@ -82,6 +82,35 @@ export const supplierDocumentsEn = {
   'supplierDocuments.action.close': 'Close',
   'supplierDocuments.action.cancel': 'Cancel',
   'supplierDocuments.action.submit': 'Record declaration',
+  // — UCX-P5 (BL-366): answer a request by its type; renew from the record —
+  'supplierDocuments.action.answer': 'Answer',
+  'supplierDocuments.action.sendAnswer': 'Send answer',
+  'supplierDocuments.panel.answerTitle': 'Answer the request',
+  'supplierDocuments.panel.renewTitle': 'Renew your {{name}}',
+  'supplierDocuments.panel.replaces': 'Replaces',
+  'supplierDocuments.panel.replacesLine': '{{id}} · expires {{date}}',
+  'supplierDocuments.panel.renewedMsg':
+    'The expiring record reads “Renewal under review” until PTI confirms it. The To do row stays open until then, with the owner named.',
+  'supplierDocuments.coa.ask': 'PTI’s request',
+  'supplierDocuments.coa.kind': 'Kind of document',
+  'supplierDocuments.coa.kindValue': 'Certificate of analysis (COA)',
+  'supplierDocuments.coa.fromRequest': '(from the request)',
+  'supplierDocuments.coa.lead':
+    'PTI asked for a certificate of analysis (COA). The form asks for what a COA carries — a certificate scheme is not needed.',
+  'supplierDocuments.coa.batch': 'Batch number',
+  'supplierDocuments.coa.batchHint':
+    'From the request. Change it if the certificate in hand names another batch.',
+  'supplierDocuments.coa.number': 'COA number',
+  'supplierDocuments.coa.issuer': 'Issued by',
+  'supplierDocuments.coa.issuedOn': 'Date issued',
+  'supplierDocuments.coa.scope': 'What it covers',
+  'supplierDocuments.coa.scopeHint':
+    'Optional — the products or grades the COA covers, in your own words.',
+  'supplierDocuments.coa.incomplete':
+    'Batch number, COA number, issued by and date issued are needed before this can be recorded.',
+  'supplierDocuments.coa.noFile.title': 'No file is sent to Paragon',
+  'supplierDocuments.coa.noFile.body':
+    'This portal records what you state about the certificate of analysis — the batch, the number, who issued it and the date. It does not receive, store or forward the document itself. Keep the original ready; PTI checks the details you type against it.',
   // — BPJPH mandatory-transition banner —
   'supplierDocuments.bpjph.title': 'BPJPH Halal Mandatory Transition — October 2026:',
   'supplierDocuments.bpjph.body':
@@ -102,6 +131,11 @@ export const supplierDocumentsEn = {
   'supplierDocuments.field.certType': 'Certificate scheme',
   'supplierDocuments.field.certType.hint':
     'What you state here is a claim until Paragon’s compliance team confirms it.',
+  // UCX-P9 (BL-370) — the scheme names decoded under the field (a visible
+  // hint; a form field never takes an (i), UCX-D30). Wording from the
+  // in-repo certificate-type definitions (`governance.glossary.js`).
+  'supplierDocuments.field.certType.schemes':
+    'BPJPH is the Indonesian state body that issues halal certificates now. MUI issued them before BPJPH; its certificates stay valid on a fixed transitional term. BPOM is the Indonesian food and drug authority, which registers products.',
   'supplierDocuments.field.certNumber': 'Certificate number',
   'supplierDocuments.field.issuer': 'Granted by',
   'supplierDocuments.field.issuedOn': 'Granted on',
@@ -210,6 +244,35 @@ export const supplierDocumentsId = {
   'supplierDocuments.action.close': 'Tutup',
   'supplierDocuments.action.cancel': 'Batal',
   'supplierDocuments.action.submit': 'Catat pernyataan',
+  // — UCX-P5 (BL-366): jawab permintaan sesuai jenisnya; perbarui dari catatan —
+  'supplierDocuments.action.answer': 'Jawab',
+  'supplierDocuments.action.sendAnswer': 'Kirim jawaban',
+  'supplierDocuments.panel.answerTitle': 'Jawab permintaan',
+  'supplierDocuments.panel.renewTitle': 'Perbarui {{name}}',
+  'supplierDocuments.panel.replaces': 'Menggantikan',
+  'supplierDocuments.panel.replacesLine': '{{id}} · berlaku sampai {{date}}',
+  'supplierDocuments.panel.renewedMsg':
+    'Catatan yang berakhir menampilkan “Pembaruan sedang ditinjau” sampai PTI mengonfirmasinya. Baris Tugas tetap terbuka sampai saat itu, dengan pemiliknya disebutkan.',
+  'supplierDocuments.coa.ask': 'Permintaan PTI',
+  'supplierDocuments.coa.kind': 'Jenis dokumen',
+  'supplierDocuments.coa.kindValue': 'Sertifikat analisis (COA)',
+  'supplierDocuments.coa.fromRequest': '(dari permintaan)',
+  'supplierDocuments.coa.lead':
+    'PTI meminta sertifikat analisis (COA). Formulir ini menanyakan isi COA — skema sertifikat tidak diperlukan.',
+  'supplierDocuments.coa.batch': 'Nomor bets',
+  'supplierDocuments.coa.batchHint':
+    'Dari permintaan. Ubah bila sertifikat yang Anda pegang menyebut bets lain.',
+  'supplierDocuments.coa.number': 'Nomor COA',
+  'supplierDocuments.coa.issuer': 'Diterbitkan oleh',
+  'supplierDocuments.coa.issuedOn': 'Tanggal terbit',
+  'supplierDocuments.coa.scope': 'Cakupannya',
+  'supplierDocuments.coa.scopeHint':
+    'Opsional — produk atau grade yang dicakup COA, dengan kata-kata Anda sendiri.',
+  'supplierDocuments.coa.incomplete':
+    'Nomor bets, nomor COA, penerbit, dan tanggal terbit wajib diisi sebelum dapat dicatat.',
+  'supplierDocuments.coa.noFile.title': 'Tidak ada berkas yang dikirim ke Paragon',
+  'supplierDocuments.coa.noFile.body':
+    'Portal ini mencatat apa yang Anda nyatakan tentang sertifikat analisis — bets, nomor, penerbit, dan tanggalnya. Portal tidak menerima, menyimpan, atau meneruskan dokumennya sendiri. Simpan aslinya; PTI mencocokkan detail yang Anda isi dengannya.',
   // — BPJPH mandatory-transition banner —
   'supplierDocuments.bpjph.title': 'Transisi Wajib Halal BPJPH — Oktober 2026:',
   'supplierDocuments.bpjph.body':
@@ -230,6 +293,8 @@ export const supplierDocumentsId = {
   'supplierDocuments.field.certType': 'Skema sertifikat',
   'supplierDocuments.field.certType.hint':
     'Yang Anda nyatakan di sini adalah klaim sampai tim kepatuhan Paragon mengonfirmasinya.',
+  'supplierDocuments.field.certType.schemes':
+    'BPJPH adalah badan negara Indonesia yang kini menerbitkan sertifikat halal. MUI menerbitkannya sebelum BPJPH; sertifikatnya tetap berlaku dengan jangka transisi tetap. BPOM adalah otoritas obat dan makanan Indonesia, yang meregistrasi produk.',
   'supplierDocuments.field.certNumber': 'Nomor sertifikat',
   'supplierDocuments.field.issuer': 'Diterbitkan oleh',
   'supplierDocuments.field.issuedOn': 'Tanggal terbit',

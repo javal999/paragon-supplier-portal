@@ -131,6 +131,10 @@ describe('supplier Goods receipts page (REQ-E07-06)', () => {
     fireEvent.change(panel().getByLabelText('Resolution comment for the supplier'), {
       target: { value: 'Retest confirmed the rejection.' }
     });
+    // UCX-P7 — the outcome is a choice the resolve verb requires.
+    fireEvent.change(panel().getByTestId('gr-dispute-outcome'), {
+      target: { value: 'receiptStands' }
+    });
     fireEvent.click(confirm);
     await waitFor(() => expect(receiptDiscrepancyStore.get('gr-006')?.status).toBe('Resolved'));
     expect(receiptDiscrepancyStore.get('gr-006')?.resolutionComment).toBe(
