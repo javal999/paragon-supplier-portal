@@ -210,14 +210,18 @@ describe('S-04 — the award reaches the supplier: the strip on the event card, 
     );
   });
 
-  it('the PTI bell carries no fixed count (BL-213)', () => {
+  it('the PTI bell shows the derived buyer To-do count, never a fixed number (BL-361)', async () => {
     renderWithProviders(<TopBarV2 />);
     expect(screen.queryByTestId('supplier-notice-bell')).toBeNull();
-    // No notice source exists for the PTI seat, so the badge is gone and the
-    // name says only "Notifications".
+    // BL-213 removed the fixed "3" because no buyer source existed; BL-361
+    // supplies it — BuyerHome's To-do derivation — so the seeded buyer seat
+    // gets a real, non-zero count and a name that states it (BL-84).
     const bell = screen.getByTestId('pti-notice-bell');
-    expect(bell).toHaveAccessibleName('Notifications');
-    expect(bell).not.toHaveTextContent(/\d/);
+    await waitFor(() => expect(Number(bell.getAttribute('data-todo-count'))).toBeGreaterThan(0));
+    // The name states the count the attribute holds, singular or plural — the
+    // reads resolve over several ticks, so the assertion tracks the reading.
+    const count = Number(bell.getAttribute('data-todo-count'));
+    expect(bell).toHaveAccessibleName(new RegExp(`^To-do: ${count} open items?$`));
   });
 });
 
