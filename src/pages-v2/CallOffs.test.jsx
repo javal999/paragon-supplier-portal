@@ -228,6 +228,8 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     const row = await screen.findByTestId('supplier-calloff-row-co-0003');
     const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
     expect(headers).toEqual([
+      // UCX-P2 (BL-363) — the leading select-for-confirm column.
+      'Select for confirm',
       'Call-off Purchase order',
       'Material PICSynthetic data · awaiting the MDM SAP feed',
       'Quantity',
@@ -237,14 +239,14 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
       'Action'
     ]);
     const cells = within(row).getAllByRole('cell');
-    expect(cells).toHaveLength(7);
-    expect(cells[0]).toHaveTextContent(/^CO-2026-0003PO-2025-00107$/);
+    expect(cells).toHaveLength(8);
+    expect(cells[1]).toHaveTextContent(/^CO-2026-0003PO-2025-00107$/);
     expect(
-      within(/** @type {HTMLElement} */ (cells[1])).getByTestId('supplier-calloff-pic-co-0003')
+      within(/** @type {HTMLElement} */ (cells[2])).getByTestId('supplier-calloff-pic-co-0003')
     ).toBeInTheDocument();
     // Awaiting confirmation: the deadline sits under the confirmation, labelled.
     expect(
-      within(/** @type {HTMLElement} */ (cells[4])).getByTestId(
+      within(/** @type {HTMLElement} */ (cells[5])).getByTestId(
         'supplier-calloff-confirm-by-co-0003'
       )
     ).toHaveTextContent(/^Confirm by \d{2} /);

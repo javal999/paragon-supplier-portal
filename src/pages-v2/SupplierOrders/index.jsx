@@ -12,12 +12,14 @@ import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 import SubTabs from '@components/ui-v2/SubTabs';
 import SidePanel from '@components/ui-v2/SidePanel';
+import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import { useTranslation } from 'react-i18next';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { POStatus } from '@services/data/types';
+import { formatNumber } from '@lib/format';
 import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
@@ -32,6 +34,8 @@ import { createAsnHref, useAsnWizardAvailability } from '../shipments/asnWizardE
 import { ACTION_STATUSES, COMPLETED_STATUSES, PROGRESS_STATUSES } from './const';
 import { filterByTab, fmtDate, readPanelDrafts } from './utils';
 import { usePoCommands } from './hooks/usePoCommands';
+import BulkReviewDialog from '../orders/BulkReviewDialog';
+import { asRequestedConfirm, poBulkEligible, poNeedsDecision } from './bulkConfirm';
 import OrdersKpis from './components/OrdersKpis';
 import OrdersTable from './components/OrdersTable';
 import PanelFooter from './components/PanelFooter';
@@ -203,6 +207,56 @@ const SupplierOrdersList = () => {
   );
 
   const displayPOs = useMemo(() => filterByTab(activeTab, MY_POS), [activeTab, MY_POS]);
+
+  // UCX-P2 v2 (BL-363) — the bulk "confirm as requested" selection. Nothing
+  // starts ticked; only records a bulk confirm may take are tickable.
+  const [bulkTicked, setBulkTicked] = useState(/** @type {Set<string>} */ (new Set()));
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkResult, setBulkResult] = useState(
+    /** @type {import('../orders/BulkReviewDialog').BulkReviewResult | null} */ (null)
+  );
+  /** @param {PurchaseOrder} po */
+  const eligiblePo = (po) => poBulkEligible(po, nowIso);
+  const tickedPOs = displayPOs.filter((po) => bulkTicked.has(po.id) && eligiblePo(po));
+  const eligiblePOs = displayPOs.filter(eligiblePo);
+  const allTicked = eligiblePOs.length > 0 && eligiblePOs.every((po) => bulkTicked.has(po.id));
+  /** @param {PurchaseOrder} po */
+  const toggleBulk = (po) => {
+    if (!eligiblePo(po)) return;
+    setBulkTicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(po.id)) next.delete(po.id);
+      else next.add(po.id);
+      return next;
+    });
+  };
+  const toggleAll = () =>
+    setBulkTicked(allTicked ? new Set() : new Set(eligiblePOs.map((po) => po.id)));
+  /** Why a row cannot be ticked, for its checkbox title ('' when it can). */
+  /** @param {PurchaseOrder} po */
+  const bulkReasonOf = (po) => {
+    const why = poNeedsDecision(po, nowIso);
+    return why ? t(`supplierOrders.bulk.reason.${why}`) : '';
+  };
+  const runBulkConfirm = async () => {
+    setBulkBusy(true);
+    const done = [];
+    const refused = [];
+    for (const po of tickedPOs) {
+      const result = await confirmMutation.mutateAsync(asRequestedConfirm(po));
+      if (result.status === 'failed')
+        refused.push({ title: po.poNumber, reason: String(result.reason ?? '') });
+      else done.push(po.poNumber);
+    }
+    setBulkBusy(false);
+    setBulkResult({ done, refused });
+    setBulkTicked((prev) => {
+      const next = new Set(prev);
+      for (const po of tickedPOs) next.delete(po.id);
+      return next;
+    });
+  };
 
   const maxOrderDate = useMemo(
     () => MY_POS.reduce((a, p) => (p.orderDate > a ? p.orderDate : a), MY_POS[0]?.orderDate ?? ''),
@@ -441,6 +495,35 @@ const SupplierOrdersList = () => {
         </div>
       )}
 
+      {canConfirmHere && counts.action > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-3" data-testid="orders-bulk-bar">
+          <label className="flex items-center gap-2 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              checked={allTicked}
+              onChange={toggleAll}
+              disabled={eligiblePOs.length === 0}
+              data-testid="orders-bulk-select-all"
+            />
+            {t('supplierOrders.bulk.selectAll')}
+          </label>
+          <span className="text-xs text-text-tertiary" data-testid="orders-bulk-count">
+            {t('supplierOrders.bulk.selected', { count: tickedPOs.length })}
+          </span>
+          <Button
+            variant="outline"
+            disabled={tickedPOs.length === 0}
+            onClick={() => {
+              setBulkResult(null);
+              setBulkOpen(true);
+            }}
+            data-testid="orders-bulk-open"
+          >
+            {t('supplierOrders.bulk.open')}
+          </Button>
+        </div>
+      )}
+
       <OrdersTable
         displayPOs={displayPOs}
         nowIso={nowIso}
@@ -448,7 +531,30 @@ const SupplierOrdersList = () => {
         asnWizard={asnWizard}
         openOrderPanel={openOrderPanel}
         handleRowAction={handleRowAction}
+        bulkEligibleIds={new Set(eligiblePOs.map((po) => po.id))}
+        bulkTickedIds={bulkTicked}
+        onToggleBulk={toggleBulk}
+        bulkReasonOf={bulkReasonOf}
         t={t}
+      />
+
+      <BulkReviewDialog
+        open={bulkOpen}
+        title={t('supplierOrders.bulk.dialog.title', { count: tickedPOs.length })}
+        intro={t('supplierOrders.bulk.dialog.intro')}
+        rows={tickedPOs.map((po) => ({
+          key: po.id,
+          title: po.poNumber,
+          facts: po.lineItems.map(
+            (l) =>
+              `${l.materialCode} · ${formatNumber(l.quantity)} ${l.uom} · ${t('supplierOrders.bulk.requested', { date: fmtDate(po.requestedDeliveryDate) })}`
+          )
+        }))}
+        confirmLabel={t('supplierOrders.bulk.confirm', { count: tickedPOs.length })}
+        onConfirm={() => void runBulkConfirm()}
+        onClose={() => setBulkOpen(false)}
+        busy={bulkBusy}
+        result={bulkResult}
       />
 
       <SidePanel

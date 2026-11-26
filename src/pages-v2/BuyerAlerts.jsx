@@ -180,6 +180,9 @@ const BuyerAlerts = () => {
   useUrlEnumParam('tab', STATUS_TABS, setTab);
   useUrlEnumParam('risk', RISK_FILTERS, setRisk);
   const [collapsed, setCollapsed] = useState(/** @type {Record<string, boolean>} */ ({}));
+  // UCX-P7 (BL-368) · UCX-D21 — an alert's own ask fills the close reason with
+  // "Asked the supplier" (editable); the reason stays the planner's choice.
+  const [prefill, setPrefill] = useState(/** @type {Record<string, string>} */ ({}));
   const [closing, setClosing] = useState(/** @type {InventoryAlert | null} */ (null));
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
@@ -504,7 +507,15 @@ const BuyerAlerts = () => {
                               {a.actionNote ? `: ${a.actionNote}` : ''}
                             </div>
                           )}
-                          {a.status === 'open' ? <AlertNextStep alert={a} ctx={ctx} /> : null}
+                          {a.status === 'open' ? (
+                            <AlertNextStep
+                              alert={a}
+                              ctx={ctx}
+                              onAsked={(key) =>
+                                setPrefill((prev) => ({ ...prev, [key]: 'asked-supplier' }))
+                              }
+                            />
+                          ) : null}
                         </div>
                         {ALERT_PLAN[a.rule].link || a.status === 'closed' ? (
                           <Link
@@ -533,7 +544,7 @@ const BuyerAlerts = () => {
                               variant="secondary"
                               onClick={() => {
                                 setClosing(a);
-                                setReason('');
+                                setReason(prefill[a.key] ?? '');
                                 setNote('');
                               }}
                               aria-label={t('inv.alerts.closeFor', {

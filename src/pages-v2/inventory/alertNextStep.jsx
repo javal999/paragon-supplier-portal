@@ -204,7 +204,7 @@ export function alertBasisText(t, a, ctx) {
 
 /**
  * P-08 — the basis line under the rule sentence.
- * @type {React.FC<{ alert: InventoryAlert; ctx: AlertContext }>}
+ * @type {React.FC<{ alert: InventoryAlert; ctx: AlertContext; onAsked?: (key: string) => void }>}
  */
 export const AlertBasis = ({ alert: a, ctx }) => {
   const { t } = useTranslation();
@@ -223,9 +223,9 @@ export const AlertBasis = ({ alert: a, ctx }) => {
 
 /**
  * P-03 — the next step sentence and the actions that fit an open alert.
- * @type {React.FC<{ alert: InventoryAlert; ctx: AlertContext }>}
+ * @type {React.FC<{ alert: InventoryAlert; ctx: AlertContext; onAsked?: (key: string) => void }>}
  */
-export const AlertNextStep = ({ alert: a, ctx }) => {
+export const AlertNextStep = ({ alert: a, ctx, onAsked }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const plan = ALERT_PLAN[a.rule];
@@ -283,6 +283,7 @@ export const AlertNextStep = ({ alert: a, ctx }) => {
                 topic={plan.ask}
                 riskClass={a.riskClass}
                 testId={`alert-ask-${a.key}`}
+                onRaised={() => onAsked?.(a.key)}
               />
             ) : (
               <AskSupplierButton
@@ -294,6 +295,7 @@ export const AlertNextStep = ({ alert: a, ctx }) => {
                   a.rule === 'leadTimeMissing' ? t('inv.alerts.ask.leadTime') : undefined
                 }
                 testId={`alert-ask-${a.key}`}
+                onRaised={() => onAsked?.(a.key)}
               />
             )}
           </span>

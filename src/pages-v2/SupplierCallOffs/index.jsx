@@ -36,6 +36,9 @@ import MaterialSearch, { useMaterialMatcher } from '@components/ui-v2/MaterialSe
 import { searchMaterials } from '@services/transitions/matchMaterial';
 import { useAsnWizardAvailability } from '../shipments/asnWizardEntry';
 import { EMPTY } from './const';
+import Button from '@components/ui-v2/Button';
+import BulkReviewDialog from '../orders/BulkReviewDialog';
+import { callOffBulkEligible, callOffNeedsDecision } from './bulkConfirm';
 import { useCallOffResponse } from './hooks/useCallOffResponse';
 import { useMarkShipped } from './hooks/useMarkShipped';
 import CallOffTable from './components/CallOffTable';
@@ -123,6 +126,14 @@ const SupplierCallOffs = () => {
   // Material C3 — the one material search (MR-3 BR-04); a supplier's names
   // are its own (narrowed in the read model, MAT-R4).
   const [search, setSearch] = useState('');
+  // UCX-P2 v2 (BL-363) — the bulk "confirm as requested" selection. Nothing
+  // starts ticked; a call-off with a PTI delay waiting needs its own answer.
+  const [bulkTicked, setBulkTicked] = useState(/** @type {Set<string>} */ (new Set()));
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkResult, setBulkResult] = useState(
+    /** @type {import('../orders/BulkReviewDialog').BulkReviewResult | null} */ (null)
+  );
   const matchOf = useMaterialMatcher();
   const [statusFilter, setStatusFilter] = useState(
     /** @type {'all' | 'toConfirm' | 'dueSoon' | 'missingAsn'} */ ('all')
@@ -185,6 +196,48 @@ const SupplierCallOffs = () => {
     }),
     matchOf
   );
+
+  /** @param {CallOffView} v */
+  const eligibleCallOff = (v) => callOffBulkEligible(v);
+  const tickedViews = rows.filter((v) => bulkTicked.has(v.callOff.id) && eligibleCallOff(v));
+  const eligibleViews = rows.filter(eligibleCallOff);
+  const allTicked =
+    eligibleViews.length > 0 && eligibleViews.every((v) => bulkTicked.has(v.callOff.id));
+  /** @param {CallOffView} v */
+  const toggleBulk = (v) => {
+    if (!eligibleCallOff(v)) return;
+    setBulkTicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(v.callOff.id)) next.delete(v.callOff.id);
+      else next.add(v.callOff.id);
+      return next;
+    });
+  };
+  const toggleAll = () =>
+    setBulkTicked(allTicked ? new Set() : new Set(eligibleViews.map((v) => v.callOff.id)));
+  /** @param {CallOffView} v */
+  const bulkReasonOf = (v) => {
+    const why = callOffNeedsDecision(v);
+    return why ? t(`co.bulk.reason.${why}`) : '';
+  };
+  const runBulkConfirm = async () => {
+    setBulkBusy(true);
+    const done = [];
+    const refused = [];
+    for (const v of tickedViews) {
+      const result = await command.mutateAsync({ verb: 'confirm', id: v.callOff.id });
+      if (result.status === 'failed')
+        refused.push({ title: v.callOff.callOffNumber, reason: String(result.reason ?? '') });
+      else done.push(v.callOff.callOffNumber);
+    }
+    setBulkBusy(false);
+    setBulkResult({ done, refused });
+    setBulkTicked((prev) => {
+      const next = new Set(prev);
+      for (const v of tickedViews) next.delete(v.callOff.id);
+      return next;
+    });
+  };
 
   /** @param {string} id */
   const open = (id) => {
@@ -271,7 +324,62 @@ const SupplierCallOffs = () => {
         </p>
       )}
 
-      <CallOffTable listed={listed} onOpen={open} />
+      {confirmAvailability.kind === 'held' && eligibleViews.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-3" data-testid="calloffs-bulk-bar">
+          <label className="flex items-center gap-2 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              checked={allTicked}
+              onChange={toggleAll}
+              data-testid="calloffs-bulk-select-all"
+            />
+            {t('co.bulk.selectAll')}
+          </label>
+          <span className="text-xs text-text-tertiary" data-testid="calloffs-bulk-count">
+            {t('co.bulk.selected', { count: tickedViews.length })}
+          </span>
+          <Button
+            variant="outline"
+            disabled={tickedViews.length === 0}
+            onClick={() => {
+              setBulkResult(null);
+              setBulkOpen(true);
+            }}
+            data-testid="calloffs-bulk-open"
+          >
+            {t('co.bulk.open')}
+          </Button>
+        </div>
+      )}
+
+      <CallOffTable
+        listed={listed}
+        onOpen={open}
+        bulkFor={(v) => ({
+          ticked: bulkTicked.has(v.callOff.id),
+          eligible: eligibleCallOff(v),
+          reason: bulkReasonOf(v),
+          onToggle: () => toggleBulk(v)
+        })}
+      />
+
+      <BulkReviewDialog
+        open={bulkOpen}
+        title={t('co.bulk.dialog.title', { count: tickedViews.length })}
+        intro={t('co.bulk.dialog.intro')}
+        rows={tickedViews.map((v) => ({
+          key: v.callOff.id,
+          title: v.callOff.callOffNumber,
+          facts: [
+            `${v.callOff.materialCode} · ${v.callOff.quantity} ${v.callOff.uom} · ${t('co.bulk.needBy', { date: formatDate(v.callOff.needDate) })}`
+          ]
+        }))}
+        confirmLabel={t('co.bulk.confirm', { count: tickedViews.length })}
+        onConfirm={() => void runBulkConfirm()}
+        onClose={() => setBulkOpen(false)}
+        busy={bulkBusy}
+        result={bulkResult}
+      />
 
       <CallOffPanel
         selected={selected}

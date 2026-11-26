@@ -146,6 +146,60 @@ export const purchaseOrderFlow = {
       version: 1
     },
     {
+      // UCX-P7 (BL-368) · UCX-D22 — PTI records that the supplier confirmed
+      // outside the hub. Cascaded from the escalation record
+      // (`t_po_escalation_supplier_confirmed`), never dispatched by a page.
+      id: 't_po_escalation_confirm',
+      from: [POStatus.SENT, POStatus.VIEWED, POStatus.ACKNOWLEDGED],
+      to: POStatus.CONFIRMED,
+      trigger: 'cascade',
+      requiredRole: 'po:escalation',
+      requiredFields: [],
+      policyHooks: [],
+      // UCX-P7 — a consequence of the record the planner made on the
+      // escalation entity (cascade). The planner acted once; this is the move.
+      surfaceable: {
+        surfaced: false,
+        because: 'computed',
+        why: 'Cascaded from the escalation record: the planner recorded one decision; this applies it.'
+      },
+      version: 1
+    },
+    {
+      // UCX-P7 · UCX-D22 — PTI sources the need elsewhere; the order is
+      // Rejected (REQ-E07-02 BR-09). Cascaded from the record.
+      id: 't_po_escalation_source_elsewhere',
+      from: [POStatus.SENT, POStatus.VIEWED, POStatus.ACKNOWLEDGED],
+      to: POStatus.REJECTED,
+      trigger: 'cascade',
+      requiredRole: 'po:escalation',
+      requiredFields: [],
+      policyHooks: [],
+      surfaceable: {
+        surfaced: false,
+        because: 'computed',
+        why: 'Cascaded from the escalation record: the planner recorded one decision; this applies it.'
+      },
+      version: 1
+    },
+    {
+      // UCX-P7 · UCX-D22 — the order is cancelled in SAP; the hub records the
+      // decision and closes it. Cascaded from the record.
+      id: 't_po_escalation_cancel',
+      from: [POStatus.SENT, POStatus.VIEWED, POStatus.ACKNOWLEDGED],
+      to: POStatus.CLOSED,
+      trigger: 'cascade',
+      requiredRole: 'po:escalation',
+      requiredFields: [],
+      policyHooks: [],
+      surfaceable: {
+        surfaced: false,
+        because: 'computed',
+        why: 'Cascaded from the escalation record: the planner recorded one decision; this applies it.'
+      },
+      version: 1
+    },
+    {
       // REQ-E07-05 — the supplier states (and later moves) the expected
       // completion date of a confirmed PO. Records a fact without moving the
       // PO, so it is legal wherever shipping is still under way.

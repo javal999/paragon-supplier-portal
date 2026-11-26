@@ -5,6 +5,7 @@
 /** @import { usePurchaseOrderAcceptCounter, usePurchaseOrderRejectCounter } from '@services/query/commandHooks' */
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import PairFacts from '../../orders/PairFacts';
 
 /**
  * @typedef {object} PoCounterReviewProps
@@ -21,6 +22,9 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
  *   onSuccess: (result: { status: string; reason?: string }) => void;
  *   onError: () => void;
  * }} reviewOutcome  The toast + reset callbacks for a review command.
+ * @property {() => void} onAccepted  UCX-P7 — after an accepted counter-offer the
+ *   panel prompts the SAP change; the review section unmounts with the move, so
+ *   the prompt lives in the panel body.
  * @property {TFunction} t
  */
 
@@ -42,63 +46,85 @@ const PoCounterReview = ({
   acceptCounter,
   rejectCounter,
   reviewOutcome,
+  onAccepted,
   t
-}) => (
-  <section data-testid="po-counter-review">
-    <h3 className="text-label text-text-tertiary uppercase mb-3">{t('oc.review.title')}</h3>
-    {reviewAvailability.kind !== 'held' ? (
-      <HandoffNotice availability={reviewAvailability} testId="handoff-po-review-response" />
-    ) : !reviewRejecting ? (
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          disabled={acceptCounter.isPending}
-          onClick={() => {
-            const po = livePO ?? selectedPO;
-            acceptCounter.mutate({ poId: po.id }, reviewOutcome(po, 'oc.toast.accepted.title'));
-          }}
-        >
-          {t('oc.review.accept')}
-        </Button>
-        <Button variant="secondary" onClick={() => setReviewRejecting(true)}>
-          {t('oc.review.reject')}
-        </Button>
+}) => {
+  // UCX-P7 · UCX-F16 — the figures that decide the review. UCX-D16: CR-05
+  // unchanged; the SAP prompt after Accept lives in the panel body, because the
+  // accepted move unmounts this section.
+  const po = livePO ?? selectedPO;
+  const materials = [...new Set(po.lineItems.map((l) => l.materialCode))];
+  return (
+    <section data-testid="po-counter-review">
+      <h3 className="text-label text-text-tertiary uppercase mb-3">{t('oc.review.title')}</h3>
+      <div className="mb-3" data-testid="po-counter-facts">
+        {materials.map((m) => (
+          <PairFacts key={m} supplierId={po.supplierId} materialCode={m} />
+        ))}
       </div>
-    ) : (
-      <div className="space-y-2">
-        <label
-          className="block text-label text-text-tertiary uppercase"
-          htmlFor="po-review-comment"
-        >
-          {t('oc.review.comment')}
-        </label>
-        <textarea
-          id="po-review-comment"
-          className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action min-h-[72px]"
-          value={reviewComment}
-          onChange={(e) => setReviewComment(e.target.value)}
-        />
+      {reviewAvailability.kind !== 'held' ? (
+        <HandoffNotice availability={reviewAvailability} testId="handoff-po-review-response" />
+      ) : !reviewRejecting ? (
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setReviewRejecting(false)}>
-            {t('oc.action.back')}
-          </Button>
           <Button
             variant="outline"
-            disabled={rejectCounter.isPending || !reviewComment.trim()}
+            disabled={acceptCounter.isPending}
             onClick={() => {
-              const po = livePO ?? selectedPO;
-              rejectCounter.mutate(
-                { poId: po.id, reviewComment: reviewComment.trim() },
-                reviewOutcome(po, 'oc.toast.reopened.title')
+              const outcome = reviewOutcome(po, 'oc.toast.accepted.title');
+              acceptCounter.mutate(
+                { poId: po.id },
+                {
+                  onSuccess: (result) => {
+                    outcome.onSuccess(result);
+                    if (result.status !== 'failed') onAccepted();
+                  },
+                  onError: outcome.onError
+                }
               );
             }}
           >
-            {t('oc.review.sendReject')}
+            {t('oc.review.accept')}
+          </Button>
+          <Button variant="secondary" onClick={() => setReviewRejecting(true)}>
+            {t('oc.review.reject')}
           </Button>
         </div>
-      </div>
-    )}
-  </section>
-);
+      ) : (
+        <div className="space-y-2">
+          <label
+            className="block text-label text-text-tertiary uppercase"
+            htmlFor="po-review-comment"
+          >
+            {t('oc.review.comment')}
+          </label>
+          <textarea
+            id="po-review-comment"
+            className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action min-h-[72px]"
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setReviewRejecting(false)}>
+              {t('oc.action.back')}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={rejectCounter.isPending || !reviewComment.trim()}
+              onClick={() => {
+                const po = livePO ?? selectedPO;
+                rejectCounter.mutate(
+                  { poId: po.id, reviewComment: reviewComment.trim() },
+                  reviewOutcome(po, 'oc.toast.reopened.title')
+                );
+              }}
+            >
+              {t('oc.review.sendReject')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
 
 export default PoCounterReview;

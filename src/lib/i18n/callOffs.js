@@ -23,6 +23,21 @@ export const callOffsEn = {
   'co.sup.filter.dueSoon': 'Due soon, no notice',
   // UCX-P1 (BL-362) — the To do's missing-ASN row opens this filter. [Proposed]
   'co.sup.filter.missingAsn': 'Missing ASN',
+  // UCX-P2 v2 (BL-363) — the bulk "confirm as requested" bar on the supplier's
+  // Call-offs. Safeguard 1: nothing starts ticked. [Proposed] labels.
+  'co.bulk.colTick': 'Select for confirm',
+  'co.bulk.tickRow': 'Select {{number}} for a bulk confirm',
+  'co.bulk.selectAll': 'Select all that can be confirmed as requested',
+  'co.bulk.selected': '{{count}} selected',
+  'co.bulk.open': 'Confirm as requested…',
+  'co.bulk.dialog.title': 'Confirm {{count}} call-offs as requested',
+  'co.bulk.dialog.intro':
+    'Each call-off is confirmed exactly as released, so its own tolerance still decides whether PTI must approve it.',
+  'co.bulk.confirm': 'Confirm {{count}} call-offs',
+  'co.bulk.needBy': 'needed {{date}}',
+  'co.bulk.reason.delayPending':
+    'PTI proposes a delay: this call-off needs your delay answer, not a confirm',
+  'co.bulk.reason.answered': 'Already answered',
   'co.umbrella.ordered': 'Ordered',
   'co.umbrella.released': 'Released',
   'co.umbrella.remaining': 'Remaining',
@@ -416,6 +431,19 @@ export const callOffsId = {
   'co.sup.filter.dueSoon': 'Segera jatuh tempo, belum ada pemberitahuan',
   // UCX-P1 (BL-362) — the To do's missing-ASN row opens this filter. [Proposed]
   'co.sup.filter.missingAsn': 'ASN belum ada',
+  'co.bulk.colTick': 'Pilih untuk konfirmasi',
+  'co.bulk.tickRow': 'Pilih {{number}} untuk konfirmasi massal',
+  'co.bulk.selectAll': 'Pilih semua yang dapat dikonfirmasi sesuai permintaan',
+  'co.bulk.selected': '{{count}} dipilih',
+  'co.bulk.open': 'Konfirmasi sesuai permintaan…',
+  'co.bulk.dialog.title': 'Konfirmasi {{count}} call-off sesuai permintaan',
+  'co.bulk.dialog.intro':
+    'Setiap call-off dikonfirmasi persis sesuai rilis, sehingga toleransinya sendiri tetap menentukan apakah PTI harus menyetujuinya.',
+  'co.bulk.confirm': 'Konfirmasi {{count}} call-off',
+  'co.bulk.needBy': 'dibutuhkan {{date}}',
+  'co.bulk.reason.delayPending':
+    'PTI mengusulkan penundaan: call-off ini memerlukan jawaban penundaan Anda, bukan konfirmasi',
+  'co.bulk.reason.answered': 'Sudah dijawab',
   'co.umbrella.ordered': 'Dipesan',
   'co.umbrella.released': 'Dirilis',
   'co.umbrella.remaining': 'Sisa',
