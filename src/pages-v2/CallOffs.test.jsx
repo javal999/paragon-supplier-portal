@@ -11,6 +11,9 @@ import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { callOffStore } from '@services/data/mock/stores/callOffStore';
 import { asnStore } from '@services/data/mock/stores/asnStore';
 import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
+import { nextFreeSequence } from '@services/transitions/shipmentNotice';
+/** @import { CallOff } from '@services/data/types' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 import { PTI_NAV, SUPPLIER_NAV } from '@components/layout-v2/navConfig';
@@ -305,7 +308,12 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     );
   });
 
-  it('a dispatch notice is offered only on an accepted confirmation, and is recorded', async () => {
+  // UCX-P3 (BL-364) — the one step replaces "Send dispatch notice" and the
+  // "Create the ASN for this call-off" link. It starts from the call-off's own
+  // values (today, its need date, its agreed quantity), sends the notice and
+  // opens ONE draft ASN with the same values — never the PO's open quantity
+  // (UCX-F9), and never a second record for the same shipment (UCX-F10).
+  it('Mark as shipped sends the notice and opens the draft ASN from the call-off’s values', async () => {
     renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER });
     fireEvent.click(
       within(await screen.findByTestId('supplier-calloff-row-co-0004')).getByRole('button', {
@@ -321,23 +329,45 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
         name: /View/
       })
     );
-    fireEvent.change(panel().getByLabelText('Shipped date'), { target: { value: '2026-09-01' } });
-    fireEvent.change(panel().getByLabelText('Expected arrival'), {
-      target: { value: '2026-09-02' }
-    });
-    fireEvent.click(panel().getByRole('button', { name: 'Send dispatch notice' }));
+    const c = /** @type {CallOff} */ (callOffStore.get('co-0006'));
+    // UCX-D13 — the sequence prefills the next free number. The counter's
+    // arithmetic is pinned in `shipmentNotice.test.js`; here the assertion is
+    // that the act passes the supplier's live ASNs to it.
+    const expectedSequence = nextFreeSequence(
+      asnStore.all().filter((a) => a.supplierId === 'sup-007')
+    );
+    // The step starts from the call-off: the hub's today, its need date, its quantity.
+    expect(panel().getByLabelText('Shipped date')).toHaveValue(DECLARED_PRESENT);
+    expect(panel().getByLabelText('Expected arrival')).toHaveValue(c.needDate);
+    expect(panel().getByLabelText('Quantity (PCS)')).toHaveValue('10000');
+
+    fireEvent.click(panel().getByRole('button', { name: 'Mark as shipped' }));
     await waitFor(() =>
-      expect(
-        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0006'))
-          .dispatches
-      ).toEqual([
+      expect(/** @type {CallOff} */ (callOffStore.get('co-0006')).dispatches).toEqual([
         expect.objectContaining({
-          shippedDate: '2026-09-01',
-          expectedArrival: '2026-09-02',
+          shippedDate: DECLARED_PRESENT,
+          expectedArrival: c.needDate,
           quantity: 10000
         })
       ])
     );
+    // The draft carries the call-off's line and quantity — the PO's open
+    // quantity for this material is 200,000, so 10,000 can only come from it.
+    await waitFor(() => {
+      const draft = asnStore.all().find((a) => a.callOffId === 'co-0006' && a.status === 'Draft');
+      expect(draft).toBeTruthy();
+      expect(draft?.poReference).toBe('PO-2025-00107');
+      expect(draft?.eta).toBe(c.needDate);
+      expect(draft?.lineItems).toEqual([
+        expect.objectContaining({ materialCode: 'PK-PETB-8801', shippedQty: 10000 })
+      ]);
+      // UCX-D13 — the sequence prefills the next free number.
+      expect(draft?.sequence).toBe(expectedSequence);
+    });
+    // One report, one record: the step now offers its step 2 on that draft.
+    const link = await panel().findByTestId('calloff-complete-details');
+    expect(link).toHaveTextContent('Complete the delivery details');
+    expect(link.getAttribute('href')).toContain('draft=ASN-2026-901');
   });
 });
 

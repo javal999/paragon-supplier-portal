@@ -24,8 +24,11 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import { formatDate } from '@lib/format';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 /** @import { CallOffView } from '@services/transitions/callOffRules' */
 import { isDueWithoutHeadsUp } from '@services/transitions/callOffRules';
+import { callOffShipment, draftForCallOff } from '@services/transitions/shipmentNotice';
+import { useAdvanceShipNoticeCreate } from '@services/query/commandHooks';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
 import { useCallOffChase } from '@services/query/hooks';
 import { PicFilter, usePicFilter } from '../materials/picDisplay';
@@ -37,6 +40,7 @@ import Button from '@components/ui-v2/Button';
 import BulkReviewDialog from '../orders/BulkReviewDialog';
 import { callOffBulkEligible, callOffNeedsDecision } from './bulkConfirm';
 import { useCallOffResponse } from './hooks/useCallOffResponse';
+import { useMarkShipped } from './hooks/useMarkShipped';
 import CallOffTable from './components/CallOffTable';
 import CallOffPanel from './components/CallOffPanel';
 
@@ -70,6 +74,9 @@ const SupplierCallOffs = () => {
   // IA-S04 — the ASN for a confirmed call-off is made in the Create-ASN wizard,
   // which needs both ASN atoms.
   const asnWizard = useAsnWizardAvailability();
+  // UCX-P3 (BL-364) — "Mark as shipped" sends the notice AND opens the draft
+  // ASN, so the page holds the ASN create mutation for that one act.
+  const createAsnMutation = useAdvanceShipNoticeCreate();
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   const [form, setForm] = useState(EMPTY);
   // UCX-P1 (BL-362) — a To do row counting one call-off opens its panel
@@ -80,15 +87,21 @@ const SupplierCallOffs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const linkedCallOffId = searchParams.get('callOff');
   /**
-   * The form a call-off's panel opens with.
+   * The form a call-off's panel opens with. UCX-P3 (BL-364) — the mark step
+   * starts from the call-off's own values (UCX-F9): the shipped date is the
+   * hub's today, the arrival its need date, and the quantity its agreed
+   * figure. All three stay editable.
    * @param {CallOffView} v
    */
-  const formFor = (v) => ({
-    ...EMPTY,
-    dispatchQty: String(
-      v.callOff.confirmation?.deliveries.reduce((s, d) => s + d.quantity, 0) ?? v.callOff.quantity
-    )
-  });
+  const formFor = (v) => {
+    const { quantity, expectedArrival } = callOffShipment(v.callOff, DECLARED_PRESENT);
+    return {
+      ...EMPTY,
+      shippedDate: DECLARED_PRESENT,
+      expectedArrival,
+      dispatchQty: String(quantity)
+    };
+  };
   const linkedView = linkedCallOffId
     ? (views.find((v) => v.callOff.id === linkedCallOffId) ?? null)
     : null;
@@ -101,6 +114,8 @@ const SupplierCallOffs = () => {
     setForm(next);
   };
   const { command, run, proposal, sendAnswer } = useCallOffResponse(panelForm, setPanelForm);
+  // UCX-P3 (BL-364) — the one-step shipment notice: notice + draft ASN.
+  const mark = useMarkShipped({ asns, createAsnMutation });
   const crumb = [t('hub.nav.section.supplierOrders'), t('co.sup.title')];
   // REQ-E07-03 — the drill-through filter. The supplier's own read already
   // excludes drafts and dismissed drafts, so the predicate only narrows by PO.
@@ -169,6 +184,8 @@ const SupplierCallOffs = () => {
           : allRows;
   /** @type {CallOffView | null} */
   const selected = rows.find((v) => v.callOff.id === effectiveSelectedId) ?? null;
+  // UCX-P3 — the open draft this call-off's mark step already created, if any.
+  const draftAsn = selected ? draftForCallOff(asns, selected.callOff.id) : null;
   const listed = searchMaterials(
     search,
     rows.filter((v) => pic.matches(v.callOff.mrpController)),
@@ -369,11 +386,12 @@ const SupplierCallOffs = () => {
         onClose={close}
         form={panelForm}
         setForm={setPanelForm}
-        busy={command.isPending}
+        busy={command.isPending || mark.pending}
         confirmAvailability={confirmAvailability}
         dispatchAvailability={dispatchAvailability}
         asnWizard={asnWizard}
-        asns={asns}
+        draftAsn={draftAsn}
+        markShipped={mark.markShipped}
         run={run}
         proposal={proposal}
         sendAnswer={sendAnswer}
