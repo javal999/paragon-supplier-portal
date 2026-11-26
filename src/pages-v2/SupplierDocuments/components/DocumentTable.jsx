@@ -10,8 +10,9 @@ import DocumentRow from './DocumentRow';
  * @typedef {object} DocumentTableProps
  * @property {SupplierDocument[]} filtered  The rows the filters let through.
  * @property {string} nowIso  The page's ONE clock read, passed to every row.
- * @property {(doc: SupplierDocument) => void} openUploadFor  Opens the declaration panel for a row.
- * @property {(open: boolean) => void} setLessonOpen  Opens the halal-renewal walkthrough.
+ * @property {(doc: SupplierDocument) => void} openUploadFor  Opens the certificate declaration panel for a row.
+ * @property {(doc: SupplierDocument) => void} openAnswerFor  UCX-P5 — opens the COA form for a COA request.
+ * @property {(doc: SupplierDocument) => void} openRenewFor  UCX-P5 — opens the declaration filled from an expiring record.
  * @property {UseToastReturn['toast']} toast  The page's toast function.
  */
 
@@ -21,7 +22,7 @@ import DocumentRow from './DocumentRow';
  * of `SupplierDocuments.jsx` by the Phase 5 page split (no behaviour change).
  * @type {React.FC<DocumentTableProps>}
  */
-const DocumentTable = ({ filtered, nowIso, openUploadFor, setLessonOpen, toast }) => {
+const DocumentTable = ({ filtered, nowIso, openUploadFor, openAnswerFor, openRenewFor, toast }) => {
   const { t } = useTranslation();
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden mb-6">
@@ -45,7 +46,8 @@ const DocumentTable = ({ filtered, nowIso, openUploadFor, setLessonOpen, toast }
               doc={doc}
               nowIso={nowIso}
               openUploadFor={openUploadFor}
-              setLessonOpen={setLessonOpen}
+              openAnswerFor={openAnswerFor}
+              openRenewFor={openRenewFor}
               toast={toast}
             />
           ))}

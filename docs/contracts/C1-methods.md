@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **120** (service surface) · **241** (transition catalog) · **66** (wired
+Three distinct axes. **120** (service surface) · **243** (transition catalog) · **66** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 241-transition catalog (72 flows)
+## Axis 2 — the 243-transition catalog (72 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -129,7 +129,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `contract.flow.js` | `contract` | 4 | `t_contract_draft`, `t_contract_activate`, `t_contract_renew`, `t_contract_terminate` | inert |
 | `obligation.flow.js` | `obligation` | 2 | `t_obligation_track`, `t_obligation_complete` | inert |
 | `purchaseRequisition.flow.js` | `purchaseRequisition` | 7 | `t_pr_create`, `t_pr_submit`, `t_pr_approve`, `t_pr_reject`, `t_pr_revise`, `t_pr_source`, `t_pr_convert` | **wired** |
-| `supplierDocument.flow.js` | `supplierDocument` | 5 | `t_supplierdoc_request`, `t_supplierdoc_declare`, `t_supplierdoc_submit`, `t_supplierdoc_verify`, `t_supplierdoc_reject` | **wired** |
+| `supplierDocument.flow.js` | `supplierDocument` | 7 | `t_supplierdoc_request`, `t_supplierdoc_declare`, `t_supplierdoc_submit`, `t_supplierdoc_answer_coa`, `t_supplierdoc_renew`, `t_supplierdoc_verify`, `t_supplierdoc_reject` | **wired** |
 | `compliance.flow.js` | `compliance` | 3 | `t_compliance_submit`, `t_compliance_verify`, `t_compliance_reject` | inert |
 | `requirementResponse.flow.js` | `requirementResponse` | 7 | `t_requirementresponse_submit`, `t_requirementresponse_acknowledge`, `t_requirementresponse_promote`, `t_requirementresponse_review`, `t_requirementresponse_accept`, `t_requirementresponse_dispute`, `t_requirementresponse_resolve` | **wired** |
 | `inventoryDeclaration.flow.js` | `inventoryDeclaration` | 2 | `t_inventorydeclaration_declare`, `t_inventorydeclaration_record` | **wired** |
@@ -185,7 +185,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `rfpFirmOffer.flow.js` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
 | `rfiIntent.flow.js` | `rfiIntent` | 3 | `t_rfiintent_respond`, `t_rfiintent_decline`, `t_rfiintent_withdraw` | **wired** |
 | `rfpIntent.flow.js` | `rfpIntent` | 3 | `t_rfpintent_respond`, `t_rfpintent_decline`, `t_rfpintent_withdraw` | **wired** |
-| **TOTAL** | | **241** | | |
+| **TOTAL** | | **243** | | |
 
 **Flow shape** (`schema.js`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /

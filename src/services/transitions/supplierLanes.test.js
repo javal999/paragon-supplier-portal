@@ -239,12 +239,16 @@ describe('⚠️ `supplierdoc:upload` — RULED TO BACK OFFICE, AND NOW ASSIGNED
     expect(SYSTEM_ROLES.back_office).toContain('supplierdoc:upload');
   });
 
-  it('it is required by exactly the verb that was authored for it', () => {
+  it('it is required by exactly the verbs that were authored for it', () => {
+    // ⚠️ UCX-P5 ADDED THE SECOND VERB, AND THE LIST IS STILL DERIVED. `_declare`
+    // volunteers a certificate nobody asked for; `_renew` (BL-366) acts on the
+    // expiring record itself, and UCX-SD19's atom is `supplierdoc:upload`. The
+    // assertion stays an exact set so an accidental third claimant is red.
     const requiring = getKnownFlows()
       .flatMap((f) => f.transitions)
       .filter((t) => t.requiredRole === 'supplierdoc:upload')
       .map((t) => t.id);
-    expect(requiring).toEqual(['t_supplierdoc_declare']);
+    expect(requiring).toEqual(['t_supplierdoc_declare', 't_supplierdoc_renew']);
   });
 
   it('CONTROL — the sibling supply verb is still a DISTINCT atom, also back office’s', () => {

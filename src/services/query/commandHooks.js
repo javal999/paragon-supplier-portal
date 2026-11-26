@@ -18,7 +18,7 @@ import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { scopeKey } from './useServiceQuery';
 /** @import { BidCurrency } from '@lib/currencyPolicy' */
 /** @import { FxPinSource } from '@lib/fxPin' */
-/** @import { CommandResult, CommandStatus, QueryScope, InspectionResult, CommandDecision, CertificateDeclaration, SupplierDocumentCategory, PoLineResponse, PoRejectionCause, InvoiceLine, CallOffDelivery, CallOffType, CallOffOrigin, StockUpdateMode, QualificationRequiredDoc, QualificationRuleLevel } from '../data/types' */
+/** @import { CommandResult, CommandStatus, QueryScope, InspectionResult, CommandDecision, CertificateDeclaration, CoaDeclaration, SupplierDocumentCategory, SupplierDocumentRequestKind, PoLineResponse, PoRejectionCause, InvoiceLine, CallOffDelivery, CallOffType, CallOffOrigin, StockUpdateMode, QualificationRequiredDoc, QualificationRuleLevel } from '../data/types' */
 /** @import { AsnLineInput } from '../transitions/fulfilmentRules' */
 /** @import { DelayAnswer } from '../transitions/callOffRules' */
 /** @import { SourcingType, SourcingTypeKey } from '../sourcing/sourcingType' */
@@ -2519,7 +2519,7 @@ export function useSupplierDocumentRequest() {
   const scope = useScope();
   const invalidate = useInvalidateProcurement();
 
-  return /** @type {typeof useMutation<CommandResult, Error, { supplierId: string; category: SupplierDocumentCategory; note?: string }>} */ (
+  return /** @type {typeof useMutation<CommandResult, Error, { supplierId: string; category: SupplierDocumentCategory; note?: string; requestKind?: SupplierDocumentRequestKind; batch?: string }>} */ (
     useMutation
   )({
     mutationFn: (vars) =>
@@ -2547,6 +2547,63 @@ export function useSupplierDocumentSubmit() {
     mutationFn: ({ docId, ...vars }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_supplierdoc_submit',
+        entity: 'supplierDocument',
+        entityId: docId,
+        payload: { ...vars }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}
+
+/**
+ * UCX-P5 · the COA answer (fires `t_supplierdoc_answer_coa`, atom
+ * `supplierdoc:submit`). The flow's kind guard refuses this verb on a row PTI
+ * did not ask for as a COA, so the surface's choice of form is not what makes
+ * the record valid.
+ */
+/**
+ * @typedef {Omit<CoaDeclaration, 'declaredAt' | 'declaredBy'>} CoaDeclarationVars
+ */
+export function useSupplierDocumentAnswerCoa() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CoaDeclarationVars & { docId: string }>} */ (
+    useMutation
+  )({
+    mutationFn: ({ docId, ...vars }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_supplierdoc_answer_coa',
+        entity: 'supplierDocument',
+        entityId: docId,
+        payload: { ...vars }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}
+
+/**
+ * UCX-P5 · the renewal (fires `t_supplierdoc_renew`, atom
+ * `supplierdoc:upload` — UCX-SD19's atom). It acts on the EXPIRING record
+ * itself, so that record lands `Under Review` and the certificate has a newer
+ * declaration while it is still inside the expiry window (UCX-SG10).
+ */
+export function useSupplierDocumentRenew() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CertificateDeclarationVars & { docId: string }>} */ (
+    useMutation
+  )({
+    mutationFn: ({ docId, ...vars }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_supplierdoc_renew',
         entity: 'supplierDocument',
         entityId: docId,
         payload: { ...vars }

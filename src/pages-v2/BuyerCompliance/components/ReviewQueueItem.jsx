@@ -13,34 +13,43 @@ import RejectReasonForm from './RejectReasonForm';
 /**
  * @typedef {object} ReviewQueueItemProps
  * @property {SupplierDocument} doc The document awaiting review.
+ * @property {string | null} supplierName The supplier's roster name, or null when
+ *   the roster no longer resolves the id (shown as the id alone).
  * @property {ReturnType<typeof useDocumentReview>} reviewer Verify / reject availability, the
  *   open reject form, the busy row and the two runners.
  * @property {TFunction} t
  */
 
 /**
- * One row of the review queue: the declared certificate (or the document name
- * for a seeded row with no declaration), its supplier and number, the
- * declaration details, the Verify / Reject buttons — each replaced by its own
+ * One row of the review queue: the declared certificate (or the COA, or the
+ * document name for a seeded row with no declaration), its supplier and
+ * number, the sentence that says nothing was uploaded and what to check, the
+ * declaration details, the Confirm / Refuse buttons — each replaced by its own
  * handoff notice when the seat does not hold the verb — and the reject form
- * when it is open on this row. Moved out of `BuyerCompliance.jsx` by the
- * Phase 5 page split (no behaviour change).
+ * when it is open on this row.
+ *
+ * UCX-P5 — the check sentence is the answer to UCX-F18: until file storage
+ * exists (BL-27), the officer confirms a record the portal cannot verify, so
+ * the panel says what to check instead.
  * @type {React.FC<ReviewQueueItemProps>}
  */
-const ReviewQueueItem = ({ doc, reviewer, t }) => {
+const ReviewQueueItem = ({ doc, supplierName, reviewer, t }) => {
   const { review, busyId, rejecting, setRejecting, runVerify } = reviewer;
   return (
     <div className="px-5 py-4" data-testid={`doc-review-${doc.id}`}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-text-primary">
-            {doc.declaration
-              ? t(certTypeLabelKey(doc.declaration.certType))
-              : /* i18n-defer: mock/sample data (fixture document name) */
-                doc.name}
+            {doc.coaDeclaration
+              ? t('compliance.queue.kind.coa')
+              : doc.declaration
+                ? t(certTypeLabelKey(doc.declaration.certType))
+                : /* i18n-defer: mock/sample data (fixture document name) */
+                  doc.name}
           </div>
           <div className="text-xs text-text-tertiary mt-0.5">
-            {/* i18n-defer: mock/sample data (supplier id) */}
+            {/* i18n-defer: mock/sample data (supplier name and id) */}
+            {supplierName ? <span>{supplierName} · </span> : null}
             <Data>{doc.supplierId}</Data>
             {doc.declaration && (
               <>
@@ -48,9 +57,18 @@ const ReviewQueueItem = ({ doc, reviewer, t }) => {
                 <Data>{doc.declaration.certNumber}</Data>
               </>
             )}
+            {doc.coaDeclaration && (
+              <>
+                {' · '}
+                <Data>{doc.coaDeclaration.coaNumber}</Data>
+              </>
+            )}
           </div>
-          {doc.declaration ? (
-            <DeclarationDetails declaration={doc.declaration} t={t} />
+          <p className="mt-2 text-xs text-text-secondary" data-testid="review-check">
+            {t('compliance.queue.check')}
+          </p>
+          {doc.declaration || doc.coaDeclaration ? (
+            <DeclarationDetails doc={doc} t={t} />
           ) : (
             /* A seeded row that predates the verb: it reached `Under
                Review` before declarations existed, so there is nothing

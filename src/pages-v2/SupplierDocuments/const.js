@@ -9,7 +9,7 @@
 
 /** @typedef {'all' | 'expired' | 'expiring' | 'due' | 'awaiting-upload'} ExpiryFilter */
 
-/** @typedef {'closed' | 'new' | 'upload-existing' | 'view'} PanelMode */
+/** @typedef {'closed' | 'new' | 'upload-existing' | 'view' | 'answer-coa' | 'renew'} PanelMode */
 
 /** The certificate type that files a declared document under a category (the
  * @type {Partial<Record<DocCategory, CertType>>}
@@ -49,5 +49,24 @@ export const EMPTY_FORM = {
   issuer: '',
   issuedOn: '',
   expiresOn: '',
+  scopeText: ''
+};
+
+/** UCX-P5 (BL-366) — the COA answer's own form. `batch` is prefilled from the
+ *  request and may be corrected; `scopeText` is the only optional one.
+ * @typedef {object} CoaForm
+ * @property {string} batch
+ * @property {string} coaNumber
+ * @property {string} issuer
+ * @property {string} issuedOn
+ * @property {string} scopeText
+ */
+
+/** @type {CoaForm} */
+export const EMPTY_COA_FORM = {
+  batch: '',
+  coaNumber: '',
+  issuer: '',
+  issuedOn: '',
   scopeText: ''
 };
