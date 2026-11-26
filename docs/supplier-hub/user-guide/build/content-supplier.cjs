@@ -195,7 +195,7 @@ add({
   statusAfter: 'Submitted: Accepted, or Outside tolerance',
   testId: 'T5',
   test: '"Tell Paragon how much you commit to, period by period. For one period you can only supply 80%."',
-  notes: 'Reasons: Capacity, Material, Logistics, Quality, Force Majeure, Discontinued, Other (last 3 need a note). Blocked by "Confirm capacity for {group} first." → Confirm capacity. Evidence: src/lib/i18n/forecastCollaboration.js:59-67,83,122-126,135,144-162; src/lib/glossary/termLabels.glossary.js:1281,1286.'
+  notes: 'Reasons: Capacity, Material, Logistics, Quality, Force Majeure, Discontinued, Other (last 3 need a note). Blocked by "Awaiting Supplier Fulfilment: capacity for {group}" → Confirm capacity. Evidence: src/lib/i18n/forecastCollaboration.js:59-67,83,122-126,135,144-162; src/lib/glossary/termLabels.glossary.js:1281,1286.'
 });
 add({
   type: 'step', kicker: task('T6', 'Submit capacity'), title: 'Submit capacity per week',
@@ -264,7 +264,7 @@ add({
   fontSize: 12.5,
   rows: [
     ['"Outside tolerance: PTI must approve this before you ship."', 'More than +5% or a later date', 'Wait for PTI\'s approval', 'Call-offs'],
-    ['"Confirm capacity for {group} first."', 'Capacity not submitted', 'Confirm capacity, then Submit all', 'Foresight commitments'],
+    ['"Awaiting Supplier Fulfilment: capacity for {group}"', 'Capacity not submitted', 'Confirm capacity, then Submit all', 'Foresight commitments'],
     ['"The week of {week} is below the LTP. Choose a reason."', 'A week below PTI\'s LTP', 'Pick a reason', 'Capacity'],
     ['"{count} document was refused:"', 'PTI refused a declaration', 'Declare again', 'Profile & documents'],
     ['"Awaiting Supplier Fulfilment"', 'Your seat lacks that lane', 'Ask a colleague or your administrator', 'Any'],
