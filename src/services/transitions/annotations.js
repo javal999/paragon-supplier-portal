@@ -113,6 +113,26 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_po_partial_deliver: { purposeKey: 'processFlows.purpose.t_po_partial_deliver' },
   t_po_deliver: { purposeKey: 'processFlows.purpose.t_po_deliver' },
   t_po_close: { purposeKey: 'processFlows.purpose.t_po_close' },
+  // UCX-P7 (BL-368) · UCX-D22 — the escalated order: the record of PTI's act,
+  // and the three moves the record cascades.
+  t_po_ask_confirm: { purposeKey: 'processFlows.purpose.t_po_ask_confirm' },
+  t_po_escalation_supplier_confirmed: {
+    purposeKey: 'processFlows.purpose.t_po_escalation_supplier_confirmed'
+  },
+  t_po_escalation_sourcing_elsewhere: {
+    purposeKey: 'processFlows.purpose.t_po_escalation_sourcing_elsewhere'
+  },
+  t_po_escalation_cancelled_in_sap: {
+    purposeKey: 'processFlows.purpose.t_po_escalation_cancelled_in_sap'
+  },
+  t_po_escalation_still_waiting: {
+    purposeKey: 'processFlows.purpose.t_po_escalation_still_waiting'
+  },
+  t_po_escalation_confirm: { purposeKey: 'processFlows.purpose.t_po_escalation_confirm' },
+  t_po_escalation_source_elsewhere: {
+    purposeKey: 'processFlows.purpose.t_po_escalation_source_elsewhere'
+  },
+  t_po_escalation_cancel: { purposeKey: 'processFlows.purpose.t_po_escalation_cancel' },
 
   // ── advanceShipNotice ──────────────────────────────────────────────────────
   t_asn_create: { purposeKey: 'processFlows.purpose.t_asn_create' },
@@ -438,6 +458,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
  */
 export const ENTITY_PURPOSE = Object.freeze({
   purchaseOrder: { purposeKey: 'processFlows.purpose.entity.purchaseOrder' },
+  poEscalation: { purposeKey: 'processFlows.purpose.entity.poEscalation' },
   advanceShipNotice: { purposeKey: 'processFlows.purpose.entity.advanceShipNotice' },
   goodsReceipt: { purposeKey: 'processFlows.purpose.entity.goodsReceipt' },
   goodsReceiptLine: { purposeKey: 'processFlows.purpose.entity.goodsReceiptLine' },

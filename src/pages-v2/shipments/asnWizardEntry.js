@@ -33,17 +33,27 @@ export function useAsnWizardAvailability() {
 export const CALL_OFF_PARAM = 'callOff';
 
 /**
+ * UCX-P3 (BL-364) — the parameter naming the DRAFT ASN "Mark as shipped"
+ * opened. The wizard starts on its details step for that draft and completes
+ * by submitting it, so the same shipment is never created twice.
+ */
+export const DRAFT_PARAM = 'draft';
+
+/**
  * The address that opens the Create-ASN wizard started for one PO, and
  * optionally for one confirmed call-off on it. `po` is the PO's id, as on
- * every other order address; `from=po` offers the way back to the PO.
- * @param {{ poId: string; callOffId?: string; fromPo?: boolean }} target
+ * every other order address; `from=po` offers the way back to the PO; `draft`
+ * opens the wizard on the draft's delivery details (the mark-as-shipped step
+ * of UCX-P3).
+ * @param {{ poId: string; callOffId?: string; draft?: string; fromPo?: boolean }} target
  * @returns {string}
  */
-export function createAsnHref({ poId, callOffId, fromPo = false }) {
+export function createAsnHref({ poId, callOffId, draft, fromPo = false }) {
   const q = new URLSearchParams();
   q.set('tab', 'create');
   q.set(PO_PARAM, poId);
   if (callOffId) q.set(CALL_OFF_PARAM, callOffId);
+  if (draft) q.set(DRAFT_PARAM, draft);
   if (fromPo) q.set(FROM_PARAM, FROM_PO);
   return `/supplier/shipments?${q.toString()}`;
 }

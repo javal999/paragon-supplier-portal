@@ -1,6 +1,5 @@
 /** @import React from 'react' */
 /** @import { useVerbAvailability } from '@hooks/useVerbAvailability' */
-/** @import { useCallOffViews } from '../../callOffs/callOffDisplay' */
 /** @import { useAsnWizardAvailability } from '../../shipments/asnWizardEntry' */
 /** @import { useCallOffResponse } from '../hooks/useCallOffResponse' */
 import { useTranslation } from 'react-i18next';
@@ -23,7 +22,8 @@ import RespondSection from './RespondSection';
  * @property {ReturnType<typeof useVerbAvailability>} confirmAvailability  Whether this user holds `calloff:confirm`.
  * @property {ReturnType<typeof useVerbAvailability>} dispatchAvailability  Whether this user holds `calloff:dispatch`.
  * @property {ReturnType<typeof useAsnWizardAvailability>} asnWizard  Whether the Create-ASN wizard is open to this user.
- * @property {ReturnType<typeof useCallOffViews>['asns']} asns  The supplier's ASNs.
+ * @property {string | null} draftAsn  UCX-P3 — the open draft ASN this call-off's mark step created, if any.
+ * @property {(v: CallOffView, form: typeof EMPTY) => Promise<void>} markShipped  UCX-P3 — send the notice and open the draft.
  * @property {ReturnType<typeof useCallOffResponse>['run']} run  Sends one command and toasts its outcome.
  * @property {ReturnType<typeof useCallOffResponse>['proposal']} proposal  What the chosen answer proposes.
  * @property {ReturnType<typeof useCallOffResponse>['sendAnswer']} sendAnswer  Sends the respond form's answer.
@@ -45,7 +45,8 @@ const CallOffPanel = ({
   confirmAvailability,
   dispatchAvailability,
   asnWizard,
-  asns,
+  draftAsn,
+  markShipped,
   run,
   proposal,
   sendAnswer
@@ -94,8 +95,8 @@ const CallOffPanel = ({
               busy={busy}
               dispatchAvailability={dispatchAvailability}
               asnWizard={asnWizard}
-              asns={asns}
-              run={run}
+              draftAsn={draftAsn}
+              markShipped={markShipped}
             />
           )}
         </div>

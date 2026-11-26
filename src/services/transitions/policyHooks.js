@@ -70,6 +70,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   PO_REJECT_CAUSE_GIVEN: 'po_reject_cause_given',
   /** Counter-offer rejected by the planner: the comment is substance, not presence. */
   PO_COUNTER_REVIEW_COMMENT_AUTHORED: 'po_counter_review_comment_authored',
+  /** UCX-P7 (BL-368) · UCX-D22 — an escalation act names a PO that exists and
+   *  still awaits the supplier's answer (Sent / Viewed / Acknowledged). */
+  PO_ESCALATION_TARGET_AWAITING: 'po_escalation_target_awaiting',
   /** Shipping notice: the expected completion date is a real `YYYY-MM-DD` date. */
   PO_SHIPPING_NOTICE_DATE_VALID: 'po_shipping_notice_date_valid',
   /** ASN create (REQ-E07-04 BR-01): the parent PO (payload.poReference) must be

@@ -270,6 +270,14 @@ const ManualPanel = ({ supplierId, positions, view, nowIso }) => {
             {text.outOfDate}
           </p>
         )}
+        {/* UCX-P4 v2 (BL-365) — one weekly page confirms every figure in one visit. */}
+        <Link
+          to="/supplier/weekly"
+          className="text-sm text-action-hover hover:underline"
+          data-testid="weekly-open-page"
+        >
+          {t('inv.weekly.openWeekly')}
+        </Link>
       </div>
       <AlsoDueLines supplierId={supplierId} positions={positions} nowIso={nowIso} />
       {reminder !== null && (

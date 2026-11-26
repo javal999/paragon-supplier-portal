@@ -8,13 +8,15 @@ import FormSection from '@components/ui-v2/FormSection';
 /** @import { AsnForm } from '../const' */
 import CarrierPicker from '../../shipments/CarrierPicker';
 import { inputClass, labelClass } from '../const';
-import { missingInboundRefs, missingLogistics } from '../utils';
+import { missingDeliveryFields } from '../utils';
 import AsnLinesEditor from './AsnLinesEditor';
 
 /**
  * Wizard step 2 — logistics (carrier, tracking, ship date, ETA), the shipped
  * lines through the shared line editor, packaging, and documents and notes.
- * @type {React.FC<{ form: AsnForm; updateForm: (patch: Partial<AsnForm>) => void; onLineChange: (materialCode: string, patch: Partial<LineEntry>) => void; wizardOpenLines: readonly OpenLine[]; wizardRead: AsnLinesRead; declaredBatches: Readonly<Record<string, readonly AvailableBatch[]>>; callOff?: Pick<CallOff, 'materialCode' | 'quantity'> }>}
+ * `sequencesInUse`:  UCX-P3 — the sequences the supplier's live ASNs hold, named
+ * in the visible hint under **Sequence**.
+ * @type {React.FC<{ form: AsnForm; updateForm: (patch: Partial<AsnForm>) => void; onLineChange: (materialCode: string, patch: Partial<LineEntry>) => void; wizardOpenLines: readonly OpenLine[]; wizardRead: AsnLinesRead; declaredBatches: Readonly<Record<string, readonly AvailableBatch[]>>; callOff?: Pick<CallOff, 'materialCode' | 'quantity'>; sequencesInUse?: readonly string[] }>}
  */
 const WizardDetailsStep = ({
   form,
@@ -23,18 +25,33 @@ const WizardDetailsStep = ({
   wizardOpenLines,
   wizardRead,
   declaredBatches,
-  callOff
+  callOff,
+  sequencesInUse = []
 }) => {
   const { t } = useTranslation();
-  const missing = missingLogistics(form);
-  const missingRefs = missingInboundRefs(form);
+  // UCX-P3 (BL-364) / UCX-F8, UCX-F32 — ONE list and ONE message: logistics,
+  // the inbound identity and each line's batch, so a blocked Next names every
+  // gap at once (the two messages this replaces named one group each).
+  const missing = missingDeliveryFields(form, wizardRead);
+  const etaBeforeShip = missing.includes('etaBeforeShip');
   /** A field's own label, without the required marker. @type {Record<string, () => string>} */
   const FIELD_LABEL = {
     carrier: () => t('supplierShipments.wizard.details.field.carrier').replace(/\s*\*$/, ''),
     tracking: () => t('fc.asn.trackingOrVehicle'),
     shipDate: () => t('supplierShipments.wizard.details.field.shipDate').replace(/\s*\*$/, ''),
-    eta: () => t('supplierShipments.wizard.details.field.eta').replace(/\s*\*$/, '')
+    eta: () => t('supplierShipments.wizard.details.field.eta').replace(/\s*\*$/, ''),
+    sequence: () => t('fc.asn.sequence'),
+    externalId: () => t('fc.asn.externalId')
   };
+  /**
+   * One missing entry as the sentence names it; a batch names its material.
+   * @param {string} m
+   */
+  const labelOf = (m) =>
+    m.startsWith('batch:')
+      ? t('fc.asn.batch.missingFor', { material: m.slice('batch:'.length) })
+      : FIELD_LABEL[m]();
+  const named = missing.filter((m) => m !== 'etaBeforeShip').map(labelOf);
   return (
     <div className="flex flex-col gap-5">
       <FormSection
@@ -93,7 +110,9 @@ const WizardDetailsStep = ({
           </div>
           {/* AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
               Jalan (the External ID). Both are required before submit; the
-              sequence rules are checked over the entered lines below. */}
+              sequence rules are checked over the entered lines below.
+              UCX-P3 — the prefilled next free number is explained by a VISIBLE
+              hint, never an (i) tip on a form field (UCX-D30; TL-D4). */}
           <div>
             <label className={`${labelClass} after:content-['_*']`} htmlFor="asn-wizard-sequence">
               {t('fc.asn.sequence')}
@@ -107,6 +126,14 @@ const WizardDetailsStep = ({
               onChange={(e) => updateForm({ sequence: e.target.value })}
               className={inputClass}
             />
+            <p className="mt-1 text-xs text-text-tertiary" data-testid="asn-wizard-sequence-hint">
+              {t('fc.asn.sequence.hint')}
+            </p>
+            {sequencesInUse.length > 0 ? (
+              <p className="text-xs text-text-tertiary" data-testid="asn-wizard-sequence-in-use">
+                {t('fc.asn.sequence.inUse', { sequences: sequencesInUse.join(', ') })}
+              </p>
+            ) : null}
           </div>
           <div>
             <label
@@ -123,33 +150,23 @@ const WizardDetailsStep = ({
               onChange={(e) => updateForm({ externalId: e.target.value })}
               className={inputClass}
             />
+            <p
+              className="mt-1 text-xs text-text-tertiary"
+              data-testid="asn-wizard-external-id-hint"
+            >
+              {t('fc.asn.externalId.hint')}
+            </p>
           </div>
         </div>
-        {/* BL-303 (UL-05) — **Next** stays disabled until these are filled; say which. */}
+        {/* UCX-P3 (BL-364) / BL-303 — **Next** stays disabled until these are
+            filled; ONE message names every one, and none is stated twice. */}
         {missing.length > 0 ? (
           <p className="text-xs text-text-secondary" role="status" data-testid="asn-wizard-missing">
-            {missing.includes('etaBeforeShip') && missing.length === 1
-              ? t('supplierShipments.wizard.details.etaBeforeShip')
-              : t('supplierShipments.wizard.details.missing', {
-                  fields: missing
-                    .filter((m) => m !== 'etaBeforeShip')
-                    .map((m) => FIELD_LABEL[m]())
-                    .join(', ')
-                })}
-          </p>
-        ) : null}
-        {/* AIB-1 BR-03 / BR-04 — the inbound-upload identity, named when absent. */}
-        {missingRefs.length > 0 ? (
-          <p
-            className="text-xs text-text-secondary"
-            role="status"
-            data-testid="asn-wizard-missing-inbound"
-          >
-            {t('fc.asn.sequence.missing', {
-              fields: missingRefs
-                .map((m) => t(m === 'sequence' ? 'fc.asn.sequence' : 'fc.asn.externalId'))
-                .join(', ')
-            })}
+            {named.length > 0
+              ? t('supplierShipments.wizard.details.missing', { fields: named.join(', ') })
+              : ''}
+            {named.length > 0 && etaBeforeShip ? ' ' : ''}
+            {etaBeforeShip ? t('supplierShipments.wizard.details.etaBeforeShip') : ''}
           </p>
         ) : null}
         {/* A sequence another ASN already holds (AIB-D1: one sequence = one ASN). */}

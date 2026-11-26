@@ -128,6 +128,17 @@ export const useSupplierDemandAnticipation = (enabled = true) =>
     { enabled }
   );
 
+/**
+ * UCX-P4 v2 (BL-365) — the weekly page's publication identity: the planning
+ * week, its publication id, the materials it holds and whether the week is
+ * already confirmed. No demand figures (DRC-D10); under `demandAnticipation`
+ * so a publication or a confirmation refreshes it.
+ */
+export const useSupplierWeeklyPublication = () =>
+  useServiceQuery(['procurement', 'demandAnticipation', 'weeklyPublication'], (svc, scope) =>
+    svc.procurement.getSupplierWeeklyPublication(scope)
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>
@@ -202,6 +213,16 @@ export const useFixedStockReconcile = () =>
  */
 export const usePoOnHold = () =>
   useServiceQuery(['procurement', 'poOnHold'], (svc, scope) => svc.procurement.getPoOnHold(scope));
+
+/**
+ * UCX-P7 (BL-368) — the escalation records against one PO, for the buyer's PO
+ * panel. No PO open means nothing to read.
+ * @param {string | null} poId
+ */
+export const usePoEscalationRecords = (poId) =>
+  useServiceQuery(['procurement', 'poEscalation', poId], (svc, scope) =>
+    poId ? svc.procurement.getPoEscalationRecords(scope, poId) : Promise.resolve({ items: [] })
+  );
 
 /**
  * REQ-E14-02 — supplier reliability and PTI's plan-change measures. The planner

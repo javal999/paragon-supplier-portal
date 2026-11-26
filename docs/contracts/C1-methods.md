@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **118** (service surface) · **235** (transition catalog) · **65** (wired
+Three distinct axes. **120** (service surface) · **243** (transition catalog) · **66** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.js` (service + command types),
 
 ---
 
-## Axis 1 — the 118-method service surface (`IDataService`)
+## Axis 1 — the 120-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -76,7 +76,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 6 | `list`, `getById`, `getCurrent`, `getStockUpdateModes`, `getUpdateCompliance`, `getVendorQualifications` |
-| `IProcurementService` | 70 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getMaterialNames`, `getStockAccess`, `getCapacityPlans`, `getCapacityHeadsUp`, `getStrategicBufferInputs`, `getRopFisikPrRecommendations`, `getWhatIfPairs`, `getWhatIfSandbox`, `getNpdReviews`, `getProtectionBufferInputs`, `getBlanketPoRunOuts`, `getDemandAnticipation`, `getDemandAnticipationHistory`, `getPlanningGroups`, `getStockSimulation`, `getInventoryAlerts`, `getSupplierAsks`, `getCapacityDecisions`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getFixedStockReconcile`, `getPoOnHold`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getCallOffChase`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth`, `getDemandForecast`, `getModelBacktest`, `getForecastBias`, `getSupplierDemandAnticipation` |
+| `IProcurementService` | 72 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getMaterialNames`, `getStockAccess`, `getCapacityPlans`, `getCapacityHeadsUp`, `getStrategicBufferInputs`, `getRopFisikPrRecommendations`, `getWhatIfPairs`, `getWhatIfSandbox`, `getNpdReviews`, `getProtectionBufferInputs`, `getBlanketPoRunOuts`, `getDemandAnticipation`, `getDemandAnticipationHistory`, `getPlanningGroups`, `getStockSimulation`, `getInventoryAlerts`, `getSupplierAsks`, `getCapacityDecisions`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getFixedStockReconcile`, `getPoOnHold`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getCallOffChase`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth`, `getDemandForecast`, `getModelBacktest`, `getForecastBias`, `getSupplierDemandAnticipation`, `getPoEscalationRecords`, `getSupplierWeeklyPublication` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -85,10 +85,10 @@ interface IDataService {
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
 | `IFileService` | 6 | `put`, `urlFor`, `release`, `isHeld`, `recordAccess`, `accessLog` |
-| **read subtotal** | **114** | |
+| **read subtotal** | **116** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **118** | |
+| **TOTAL** | **120** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 235-transition catalog (71 flows)
+## Axis 2 — the 243-transition catalog (72 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -113,7 +113,8 @@ transition id can be assembled at a call site rather than written as a literal (
 
 | Flow file | Entity | Transitions | Transition ids | Wiring |
 |---|---|---|---|---|
-| `purchaseOrder.flow.js` | `purchaseOrder` | 12 | `t_po_issue`, `t_po_view`, `t_po_acknowledge`, `t_po_confirm`, `t_po_adjust`, `t_po_reject`, `t_po_accept_counter`, `t_po_reject_counter`, `t_po_shipping_notice`, `t_po_partial_deliver`, `t_po_deliver`, `t_po_close` | **wired** |
+| `purchaseOrder.flow.js` | `purchaseOrder` | 15 | `t_po_issue`, `t_po_view`, `t_po_acknowledge`, `t_po_confirm`, `t_po_adjust`, `t_po_reject`, `t_po_accept_counter`, `t_po_reject_counter`, `t_po_escalation_confirm`, `t_po_escalation_source_elsewhere`, `t_po_escalation_cancel`, `t_po_shipping_notice`, `t_po_partial_deliver`, `t_po_deliver`, `t_po_close` | **wired** |
+| `poEscalation.flow.js` | `poEscalation` | 5 | `t_po_ask_confirm`, `t_po_escalation_supplier_confirmed`, `t_po_escalation_sourcing_elsewhere`, `t_po_escalation_cancelled_in_sap`, `t_po_escalation_still_waiting` | **wired** |
 | `advanceShipNotice.flow.js` | `advanceShipNotice` | 12 | `t_asn_create`, `t_asn_submit`, `t_asn_cancel`, `t_asn_request_exception`, `t_asn_approve_exception`, `t_asn_reject_exception`, `t_asn_change_eta`, `t_asn_in_transit`, `t_asn_deliver`, `t_asn_discrepancy`, `t_asn_resolve_discrepancy`, `t_asn_acknowledge_inbound` | **wired** |
 | `goodsReceipt.flow.js` | `goodsReceipt` | 8 | `t_gr_create`, `t_gr_start_inspection`, `t_gr_hold`, `t_gr_request_retest`, `t_gr_approve`, `t_gr_partial_approve`, `t_gr_reject`, `t_gr_post` | **wired** |
 | `goodsReceiptLine.flow.js` | `goodsReceiptLine` | 6 | `t_grline_inspect`, `t_grline_accept`, `t_grline_reject`, `t_grline_quarantine`, `t_grline_release`, `t_grline_return` | sub-flow (rollup) |
@@ -184,7 +185,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `rfpFirmOffer.flow.js` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
 | `rfiIntent.flow.js` | `rfiIntent` | 3 | `t_rfiintent_respond`, `t_rfiintent_decline`, `t_rfiintent_withdraw` | **wired** |
 | `rfpIntent.flow.js` | `rfpIntent` | 3 | `t_rfpintent_respond`, `t_rfpintent_decline`, `t_rfpintent_withdraw` | **wired** |
-| **TOTAL** | | **235** | | |
+| **TOTAL** | | **243** | | |
 
 **Flow shape** (`schema.js`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -200,12 +201,12 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 65 wired CommandTargets
+## Axis 3 — the 66 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **65 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **66 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
-- **wired:** `poCancellation`, `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `eventCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `callOffChase`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `daConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`
+- **wired:** `poCancellation`, `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `eventCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `callOffChase`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `daConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`, `poEscalation`
 
 The interface is **7 members** (`dispatcher/types.js`, `CommandTarget`):
 
@@ -230,9 +231,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (71 flows → 3 states)
+### Wiring census (72 flows → 3 states)
 
-- **65 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **66 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.js` /
   `invoiceRollup.js`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.

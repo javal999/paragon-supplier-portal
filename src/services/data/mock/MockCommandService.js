@@ -121,6 +121,8 @@ import {
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { asnStore } from './stores/asnStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
+import { poEscalationStore } from './stores/poEscalationStore';
+import { isReceiptDisputeOutcome } from '../../transitions/receiptDiscrepancyRules';
 import { invoiceStore } from './stores/invoiceStore';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
@@ -205,6 +207,7 @@ import { capacityDecisionTarget } from './targets/capacityDecision';
 import { poOnHoldDecisionTarget } from './targets/poOnHoldDecision';
 import { poOnHoldStore } from './stores/poOnHoldStore';
 import { poCancellationTarget } from './targets/poCancellation';
+import { poEscalationTarget } from './targets/poEscalation';
 import { allPoOnHold } from './poOnHoldReadModel';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
@@ -1426,7 +1429,14 @@ const receiptDiscrepancyTarget = {
       ...r,
       status: /** @type {ReceiptDiscrepancyStatus} */ (toState),
       ...(toState === 'Resolved'
-        ? { resolutionComment: nonBlank(payload.resolutionComment), resolvedAt: sdcClock.now() }
+        ? {
+            resolutionComment: nonBlank(payload.resolutionComment),
+            // UCX-P7 — the outcome is recorded with the resolution (UCX-F17).
+            resolution: isReceiptDisputeOutcome(payload.resolution)
+              ? payload.resolution
+              : undefined,
+            resolvedAt: sdcClock.now()
+          }
         : {})
     }));
   },
@@ -1463,11 +1473,17 @@ bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
   return { ok: true };
 });
 
-bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload }) =>
-  nonBlank(payload.resolutionComment)
-    ? { ok: true }
-    : { ok: false, reason: 'resolving a dispute needs a comment for the supplier' }
-);
+bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload }) => {
+  if (!nonBlank(payload.resolutionComment))
+    return { ok: false, reason: 'resolving a dispute needs a comment for the supplier' };
+  // UCX-P7 — the outcome is a choice from the ruled set, never prose.
+  if (!isReceiptDisputeOutcome(payload.resolution))
+    return {
+      ok: false,
+      reason: 'RECEIPT_DISPUTE_OUTCOME_UNKNOWN: choose one of supplierRight, receiptStands, recount'
+    };
+  return { ok: true };
+});
 
 // — Call-off target (REQ-E09-01, REQ-E09-03, REQ-E09-04) — the hub is the
 //   record. The planner releases, changes and reviews; the supplier confirms and
@@ -6588,6 +6604,9 @@ const TARGETS = {
   poOnHoldDecision: poOnHoldDecisionTarget,
   // PEX-12 [Proposed] — a PO cancellation request; never sent to SAP.
   poCancellation: poCancellationTarget,
+  // UCX-P7 (BL-368) · UCX-D22 — the escalated-PO record: the ask and the four
+  // decisions. The three ending decisions cascade the order's move.
+  poEscalation: poEscalationTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.
@@ -6651,6 +6670,17 @@ export const commandTargetFor = (entity) => TARGETS[entity];
  * @returns {CascadeCommand[]}
  */
 const resolveCascades = (ctx) => {
+  // UCX-P7 (BL-368) · UCX-D22 — the escalation record cascades the order's move
+  // that its decision names; "still waiting" has no link, so nothing fires.
+  if (ctx.entity === 'poEscalation') {
+    const record = poEscalationStore.get(ctx.entityId);
+    if (!record) return [];
+    return cascadesFor(ctx.transitionId).map((link) => ({
+      entity: link.targetEntity,
+      entityId: record.poId,
+      transitionId: link.targetTransitionId
+    }));
+  }
   // Material C2 — a newer trade name replaces the earlier one (resolver in its own module).
   if (ctx.entity === 'materialName') return materialNameCascades(ctx);
   if (ctx.entity === 'goodsReceipt') {

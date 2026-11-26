@@ -12,6 +12,8 @@
 
 /** @import { DaConfirmation } from '../types' */
 import { daConfirmationStore } from './stores/daConfirmationStore';
+import { demandAnticipationStore } from './stores/demandAnticipationStore';
+import { supplierDaRows } from '../../transitions/supplierDaView';
 import { daConfirmationStatus } from '../../transitions/daConfirmationRules';
 /** @import { DaConfirmationStatus } from '../../transitions/daConfirmationRules' */
 
@@ -122,4 +124,58 @@ export function daSohBefore(supplierId, week, materialCodes, stockSoh) {
   for (const code of materialCodes)
     out[code] = stockSoh(supplierId, code) ?? confirmed[code] ?? null;
   return out;
+}
+
+// ── UCX-P4 v2 (BL-365) — THE WEEKLY PAGE'S PUBLICATION IDENTITY ─────────────
+//
+// The weekly page confirms the week through the EXISTING DA confirmation verb
+// (PSC-1 BR-10; no new verb, UCX-D18), so it needs the publication's identity:
+// the planning week, its id, the materials it holds and whether this week is
+// already confirmed. It needs NO demand figures — DRC-D10 keeps the supplier DA
+// view off, and this read deliberately carries no `qty`, `ltp`, `safety` or
+// `totalDa`: the weekly page shows the DA as a carried item, never as a row.
+// That is what keeps the read compatible with the flag while the confirmation
+// verb stays usable.
+/**
+ * `materialCodes`:  The supplier's materials the publication holds, sorted.
+ * `confirmedAt`:  When this week's confirmation was recorded; null when not yet.
+ *
+ * @typedef {{
+ *   readonly week: string;
+ *   readonly publicationId: string;
+ *   readonly publishedAt: string;
+ *   readonly materialCodes: readonly string[];
+ *   readonly confirmedAt: string | null;
+ * }} SupplierWeeklyPublication
+ */
+
+/**
+ * The current publication's identity for one supplier's weekly page, or null
+ * when no publication holds a pair of its materials.
+ * @param {string} supplierId
+ * @returns {SupplierWeeklyPublication | null}
+ */
+export function supplierWeeklyPublication(supplierId) {
+  const own = supplierDaRows(demandAnticipationStore.all()).filter(
+    (r) => r.supplierId === supplierId
+  );
+  if (own.length === 0) return null;
+  // The newest publication (a re-publication of the same week supersedes the
+  // earlier one at read), then only the pairs that publication itself holds.
+  const latest = [...own].sort(
+    (a, b) =>
+      b.publishedAt.localeCompare(a.publishedAt) || b.planningWeek.localeCompare(a.planningWeek)
+  )[0];
+  const codes = [
+    ...new Set(
+      own.filter((r) => r.publicationId === latest.publicationId).map((r) => r.materialCode)
+    )
+  ].sort();
+  return {
+    week: latest.planningWeek,
+    publicationId: latest.publicationId,
+    publishedAt: latest.publishedAt,
+    materialCodes: codes,
+    confirmedAt: daConfirmationFor(supplierId, latest.planningWeek)?.recordedAt ?? null
+  };
 }

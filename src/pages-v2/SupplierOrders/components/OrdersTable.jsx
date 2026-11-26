@@ -23,6 +23,11 @@ import { fmtDate, fmtIDR } from '../utils';
  * @property {{ held: boolean }} asnWizard  Whether the seat holds the Create-ASN wizard's atoms.
  * @property {(po: PurchaseOrder, mode?: PanelMode) => void} openOrderPanel  A row click opens the PO.
  * @property {(po: PurchaseOrder, e: React.MouseEvent) => void} handleRowAction  The row button's act.
+ * @property {ReadonlySet<string>} bulkEligibleIds  UCX-P2 — the ids a bulk
+ *   confirm may tick (the record's own rules decide; the helper derives).
+ * @property {ReadonlySet<string>} bulkTickedIds  The ids ticked in the bar.
+ * @property {(po: PurchaseOrder) => void} onToggleBulk  Ticks or unticks one row.
+ * @property {(po: PurchaseOrder) => string} bulkReasonOf  Why a row is not tickable ('' when it is).
  * @property {TFunction} t
  */
 
@@ -40,6 +45,10 @@ const OrdersTable = ({
   asnWizard,
   openOrderPanel,
   handleRowAction,
+  bulkEligibleIds,
+  bulkTickedIds,
+  onToggleBulk,
+  bulkReasonOf,
   t
 }) => {
   /**
@@ -60,6 +69,9 @@ const OrdersTable = ({
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
+          <TableHeaderCell className="w-8">
+            <span className="sr-only">{t('supplierOrders.bulk.colTick')}</span>
+          </TableHeaderCell>
           <TableHeaderCell>{t('supplierOrders.col.po')}</TableHeaderCell>
           <TableHeaderCell>{t('supplierOrders.col.orderDate')}</TableHeaderCell>
           <TableHeaderCell>{t('supplierOrders.col.requestedDelivery')}</TableHeaderCell>
@@ -75,6 +87,17 @@ const OrdersTable = ({
               className="cursor-pointer"
               onClick={() => openOrderPanel(po, 'detail')}
             >
+              <TableCell className="align-middle" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={bulkTickedIds.has(po.id)}
+                  disabled={!bulkEligibleIds.has(po.id)}
+                  title={bulkReasonOf(po)}
+                  aria-label={t('supplierOrders.bulk.tickRow', { po: po.poNumber })}
+                  onChange={() => onToggleBulk(po)}
+                  data-testid={`po-bulk-tick-${po.id}`}
+                />
+              </TableCell>
               <TableCell>
                 <Data className="text-xs font-bold text-text-primary">{po.poNumber}</Data>
               </TableCell>
@@ -109,7 +132,7 @@ const OrdersTable = ({
           ))}
           {displayPOs.length === 0 && (
             <tr>
-              <td colSpan={7} className="text-center text-sm text-text-tertiary py-10">
+              <td colSpan={8} className="text-center text-sm text-text-tertiary py-10">
                 {t('supplierOrders.table.empty')}
               </td>
             </tr>

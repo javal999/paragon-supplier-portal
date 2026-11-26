@@ -382,6 +382,8 @@ async function realIds() {
     poOnHoldDecision: 'poh-0001',
     // PEX-12 — a PO cancellation request: same shape, store starts empty.
     poCancellation: 'poc-0001',
+    // UCX-P7 — the escalated-PO record: creation-only, its store starts empty.
+    poEscalation: 'esc-0001',
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -716,7 +718,9 @@ describe('POPULATION — nothing below means anything without this', () => {
       'daConfirmation',
       // PEX-8: its store opens empty, so no id can be walked to a state.
       'poOnHoldDecision',
-      'poCancellation'
+      'poCancellation',
+      // UCX-P7: creation-only (the ask and the four decisions), store empty.
+      'poEscalation'
     ]);
     // PTI's capacity gap decision left this list at BL-227: its withdraw verb
     // is a non-creation transition, and the target names the supplier.

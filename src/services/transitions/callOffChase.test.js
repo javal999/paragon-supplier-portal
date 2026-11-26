@@ -266,6 +266,17 @@ describe('AIB-3 BR-04 — an ASN clears the chase; a partial one does not', () =
   });
 });
 
+describe('UCX-P3 (BL-364) — a draft is not a shipment: the chase waits for the submit', () => {
+  it('a Draft ASN leaves the call-off on the chase list; submitting it covers it', () => {
+    const draft = asn({ status: 'Draft' });
+    expect(chaseCoverage(callOff(), [draft])).toBe(0);
+    expect(rows([callOff()], [draft], [], DUE_MON)[0].state).toBe('open');
+    const submitted = asn({ status: 'Submitted' });
+    expect(chaseCoverage(callOff(), [submitted])).toBe(1000);
+    expect(rows([callOff()], [submitted], [], DUE_MON)[0].state).toBe('covered');
+  });
+});
+
 describe('AIB-3 BR-01 — the planner closes it once', () => {
   it('a closure closes the row and it never re-opens, whatever the ASN does', () => {
     const closure = {
