@@ -261,6 +261,7 @@ const GoodsReceiptWorkspace = ({
       {discrepancyAsns.length > 0 && (
         <DiscrepancySection
           discrepancyAsns={discrepancyAsns}
+          goodsReceipts={goodsReceipts}
           resolveAvailability={resolveAvailability}
           resolving={commands.resolveDiscrepancyMutation.isPending}
           onResolve={commands.handleResolveDiscrepancy}

@@ -15,6 +15,8 @@ import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { formatDate } from '@lib/format';
 import { useReceiptDiscrepancyResolve } from '@services/query/commandHooks';
+import { RECEIPT_DISPUTE_OUTCOMES } from '@services/transitions/receiptDiscrepancyRules';
+/** @import { ReceiptDisputeOutcome } from '@services/transitions/receiptDiscrepancyRules' */
 /** @import { GoodsReceipt } from '@services/data/types' */
 import { isOpenDispute } from '@services/transitions/fulfilmentRules';
 
@@ -35,6 +37,8 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
   const availability = useVerbAvailability('receiptdiscrepancy:resolve');
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   const [comment, setComment] = useState('');
+  // UCX-P7 · UCX-F17 — the outcome is a choice, not prose.
+  const [outcome, setOutcome] = useState('');
 
   const disputes = goodsReceipts.filter(isOpenDispute);
   if (disputes.length === 0) return null;
@@ -44,7 +48,11 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
     if (!selected) return;
     const grNumber = selected.grNumber;
     resolve.mutate(
-      { receiptId: selected.id, resolutionComment: comment.trim() },
+      {
+        receiptId: selected.id,
+        resolutionComment: comment.trim(),
+        resolution: /** @type {ReceiptDisputeOutcome} */ (outcome)
+      },
       {
         onSuccess: (res) => {
           if (res.status === 'failed') {
@@ -58,6 +66,7 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
           toast({ variant: 'success', title: t('fc.grDispute.success', { grNumber }) });
           setSelectedId(null);
           setComment('');
+          setOutcome('');
         },
         onError: () => toast({ variant: 'error', title: t('fc.grDispute.failed', { grNumber }) })
       }
@@ -139,7 +148,7 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
             </Button>
             <Button
               variant="outline"
-              disabled={resolve.isPending || comment.trim() === ''}
+              disabled={resolve.isPending || comment.trim() === '' || outcome === ''}
               onClick={doResolve}
             >
               {t('fc.grDispute.confirm')}
@@ -154,6 +163,28 @@ const ReceiptDisputesSection = ({ goodsReceipts }) => {
                 {t('fc.grDispute.panel.supplierSays')}
               </div>
               <p className="text-sm text-text-primary">{selected.discrepancyResponse?.comment}</p>
+            </div>
+            <div>
+              <label
+                htmlFor="gr-dispute-outcome"
+                className="block text-label text-text-tertiary uppercase mb-1"
+              >
+                {t('fc.grDispute.outcome.label')}
+              </label>
+              <select
+                id="gr-dispute-outcome"
+                value={outcome}
+                onChange={(e) => setOutcome(e.target.value)}
+                className="w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action"
+                data-testid="gr-dispute-outcome"
+              >
+                <option value="">{t('fc.grDispute.outcome.choose')}</option>
+                {RECEIPT_DISPUTE_OUTCOMES.map((o) => (
+                  <option key={o} value={o}>
+                    {t(`fc.grDispute.outcome.${o}`)}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label

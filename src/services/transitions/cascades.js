@@ -26,6 +26,18 @@
  */
 export const CASCADES = {
   t_gr_reject: [{ targetEntity: 'advanceShipNotice', targetTransitionId: 't_asn_discrepancy' }],
+  // UCX-P7 (BL-368) · UCX-D22 — the escalated-PO record cascades the order's
+  // move that its decision names. "Still waiting" is deliberately absent: it
+  // records PTI's choice to wait and leaves the order awaiting the supplier.
+  t_po_escalation_supplier_confirmed: [
+    { targetEntity: 'purchaseOrder', targetTransitionId: 't_po_escalation_confirm' }
+  ],
+  t_po_escalation_sourcing_elsewhere: [
+    { targetEntity: 'purchaseOrder', targetTransitionId: 't_po_escalation_source_elsewhere' }
+  ],
+  t_po_escalation_cancelled_in_sap: [
+    { targetEntity: 'purchaseOrder', targetTransitionId: 't_po_escalation_cancel' }
+  ],
   t_gr_partial_approve: [
     { targetEntity: 'advanceShipNotice', targetTransitionId: 't_asn_discrepancy' }
   ],

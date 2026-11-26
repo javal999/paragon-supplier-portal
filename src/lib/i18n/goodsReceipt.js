@@ -298,6 +298,14 @@ export const goodsReceiptEn = {
   'goodsReceipt.discrepancy.col.po': 'PO ref',
   'goodsReceipt.discrepancy.col.carrier': 'Carrier',
   'goodsReceipt.discrepancy.col.status': 'Status',
+  // UCX-P7 (BL-368) · UCX-F17 — the quantities as inspected and the supplier's
+  // answer, on the discrepancy row. [Proposed] labels.
+  'goodsReceipt.discrepancy.qty':
+    '{{material}}: shipped {{received}} · accepted {{accepted}} · rejected {{rejected}}',
+  'goodsReceipt.discrepancy.answer.disputed': 'Supplier disputed: "{{comment}}"',
+  'goodsReceipt.discrepancy.answer.acknowledged': 'Supplier acknowledged: "{{comment}}"',
+  'goodsReceipt.discrepancy.answer.resolved': 'Resolved: "{{comment}}"',
+  'goodsReceipt.discrepancy.answer.none': 'No supplier answer yet',
   'goodsReceipt.discrepancy.action': 'Reconcile',
   'goodsReceipt.discrepancy.resolving': 'Reconciling…',
   'goodsReceipt.discrepancy.done.title': '{{asnNumber}} reconciled',
@@ -538,6 +546,12 @@ export const goodsReceiptId = {
   'goodsReceipt.discrepancy.col.po': 'Ref. PO',
   'goodsReceipt.discrepancy.col.carrier': 'Pengangkut',
   'goodsReceipt.discrepancy.col.status': 'Status',
+  'goodsReceipt.discrepancy.qty':
+    '{{material}}: dikirim {{received}} · diterima {{accepted}} · ditolak {{rejected}}',
+  'goodsReceipt.discrepancy.answer.disputed': 'Pemasok membantah: "{{comment}}"',
+  'goodsReceipt.discrepancy.answer.acknowledged': 'Pemasok mengakui: "{{comment}}"',
+  'goodsReceipt.discrepancy.answer.resolved': 'Selesai: "{{comment}}"',
+  'goodsReceipt.discrepancy.answer.none': 'Belum ada jawaban pemasok',
   'goodsReceipt.discrepancy.action': 'Rekonsiliasi',
   'goodsReceipt.discrepancy.resolving': 'Merekonsiliasi…',
   'goodsReceipt.discrepancy.done.title': '{{asnNumber}} direkonsiliasi',

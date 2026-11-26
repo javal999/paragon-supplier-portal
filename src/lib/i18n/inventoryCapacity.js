@@ -480,6 +480,7 @@ export const inventoryCapacityEn = {
   'inv.capacity.reason.discontinued': 'Discontinued',
   'inv.capacity.reason.other': 'Other',
   // MR-9 BR-05 — the starter reasons for closing an alert (list `alertClose`).
+  'inv.alerts.closeReason.asked-supplier': 'Asked the supplier',
   'inv.alerts.closeReason.calloff-raised': 'Call-off raised or brought forward',
   'inv.alerts.closeReason.po-raised': 'PO raised',
   'inv.alerts.closeReason.supplier-updated': 'Supplier updated its data',
@@ -1214,6 +1215,7 @@ export const inventoryCapacityId = {
   'inv.capacity.reason.force-majeure': 'Keadaan kahar',
   'inv.capacity.reason.discontinued': 'Dihentikan',
   'inv.capacity.reason.other': 'Lainnya',
+  'inv.alerts.closeReason.asked-supplier': 'Menanyakan ke pemasok',
   'inv.alerts.closeReason.calloff-raised': 'Call-off dibuat atau dimajukan',
   'inv.alerts.closeReason.po-raised': 'PO dibuat',
   'inv.alerts.closeReason.supplier-updated': 'Pemasok memperbarui datanya',

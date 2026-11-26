@@ -201,6 +201,9 @@ const LANE_BUNDLES = Object.freeze({
     'pr:reject',
     // REQ-E07-02 — deciding on a supplier's counter-offer to a PO.
     'po:review-response',
+    // UCX-P7 (BL-368) · UCX-D29 — the escalated-PO acts: ask the supplier to
+    // confirm, and record the decision PTI took. Procurement owns the act.
+    'po:escalation',
     // ── B1 · RAISING A SUPPLIER APPLICATION, AND ONLY RAISING ONE ─────────
     // Establishing or extending a commercial relationship with a vendor is
     // this lane's subject matter — it sits upstream of the sourcing, orders
@@ -771,6 +774,14 @@ export const AUTOMATION_ATOMS = Object.freeze([
   'pr:convert',
   'shipment:create',
   'shipment:advance',
+  // UCX-P7 (BL-368) · UCX-D22 — PTI's escalated-PO decision is a HUMAN act
+  // (procurement holds it), and the order's move (Confirmed / Rejected /
+  // Closed) is the automation grant applying the choice the person recorded.
+  // The atom therefore sits in both places, as `invoice:pay` does; a cascade
+  // targets it, so leaving it off this list would make the move refuse at the
+  // role gate and record nothing (the exact silence the fan-out's `catch`
+  // hides).
+  'po:escalation',
   // ⚠️ **`supplierdoc:verify` / `:reject` LEFT THIS LIST AT §82, BECAUSE THEIR
   // TRIGGER CHANGED.** They were here as machine acts of the "verification
   // pipeline" the flow no longer claims to be: both are now `user`-triggered and

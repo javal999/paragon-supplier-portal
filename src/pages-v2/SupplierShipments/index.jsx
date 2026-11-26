@@ -26,7 +26,8 @@ import EmptyState from '@components/ui-v2/EmptyState';
 /** @import { StatusFilter, TabKey } from './const' */
 import { OrderNotFound, PoFilterBanner, drilledPoId } from '../orders/PoDrillFilter';
 import { isConfirmedAndAccepted } from '@services/transitions/callOffRules';
-import { CALL_OFF_PARAM, useAsnWizardAvailability } from '../shipments/asnWizardEntry';
+import { nextFreeSequence } from '@services/transitions/shipmentNotice';
+import { CALL_OFF_PARAM, DRAFT_PARAM, useAsnWizardAvailability } from '../shipments/asnWizardEntry';
 import { poSelection, readWizard } from './utils';
 import { useShipmentsData } from './hooks/useShipmentsData';
 import { useExpandedAsns } from './hooks/useExpandedAsns';
@@ -122,8 +123,45 @@ const SupplierShipments = () => {
   const startedFor = useRef('');
   const startPoId = searchParams.get('tab') === 'create' ? drilledPoId(drill) : null;
   const startCallOffId = searchParams.get(CALL_OFF_PARAM);
+  const startDraftNumber = searchParams.get(DRAFT_PARAM);
+  // UCX-P3 (BL-364) — UCX-D13: the sequence prefills the next free number once
+  // the ASN read resolves, and only while the field is still empty, so a
+  // supplier who cleared it is not overruled.
+  const sequenceSeeded = useRef(false);
+  useEffect(() => {
+    if (sequenceSeeded.current || asnsQuery.isPending) return;
+    if (startDraftNumber !== null) return; // the draft carries its own form
+    sequenceSeeded.current = true;
+    if (wizard.form.sequence.trim() === '') {
+      wizard.updateForm({ sequence: nextFreeSequence(asns) });
+    }
+    // `wizard.updateForm` is a fresh closure each render over a state setter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asnsQuery.isPending, asns, startDraftNumber]);
+  // UCX-P3 (BL-364) — "Complete the delivery details": the wizard opens on the
+  // draft the call-off drawer already created, at its details step, and
+  // completes by submitting THAT draft (never a second ASN).
+  const draftStartedFor = useRef('');
+  useEffect(() => {
+    if (startDraftNumber === null) return;
+    if (asnsQuery.isPending || posQuery.isPending) return;
+    if (draftStartedFor.current === startDraftNumber) return;
+    const asn = asns.find((a) => a.asnNumber === startDraftNumber && a.status === 'Draft');
+    if (!asn) return;
+    draftStartedFor.current = startDraftNumber;
+    sequenceSeeded.current = true;
+    wizard.startFromDraft(
+      asn,
+      SHIPPABLE_POS.find((p) => p.poNumber === asn.poReference),
+      nextFreeSequence(asns)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDraftNumber, asns, SHIPPABLE_POS, asnsQuery.isPending, posQuery.isPending]);
   useEffect(() => {
     if (startPoId === null) return;
+    // UCX-P3 — a draft address already names the PO AND the draft's values;
+    // seeding from the PO's open quantity here would overwrite them (UCX-F9).
+    if (startDraftNumber !== null) return;
     if (posQuery.isPending || asnsQuery.isPending || receiptsQuery.isPending) return;
     if (startCallOffId !== null && callOffsQuery.isPending) return;
     const key = `${startPoId}|${startCallOffId ?? ''}`;
@@ -143,6 +181,7 @@ const SupplierShipments = () => {
   }, [
     startPoId,
     startCallOffId,
+    startDraftNumber,
     SHIPPABLE_POS,
     asns,
     receipts,
@@ -212,15 +251,25 @@ const SupplierShipments = () => {
     );
 
   const { form, updateForm } = wizard;
-  const { selectedPO, selectedCallOff, wizardOpenLines, wizardRead, wizardWarnings, isStepValid } =
-    readWizard({
-      form,
-      shippablePos: SHIPPABLE_POS,
-      asns,
-      declaredBatches,
-      callOffViewList,
-      receipts
-    });
+  const {
+    selectedPO,
+    selectedCallOff,
+    wizardOpenLines,
+    wizardRead,
+    wizardWarnings,
+    sequencesInUse,
+    isStepValid
+  } = readWizard({
+    form,
+    shippablePos: SHIPPABLE_POS,
+    asns,
+    declaredBatches,
+    callOffViewList,
+    receipts,
+    // UCX-P3 — the draft being completed is not its own open quantity and not
+    // its own sequence clash.
+    ...(wizard.draftAsn !== null ? { excludeAsn: wizard.draftAsn } : {})
+  });
 
   /** @type {WizardStep[]} */
   const wizardSteps = [
@@ -255,6 +304,7 @@ const SupplierShipments = () => {
           wizardRead={wizardRead}
           declaredBatches={declaredBatches}
           callOff={selectedCallOff}
+          sequencesInUse={sequencesInUse}
         />
       )
     },

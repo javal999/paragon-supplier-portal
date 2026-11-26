@@ -67,7 +67,11 @@ const AsnLinesEditor = ({
               <th className="text-left py-1 pr-2">
                 <TermLabel term="asnShippedQuantity" />
               </th>
-              <th className="text-left py-1 pr-2">{t('fc.asn.col.batch')}</th>
+              {/* UCX-P3 (BL-364) / UCX-F8 — the batch is required at submit
+                  (BR-04), so the column carries the portal's required mark
+                  like every required field, and the one message under the
+                  table names the material it is missing for. */}
+              <th className="text-left py-1 pr-2 after:content-['_*']">{t('fc.asn.col.batch')}</th>
               <th className="text-left py-1">{t('fc.asn.col.expiry')}</th>
             </tr>
           </thead>
