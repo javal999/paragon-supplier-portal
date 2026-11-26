@@ -30,6 +30,8 @@ import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerR
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
+/** @import { SupplierWeeklyPublication } from './daConfirmationReadModel' */
+import { supplierWeeklyPublication } from './daConfirmationReadModel';
 /** @import { SupplierDaRow } from './demandAnticipationReadModel' */
 import { allCapacityHeadsUp } from './capacityHeadsUpReadModel';
 import { allStrategicBufferInputs } from './strategicBufferInputsReadModel';
@@ -640,6 +642,20 @@ export class MockProcurementService {
     // Scoped by persona, never by page: a supplier reads its own pairs only;
     // PTI reads every pair (what its suppliers would see).
     return { items: applySupplierScope(scope, supplierDemandAnticipation()) };
+  }
+
+  /**
+   * UCX-P4 v2 (BL-365) — the weekly page's publication identity (PSC-1 BR-10):
+   * the planning week, its publication id, the materials it holds and whether
+   * this week is already confirmed. NO demand figures (DRC-D10): the supplier
+   * DA view stays off, and the page carries the DA as an item only. Null for a
+   * buyer scope and for a supplier no publication holds.
+   * @param {QueryScope} scope
+   * @returns {Promise<SupplierWeeklyPublication | null>}
+   */
+  async getSupplierWeeklyPublication(scope) {
+    if (scope.personaType !== 'supplier' || !scope.supplierId) return null;
+    return supplierWeeklyPublication(scope.supplierId);
   }
 
   /**

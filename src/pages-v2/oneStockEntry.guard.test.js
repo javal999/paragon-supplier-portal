@@ -15,9 +15,15 @@
 // THE INVARIANT, DERIVED FROM SOURCE (not from a list of files):
 //   1. the stock-declaration transitions are dispatched from exactly ONE site —
 //      `useInventoryCommand` in commandHooks;
-//   2. that hook's two stock verbs are driven from exactly the Stock page's two
-//      methods — the entry form and the template upload;
-//   3. every surface that leads to a stock record renders that entry form.
+//   2. that hook's two stock verbs are driven by exactly the named surfaces:
+//      the Stock page's two methods (entry form, template upload) and — since
+//      UCX-P4 v2 / UCX-D18, owner 2026-11-25 — the ONE weekly page, which
+//      writes stock on hand and in production through the same hook. The
+//      ruling accepted "a second stock entry point" as the price of one weekly
+//      visit; what stays invariant is the SAME hook, verb and rule set, so the
+//      pinned list is the review step: a fourth driver needs a ruling, not a
+//      quiet append.
+//   3. every OTHER surface that leads to a stock record renders the entry form.
 // Each derivation is controlled by a NAMED member it must find, and probed with
 // the shape the tree really shipped before this batch.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -162,13 +168,16 @@ describe('BL-73 · the stock transitions are dispatched from ONE site', () => {
   });
 });
 
-describe('BL-73 · the stock verbs are driven only by the Stock page’s two methods', () => {
+describe('BL-73 · the stock verbs are driven only by the named surfaces', () => {
   const drivers = FILES.filter((f) => drivesStockVerb(f.text, f.file))
     .map((f) => f.file)
     .sort();
 
-  it('POPULATION + THE TREE — the entry form and the template upload, and nothing else', () => {
+  it('POPULATION + THE TREE — the form, the upload and the one weekly page, and nothing else', () => {
+    // UCX-D18 (owner 2026-11-25): the weekly page writes stock on hand and in
+    // production through the SAME hook and verb. A fourth driver needs a ruling.
     expect(drivers).toEqual([
+      'pages-v2/SupplierWeekly.jsx',
       'pages-v2/inventory/StockEntryPanel.jsx',
       'pages-v2/inventory/StockUploadPanel.jsx'
     ]);
