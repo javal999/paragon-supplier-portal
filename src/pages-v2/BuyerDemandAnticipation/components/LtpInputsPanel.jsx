@@ -43,6 +43,10 @@ const LtpInputsPanel = ({ materials }) => {
     >
       <h2 className="text-base font-semibold text-text-primary mb-1">{t('ltpIn.title')}</h2>
       <p className="text-xs text-text-tertiary mb-3">{t('ltpIn.intro')}</p>
+      {/* UCX-P9 (BL-370) — each series defined where the planner uploads it. */}
+      <p className="text-xs text-text-secondary mb-3" data-testid="ltp-in-series-explained">
+        {t('ltpIn.seriesExplained')}
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end mb-3">
         <div>
           <label htmlFor="ltp-in-material" className={labelClass}>

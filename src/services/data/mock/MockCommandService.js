@@ -30,6 +30,9 @@ import { BASE_CURRENCY, BID_CURRENCIES } from '@lib/currencyPolicy';
 import { normalizeQty } from '@lib/localeNumber';
 /** @import { EnforcementMode, GovernedCheckId } from '@lib/enforcement' */
 import { asActorAttribution, isGovernedCheckId, isReviewDay } from '@lib/enforcement';
+// UCX-P5 — the scheme→category map lives in ONE place, shared with the buyer's
+// renewal ask, because both file a document under a certificate's category.
+import { CERT_TYPE_TO_CATEGORY } from '@lib/complianceView';
 // REQ-E03-01 to REQ-E03-05 — the RFx rules. The verb and the screen read the
 // SAME predicates, so a refusal and a disabled button can never disagree.
 // RFx authoring — typed questions, custom terms, indicative pricing.
@@ -118,6 +121,8 @@ import {
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { asnStore } from './stores/asnStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
+import { poEscalationStore } from './stores/poEscalationStore';
+import { isReceiptDisputeOutcome } from '../../transitions/receiptDiscrepancyRules';
 import { invoiceStore } from './stores/invoiceStore';
 import { rfqStore } from './stores/rfqStore';
 import { quotationStore } from './stores/quotationStore';
@@ -202,6 +207,7 @@ import { capacityDecisionTarget } from './targets/capacityDecision';
 import { poOnHoldDecisionTarget } from './targets/poOnHoldDecision';
 import { poOnHoldStore } from './stores/poOnHoldStore';
 import { poCancellationTarget } from './targets/poCancellation';
+import { poEscalationTarget } from './targets/poEscalation';
 import { allPoOnHold } from './poOnHoldReadModel';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
@@ -1423,7 +1429,14 @@ const receiptDiscrepancyTarget = {
       ...r,
       status: /** @type {ReceiptDiscrepancyStatus} */ (toState),
       ...(toState === 'Resolved'
-        ? { resolutionComment: nonBlank(payload.resolutionComment), resolvedAt: sdcClock.now() }
+        ? {
+            resolutionComment: nonBlank(payload.resolutionComment),
+            // UCX-P7 — the outcome is recorded with the resolution (UCX-F17).
+            resolution: isReceiptDisputeOutcome(payload.resolution)
+              ? payload.resolution
+              : undefined,
+            resolvedAt: sdcClock.now()
+          }
         : {})
     }));
   },
@@ -1460,11 +1473,17 @@ bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_ANSWERABLE, ({ payload }) => {
   return { ok: true };
 });
 
-bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload }) =>
-  nonBlank(payload.resolutionComment)
-    ? { ok: true }
-    : { ok: false, reason: 'resolving a dispute needs a comment for the supplier' }
-);
+bindPolicyHook(POLICY_HOOKS.RECEIPT_DISCREPANCY_RESOLUTION_AUTHORED, ({ payload }) => {
+  if (!nonBlank(payload.resolutionComment))
+    return { ok: false, reason: 'resolving a dispute needs a comment for the supplier' };
+  // UCX-P7 — the outcome is a choice from the ruled set, never prose.
+  if (!isReceiptDisputeOutcome(payload.resolution))
+    return {
+      ok: false,
+      reason: 'RECEIPT_DISPUTE_OUTCOME_UNKNOWN: choose one of supplierRight, receiptStands, recount'
+    };
+  return { ok: true };
+});
 
 // — Call-off target (REQ-E09-01, REQ-E09-03, REQ-E09-04) — the hub is the
 //   record. The planner releases, changes and reviews; the supplier confirms and
@@ -6053,17 +6072,6 @@ const hubSettingTarget = {
  */
 const NOT_STATED = '—';
 
-/** @type {Record<CertType, SupplierDocumentCategory>} */
-const CERT_TYPE_TO_CATEGORY = {
-  HALAL_BPJPH: 'Halal Compliance',
-  HALAL_MUI_LEGACY: 'Halal Compliance',
-  HALAL_FOREIGN: 'Halal Compliance',
-  BPOM: 'BPOM Regulatory',
-  ISO: 'Quality',
-  TAX_LEGAL: 'Tax & Legal',
-  OTHER: 'Other'
-};
-
 /** The declaration assembled from a validated payload. The dispatcher has
  *  already proven every `DECLARATION_FIELDS` member is present and non-empty
  *  (`requiredFields`), so these are reads and not rescues — the one exception is
@@ -6096,62 +6104,108 @@ function declarationFrom(payload, scope) {
   };
 }
 
+/** The COA declaration assembled from a validated payload (UCX-P5). The
+ *  dispatcher has already proven `batch`, `coaNumber`, `issuer` and `issuedOn`
+ *  present and non-empty (`requiredFields`); `scopeText` is optional at the form.
+ * @param {Record<string, unknown>} payload
+ * @param {QueryScope} scope
+ * @returns {import('../types').CoaDeclaration}
+ */
+function coaDeclarationFrom(payload, scope) {
+  /** @param {string} k */
+  const str = (k) =>
+    typeof payload[k] === 'string' ? /** @type {string} */ (payload[k]).trim() : '';
+  return {
+    batch: str('batch'),
+    coaNumber: str('coaNumber'),
+    issuer: str('issuer'),
+    issuedOn: str('issuedOn'),
+    scopeText: str('scopeText'),
+    declaredAt: sdcClock.now(),
+    declaredBy: scope.actor ?? NO_PERSON
+  };
+}
+
 /** @type {CommandTarget} */
 const supplierDocumentTarget = {
   readState: (id) => supplierDocumentStore.get(id)?.status ?? null,
   readScopeOwner: (id) => supplierDocumentStore.get(id)?.supplierId ?? null,
   readEntity: (id) => supplierDocumentStore.get(id) ?? null,
-  applyTransition: (id, toState, payload, scope) => {
-    supplierDocumentStore.update(id, (d) => ({
-      ...d,
-      status: /** @type {SupplierDocumentStatus} */ (toState),
-      // A SUPPLY verb (`_submit`) restates the certificate's details; a REVIEW
-      // verb (`_verify` / `_reject`) must not touch them. Branching on the
-      // presence of a validated `certType` in the payload would be brittle, so
-      // this branches on the DESTINATION — only the supply verbs land in
-      // `Under Review`, and they are the only ones carrying a declaration.
-      ...(toState === 'Under Review'
-        ? (() => {
-            const decl = declarationFrom(payload, scope);
-            return {
-              declaration: decl,
-              // The denormalised display fields follow the declaration, so the
-              // row a reader sees and the declaration behind it cannot disagree.
-              //
-              // ⚠️ **`name` JOINED THIS LIST IN WAVE E, AND ITS ABSENCE WAS
-              // ALREADY A DEFECT ON THE SHIPPED PATH.** Every other display
-              // field was replaced from the declaration and this one was not, so
-              // a document that reached `Under Review` through `_submit` kept a
-              // name describing whatever it used to be — the exact disagreement
-              // the comment above says these lines exist to prevent. Wave E only
-              // made it VISIBLE: a REQUESTED row is minted `NOT_STATED`, so
-              // without this the certificate would still be called — after the
-              // supplier had named it. `create` writes `decl.certNumber` for the
-              // volunteered path; this is the same rule for the requested one.
-              name: decl.certNumber,
-              issuedBy: decl.issuer,
-              issuedDate: decl.issuedOn,
-              expiryDate: decl.expiresOn,
-              linkedTo: decl.scopeText,
-              category: CERT_TYPE_TO_CATEGORY[decl.certType]
-            };
-          })()
-        : {}),
-      // ⚠️ THE §80 REFUSAL TRIO, WRITTEN TOGETHER OR NOT AT ALL. `rejectionReason`
-      // is a `requiredField` on the verb, so the dispatcher has already refused a
-      // blank one — the surface cannot record an accusation with no reason, and
-      // the timestamp and actor are minted here rather than accepted.
-      ...(toState === 'Rejected'
-        ? {
-            rejectionReason: String(payload.rejectionReason).trim(),
-            rejectedAt: sdcClock.now(),
-            rejectedBy: scope.actor ?? NO_PERSON
-          }
-        : {}),
-      // Material G1 (plan AD-2) — when the document became valid, from the hub
-      // clock. The qualification history replays from it.
-      ...(toState === 'Valid' ? { verifiedAt: sdcClock.now() } : {})
-    }));
+  applyTransition: (id, toState, payload, scope, transitionId) => {
+    supplierDocumentStore.update(id, (d) => {
+      // ── UCX-P5 · THE COA ANSWER, AND ITS OWN RECORD SHAPE ────────────────
+      // Branch on the VERB (`transitionId`), not on `toState`: this verb and
+      // the certificate verbs share the destination, and the payload shapes
+      // are disjoint by kind. The kind guards on the flow refuse a mismatch
+      // before this branch is reachable.
+      if (transitionId === 't_supplierdoc_answer_coa') {
+        const coa = coaDeclarationFrom(payload, scope);
+        return {
+          ...d,
+          status: /** @type {SupplierDocumentStatus} */ (toState),
+          coaDeclaration: coa,
+          // The denormalised display fields follow the declaration, so the row
+          // a reader sees and the record behind it cannot disagree (the
+          // certificate verbs' rule, one shape over).
+          name: coa.coaNumber,
+          issuedBy: coa.issuer,
+          issuedDate: coa.issuedOn,
+          // A COA records a batch, not a validity term.
+          expiryDate: null,
+          linkedTo: coa.scopeText === '' ? d.category : coa.scopeText
+        };
+      }
+      return {
+        ...d,
+        status: /** @type {SupplierDocumentStatus} */ (toState),
+        // A SUPPLY verb (`_submit`) restates the certificate's details; a REVIEW
+        // verb (`_verify` / `_reject`) must not touch them. Branching on the
+        // presence of a validated `certType` in the payload would be brittle, so
+        // this branches on the DESTINATION — only the supply verbs land in
+        // `Under Review`, and they are the only ones carrying a declaration.
+        ...(toState === 'Under Review'
+          ? (() => {
+              const decl = declarationFrom(payload, scope);
+              return {
+                declaration: decl,
+                // The denormalised display fields follow the declaration, so the
+                // row a reader sees and the declaration behind it cannot disagree.
+                //
+                // ⚠️ **`name` JOINED THIS LIST IN WAVE E, AND ITS ABSENCE WAS
+                // ALREADY A DEFECT ON THE SHIPPED PATH.** Every other display
+                // field was replaced from the declaration and this one was not, so
+                // a document that reached `Under Review` through `_submit` kept a
+                // name describing whatever it used to be — the exact disagreement
+                // the comment above says these lines exist to prevent. Wave E only
+                // made it VISIBLE: a REQUESTED row is minted `NOT_STATED`, so
+                // without this the certificate would still be called — after the
+                // supplier had named it. `create` writes `decl.certNumber` for the
+                // volunteered path; this is the same rule for the requested one.
+                name: decl.certNumber,
+                issuedBy: decl.issuer,
+                issuedDate: decl.issuedOn,
+                expiryDate: decl.expiresOn,
+                linkedTo: decl.scopeText,
+                category: CERT_TYPE_TO_CATEGORY[decl.certType]
+              };
+            })()
+          : {}),
+        // ⚠️ THE §80 REFUSAL TRIO, WRITTEN TOGETHER OR NOT AT ALL. `rejectionReason`
+        // is a `requiredField` on the verb, so the dispatcher has already refused a
+        // blank one — the surface cannot record an accusation with no reason, and
+        // the timestamp and actor are minted here rather than accepted.
+        ...(toState === 'Rejected'
+          ? {
+              rejectionReason: String(payload.rejectionReason).trim(),
+              rejectedAt: sdcClock.now(),
+              rejectedBy: scope.actor ?? NO_PERSON
+            }
+          : {}),
+        // Material G1 (plan AD-2) — when the document became valid, from the hub
+        // clock. The qualification history replays from it.
+        ...(toState === 'Valid' ? { verifiedAt: sdcClock.now() } : {})
+      };
+    });
   },
   // ⚠️ **`requireCreationOwner` IS THE HALF THE DECLARE PATH NEVER NEEDED, AND
   // THE REQUEST PATH CANNOT SHIP WITHOUT.** Until `t_supplierdoc_request` this
@@ -6238,6 +6292,19 @@ const supplierDocumentTarget = {
         // joins this field across rows, so — there would render as noise where
         // a true statement fits.
         linkedTo: /** @type {SupplierDocumentCategory} */ (payload.category),
+        // ── UCX-P5 · A REQUEST KIND WITH ITS OWN FIELDS (UCX-D23) ──────────
+        // The payload may name what it asks for: `COA` plus the batch, or
+        // `CERTIFICATE` (the default every row minted before this field was).
+        // Only a COA ask carries a batch; a batch on a certificate ask is
+        // dropped rather than stored as a field nothing would read.
+        ...(payload.requestKind === 'COA' || payload.requestKind === 'CERTIFICATE'
+          ? { requestKind: payload.requestKind }
+          : {}),
+        ...(payload.requestKind === 'COA' &&
+        typeof payload.batch === 'string' &&
+        payload.batch.trim() !== ''
+          ? { requestBatch: payload.batch.trim() }
+          : {}),
         // Absent rather than blank: `notes` is optional and the surface renders
         // it conditionally, so an empty string would draw an empty warning line.
         ...(note === '' ? {} : { notes: note })
@@ -6537,6 +6604,9 @@ const TARGETS = {
   poOnHoldDecision: poOnHoldDecisionTarget,
   // PEX-12 [Proposed] — a PO cancellation request; never sent to SAP.
   poCancellation: poCancellationTarget,
+  // UCX-P7 (BL-368) · UCX-D22 — the escalated-PO record: the ask and the four
+  // decisions. The three ending decisions cascade the order's move.
+  poEscalation: poEscalationTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.
@@ -6600,6 +6670,17 @@ export const commandTargetFor = (entity) => TARGETS[entity];
  * @returns {CascadeCommand[]}
  */
 const resolveCascades = (ctx) => {
+  // UCX-P7 (BL-368) · UCX-D22 — the escalation record cascades the order's move
+  // that its decision names; "still waiting" has no link, so nothing fires.
+  if (ctx.entity === 'poEscalation') {
+    const record = poEscalationStore.get(ctx.entityId);
+    if (!record) return [];
+    return cascadesFor(ctx.transitionId).map((link) => ({
+      entity: link.targetEntity,
+      entityId: record.poId,
+      transitionId: link.targetTransitionId
+    }));
+  }
   // Material C2 — a newer trade name replaces the earlier one (resolver in its own module).
   if (ctx.entity === 'materialName') return materialNameCascades(ctx);
   if (ctx.entity === 'goodsReceipt') {

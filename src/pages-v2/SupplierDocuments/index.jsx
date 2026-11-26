@@ -249,7 +249,8 @@ const SupplierDocuments = () => {
         filtered={filtered}
         nowIso={nowIso}
         openUploadFor={panel.openUploadFor}
-        setLessonOpen={setLessonOpen}
+        openAnswerFor={panel.openAnswerFor}
+        openRenewFor={panel.openRenewFor}
         toast={toast}
       />
 
@@ -264,6 +265,8 @@ const SupplierDocuments = () => {
         uploaded={panel.uploaded}
         form={panel.form}
         setForm={panel.setForm}
+        coaForm={panel.coaForm}
+        setCoaForm={panel.setCoaForm}
         supplyAvailability={panel.supplyAvailability}
         pending={panel.pending}
         closePanel={panel.closePanel}

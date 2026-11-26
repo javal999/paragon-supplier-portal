@@ -87,6 +87,52 @@ bindPolicyHook(POLICY_HOOKS.SUPPLIERDOC_REFUSAL_AUTHORED, ({ payload }) => {
   return { ok: true };
 });
 
+// ── UCX-P5 · ANSWER A DOCUMENT REQUEST BY ITS TYPE ──────────────────────────
+//
+// The kind is a property of the REQUEST, and `requiredFields` cannot carry
+// this rule: the two forms require different fields, so the payload can always
+// look complete for the wrong verb. The guard reads the ENTITY
+// (`target.readEntity`) and compares its stored `requestKind` — the ask's own
+// kind decides which record shape is legal.
+//
+// `null`/`undefined` means a certificate request: every row minted before the
+// kind existed was answered by the one certificate form.
+/**
+ * @param {unknown} entity
+ * @returns {string | undefined}
+ */
+function requestKindOf(entity) {
+  if (entity === null || typeof entity !== 'object') return undefined;
+  const kind = /** @type {{ requestKind?: unknown }} */ (entity).requestKind;
+  return typeof kind === 'string' ? kind : undefined;
+}
+
+bindPolicyHook(POLICY_HOOKS.SUPPLIERDOC_COA_REQUEST, ({ entityId, target }) => {
+  const kind = requestKindOf(target.readEntity(entityId));
+  if (kind !== 'COA') {
+    return {
+      ok: false,
+      reason:
+        'this document was not requested as a COA — a COA answer needs a COA request, ' +
+        'and a certificate request is answered with the certificate form'
+    };
+  }
+  return { ok: true };
+});
+
+bindPolicyHook(POLICY_HOOKS.SUPPLIERDOC_CERTIFICATE_REQUEST, ({ entityId, target }) => {
+  const kind = requestKindOf(target.readEntity(entityId));
+  if (kind === 'COA') {
+    return {
+      ok: false,
+      reason:
+        'this document was requested as a COA — the certificate form cannot record it, ' +
+        'because a COA carries a batch and no certificate scheme'
+    };
+  }
+  return { ok: true };
+});
+
 // ── §68 · PR APPROVE — THE DECIDER IS NAMED, AND NOT BY THE CALLER ──────────
 //
 // ⚠️ **THIS IS C10 §6.2's SECOND HALF, AND IT IS THE FIRST IMPLEMENTATION OF

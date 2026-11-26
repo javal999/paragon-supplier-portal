@@ -62,6 +62,26 @@ export const processFlowPurposeEn = {
     'Everything ordered has physically arrived. Buying stops chasing and finance starts expecting a bill.',
   'processFlows.purpose.t_po_close':
     'The order is finished with — received, billed and settled — and stops appearing in anybody’s open work.',
+  // UCX-P7 (BL-368) · UCX-D22 — the escalated order. The texts avoid every
+  // machine token the process-flows page renders beside them (PF-2).
+  'processFlows.purpose.entity.poEscalation':
+    'What PTI did about an order the supplier did not answer by its deadline: the ask, and the outcome the planner chose.',
+  'processFlows.purpose.t_po_ask_confirm':
+    'PTI asks the supplier to confirm an order that has had no answer past its deadline; the ask is kept on record.',
+  'processFlows.purpose.t_po_escalation_supplier_confirmed':
+    'PTI writes down that the supplier answered outside the hub; the order is confirmed.',
+  'processFlows.purpose.t_po_escalation_sourcing_elsewhere':
+    'PTI writes down that the need is sourced another way.',
+  'processFlows.purpose.t_po_escalation_cancelled_in_sap':
+    'PTI writes down that the order is cancelled in SAP.',
+  'processFlows.purpose.t_po_escalation_still_waiting':
+    'PTI writes down that it chooses to wait for the supplier; the order stays awaiting an answer.',
+  'processFlows.purpose.t_po_escalation_confirm':
+    'The planner wrote down that the supplier said yes outside the hub, so the order moves forward as agreed.',
+  'processFlows.purpose.t_po_escalation_source_elsewhere':
+    'The planner wrote down that the need is found another way, so the order stops and the need moves to a new source.',
+  'processFlows.purpose.t_po_escalation_cancel':
+    'The planner wrote down that the order is cancelled in SAP, so the hub stops tracking it.',
 
   // ── advanceShipNotice ──────────────────────────────────────────────────────
   'processFlows.purpose.entity.advanceShipNotice':
@@ -287,6 +307,10 @@ export const processFlowPurposeEn = {
     'The supplier states the details of a certificate nobody asked for — which scheme, which number, who granted it, when it runs out — so a certificate Paragon did not know to ask for can still reach the people who check it. No file is transmitted; what is recorded is what the supplier says.',
   'processFlows.purpose.t_supplierdoc_submit':
     'The supplier states the details of what was asked for. From here the delay is Paragon’s, not theirs.',
+  'processFlows.purpose.t_supplierdoc_answer_coa':
+    'Paragon asked for a certificate of analysis for a named lot, and the supplier answers with what that paper carries — which lot, which number, who issued it and when — so the record states the same facts as the document in hand.',
+  'processFlows.purpose.t_supplierdoc_renew':
+    'A certificate that is running out is renewed from its own record: the earlier details are filled in, the supplier states the new paper, and the existing record waits for Paragon to confirm it.',
   'processFlows.purpose.t_supplierdoc_verify':
     'Somebody has confirmed the paper is genuine and current. Only now does it count for anything.',
   'processFlows.purpose.t_supplierdoc_reject':
@@ -740,6 +764,24 @@ export const processFlowPurposeId = {
     'Seluruh pesanan sudah tiba secara fisik. Pembelian berhenti mengejar dan keuangan mulai menunggu tagihan.',
   'processFlows.purpose.t_po_close':
     'Pesanan ini selesai — sudah diterima, ditagih, dan dibayar — dan tidak lagi muncul dalam daftar pekerjaan siapa pun.',
+  'processFlows.purpose.entity.poEscalation':
+    'Catatan tentang apa yang PTI lakukan atas pesanan yang tidak dijawab pemasok sampai tenggatnya: permintaan, dan hasil yang dipilih perencana.',
+  'processFlows.purpose.t_po_ask_confirm':
+    'PTI meminta pemasok mengonfirmasi pesanan yang belum dijawab melewati tenggatnya; permintaan itu tercatat.',
+  'processFlows.purpose.t_po_escalation_supplier_confirmed':
+    'PTI menuliskan bahwa pemasok menjawab di luar hub; pesanan dikonfirmasi.',
+  'processFlows.purpose.t_po_escalation_sourcing_elsewhere':
+    'PTI menuliskan bahwa kebutuhan dicari dari sumber lain.',
+  'processFlows.purpose.t_po_escalation_cancelled_in_sap':
+    'PTI menuliskan bahwa pesanan dibatalkan di SAP.',
+  'processFlows.purpose.t_po_escalation_still_waiting':
+    'PTI menuliskan bahwa ia memilih menunggu pemasok; pesanan tetap menunggu jawaban.',
+  'processFlows.purpose.t_po_escalation_confirm':
+    'Perencana menuliskan bahwa pemasok menyetujui di luar hub, sehingga pesanan berjalan sesuai kesepakatan.',
+  'processFlows.purpose.t_po_escalation_source_elsewhere':
+    'Perencana menuliskan bahwa kebutuhan diambil dari cara lain, sehingga pesanan berhenti dan kebutuhan pindah ke sumber baru.',
+  'processFlows.purpose.t_po_escalation_cancel':
+    'Perencana menuliskan bahwa pesanan dibatalkan di SAP, sehingga hub berhenti melacaknya.',
 
   // ── advanceShipNotice ──────────────────────────────────────────────────────
   'processFlows.purpose.entity.advanceShipNotice':
@@ -965,6 +1007,10 @@ export const processFlowPurposeId = {
     'Pemasok menyatakan rincian sertifikat yang tidak diminta siapa pun — skema, nomor, penerbit, tanggal — sehingga sertifikat yang tidak Paragon ketahui pun tetap sampai ke pihak yang memeriksanya. Tidak ada berkas yang dikirim; yang dicatat adalah rinciannya.',
   'processFlows.purpose.t_supplierdoc_submit':
     'Pemasok menyatakan rincian atas apa yang diminta. Sejak titik ini keterlambatan ada di pihak Paragon, bukan pada mereka.',
+  'processFlows.purpose.t_supplierdoc_answer_coa':
+    'Paragon meminta sertifikat analisis untuk lot tertentu, dan pemasok menjawab dengan isi berkas itu — lot, nomor, penerbit, dan tanggalnya — sehingga catatan memuat fakta yang sama dengan dokumen yang dipegang.',
+  'processFlows.purpose.t_supplierdoc_renew':
+    'Sertifikat yang hampir habis diperbarui dari catatannya sendiri: rincian lama terisi, pemasok menyatakan berkas baru, dan catatan yang ada menunggu konfirmasi Paragon.',
   'processFlows.purpose.t_supplierdoc_verify':
     'Ada yang sudah memastikan berkasnya asli dan masih berlaku. Baru sekaranglah ia berarti sesuatu.',
   'processFlows.purpose.t_supplierdoc_reject':

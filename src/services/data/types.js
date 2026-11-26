@@ -1696,6 +1696,40 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  */
 
 /**
+ * What PTI asked for. A COA request carries its own fields (batch) and is
+ * answered with the COA form; a certificate request is answered with the
+ * certificate declaration. Absent means a certificate request — every row
+ * minted before this field existed was one.
+ *
+ * UCX-P5 (BL-366) · UCX-D23: *"A COA request carries its own form fields
+ * (batch, number, issuer, date)."* [Proposed] the model shape: the BACKLOG row
+ * names "a request kind with its own fields (backend)" as the dependency.
+ */
+/** @typedef {'COA' | 'CERTIFICATE'} SupplierDocumentRequestKind */
+
+/**
+ * §UCX-P5 — what a supplier states about a certificate of analysis. A SECOND
+ * RECORD SHAPE, deliberately (P2's recorded risk): a COA carries a batch, a
+ * number, an issuer and a date, and no certificate scheme. Storing it in
+ * `CertificateDeclaration` would force a scheme the supplier cannot know.
+ *
+ * ⚠️ **THE BATCH IS PART OF THE DECLARATION, NOT ONLY OF THE ASK.** The form
+ * prefills it from `SupplierDocument.requestBatch` and the supplier may correct
+ * it — the certificate in hand is the authority, and the kit's K8 watches
+ * whether a careless reader sends the ask's batch against the card.
+ *
+ * @typedef {object} CoaDeclaration
+ * @property {string} batch The batch the COA covers, as the supplier states it.
+ * @property {string} coaNumber
+ * @property {string} issuer
+ * @property {string} issuedOn
+ * @property {string} scopeText The supplier's own words; optional at the form.
+ * @property {string} declaredAt Store-assigned, never payload-supplied.
+ * @property {ActorAttribution} declaredBy Always `UNATTRIBUTED` in this tree, as
+ *   `CertificateDeclaration.declaredBy` is (C10 §5.2 / D-ID-3).
+ */
+
+/**
  * @typedef {object} SupplierDocument
  * @property {string} id
  * @property {string} supplierId
@@ -1734,6 +1768,16 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {CertificateDeclaration} [declaration] The certificate details the supplier stated, present only on a DECLARED
  *   document. See `CertificateDeclaration` — the whole object is optional and
  *   its fields are not, so half a declaration cannot exist.
+ * @property {SupplierDocumentRequestKind} [requestKind] What PTI asked for, when the row is a REQUEST someone
+ *   opened. Absent on every seeded row that is not a request and on every
+ *   request minted before this field existed — absent means a certificate
+ *   request, which is what the one-form path answered. Read by the supplier
+ *   row (which form the "Answer" control opens) and the spine's kind guards.
+ * @property {string} [requestBatch] The batch a COA request names, carried from the ask to the answer's form
+ *   prefill. Present only with `requestKind: 'COA'`.
+ * @property {CoaDeclaration} [coaDeclaration] The COA details the supplier stated, present only on a document
+ *   answered through the COA form. Sibling of `declaration`, not a member of it:
+ *   the two record shapes carry different fields (P2's recorded risk).
  */
 
 // ─── Invoice — DR-7: ONE canonical machine + persona projections ──────────────
@@ -3311,6 +3355,11 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   supplier × material, the latest publication's figures per horizon week, read only. Built ahead and
  *   switched off (DRC-D10, `SUPPLIER_DA_VIEW_ENABLED`): while off, every scope reads an empty page. On,
  *   a supplier reads its own pairs only and PTI every pair.
+ * @property {(scope: QueryScope) => Promise<import('./mock/daConfirmationReadModel').SupplierWeeklyPublication | null>} getSupplierWeeklyPublication
+ *   UCX-P4 v2 (BL-365) — the weekly page's publication identity (PSC-1 BR-10): the planning
+ *   week, its publication id, the materials it holds and whether this week is already confirmed.
+ *   NO demand figures (DRC-D10): the supplier DA view stays off. Null for a buyer scope and for a
+ *   supplier no publication holds.
  * @property {(scope: QueryScope) => Promise<Page<DaHistoryRow>>} getDemandAnticipationHistory DRC-3 (BL-189) — every demand anticipation publication ever recorded,
  *   one row per publication × supplier × material, with its stamped figure, its
  *   carry-over origin and the delayed call-offs it reflects (DRC-5). PTI only:
@@ -3336,6 +3385,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   planner reads every supplier; a supplier reads only its own rows (scoped in the service).
  * @property {(scope: QueryScope) => Promise<Page<PoOnHoldRow>>} getPoOnHold PEX-7 / PEX-8 — the PO On Hold lines: open PO quantity DA does not absorb, per supplier × material,
  *   with the grace period and the decision. The planner reads every supplier; a supplier reads only its own (scoped in the service).
+ * @property {(scope: QueryScope, poId: string) => Promise<Page<import('./mock/stores/poEscalationStore').PoEscalationRecord>>} getPoEscalationRecords UCX-P7 (BL-368) — the acts PTI recorded on one escalated PO
+ *   (the ask and the four decisions). Scoped in the service: the panel is the buyer's.
  * @property {(scope: QueryScope, windowWeeks?: ReliabilityWindowWeeks) => Promise<Page<SupplierReliabilityView>>} getSupplierReliability REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
  *   trailing window, computed by the forecast engine on its (SIMULATED)
  *   dataset. The planner sees every supplier; a supplier sees ONLY its own row,

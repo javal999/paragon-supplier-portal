@@ -182,7 +182,7 @@ describe('WAVE E · the act is reachable, and withheld as a notice', () => {
     expect(screen.queryByTestId('handoff-supplierdoc-request')).not.toBeInTheDocument();
   });
 
-  it('⚠️ (surface × verb × ENTRANCE) — the commit has exactly ONE door, derived from source', () => {
+  it('⚠️ (surface × verb × ENTRANCE) — every commit site sits behind a HELD-gated panel', () => {
     // ⚠️ **A RENDERED ABSENCE CANNOT PROVE THIS, AND SAYING SO IS THE POINT.**
     // The obvious test — render the withheld seat and assert the panel's
     // controls are missing — PASSES FOR THE WRONG REASON: `SidePanel` renders
@@ -204,17 +204,21 @@ describe('WAVE E · the act is reachable, and withheld as a notice', () => {
     expect(src).toContain('useSupplierDocumentRequest');
     expect(src).not.toContain('useSupplierDocumentNonexistentVerb');
 
-    // ONE way to open the mode, and ONE site that commits it.
+    // The GENERIC ask: one way to open the mode, one site that commits it.
     expect(src.match(/setRequestOpen\(true\)/g)).toHaveLength(1);
     expect(src.match(/void runRequest\(\)/g)).toHaveLength(1);
-    // …and the mutation itself is dispatched from exactly one place.
-    expect(src.match(/requestDoc\.mutateAsync/g)).toHaveLength(1);
+    // ⚠️ UCX-P5 ADDED A SECOND ENTRANCE TO THE SAME VERB — the renewal ask from
+    // an expiring row — so the commit sites are now TWO, and both are named
+    // here rather than left as a count that could drift.
+    expect(src.match(/requestDoc\.mutateAsync/g)).toHaveLength(2);
+    expect(src.match(/void runAsk\(\)/g)).toHaveLength(1);
+    expect(src).toMatch(/canAskRenewal=\{request\.kind === 'held'\}/);
 
     // BOTH doors sit inside the authority guard: the header's opener is in the
-    // `held` branch of the primary-slot ternary, and the panel that carries the
+    // `held` branch of the primary-slot ternary, and EACH panel that carries a
     // committing button is mounted only under `request.kind === 'held'`.
     expect(src).toMatch(/request\.kind === 'held'\s*\n?\s*\? \{/);
-    expect(src).toMatch(/\{request\.kind === 'held' && \(\s*\n\s*<SidePanel/);
+    expect(src.match(/\{request\.kind === 'held' && \(\s*\n\s*<SidePanel/g)).toHaveLength(2);
   });
 
   it('and the withheld seat reaches none of the panel’s controls', () => {

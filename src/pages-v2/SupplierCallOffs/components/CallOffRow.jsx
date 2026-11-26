@@ -18,14 +18,29 @@ import FulfilBy from './FulfilBy';
  * confirmation with its confirm-by deadline and tolerance tags, delivery, and
  * the Respond/Open button. Moved out of `SupplierCallOffs.jsx` by the Phase 5
  * page split (no behaviour change).
- * @type {React.FC<{ v: CallOffView; match: React.ComponentProps<typeof MaterialMatchReason>['match']; onOpen: (id: string) => void }>}
+ * UCX-P2 — `bulk` adds the select-for-confirm cell (nothing starts ticked;
+ * only a released call-off with no PTI delay waiting is tickable).
+ * @type {React.FC<{ v: CallOffView; match: React.ComponentProps<typeof MaterialMatchReason>['match']; onOpen: (id: string) => void; bulk?: { ticked: boolean; eligible: boolean; reason: string; onToggle: () => void } }>}
  */
-const CallOffRow = ({ v, match, onOpen }) => {
+const CallOffRow = ({ v, match, onOpen, bulk }) => {
   const { t } = useTranslation();
   const c = v.callOff;
   const needsAnswer = c.status === 'Awaiting Confirmation';
   return (
     <TableRow data-testid={`supplier-calloff-row-${c.id}`}>
+      <TableCell className="align-middle">
+        {bulk ? (
+          <input
+            type="checkbox"
+            checked={bulk.ticked}
+            disabled={!bulk.eligible}
+            title={bulk.reason}
+            aria-label={t('co.bulk.tickRow', { number: c.callOffNumber })}
+            onChange={bulk.onToggle}
+            data-testid={`calloff-bulk-tick-${c.id}`}
+          />
+        ) : null}
+      </TableCell>
       <TableCell>
         <Data as="div" className="text-xs font-bold text-text-primary whitespace-nowrap">
           {c.callOffNumber}

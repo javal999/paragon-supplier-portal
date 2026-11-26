@@ -15,6 +15,7 @@ import {
   suppliersWithAssignments
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
+import { poEscalationStore } from './stores/poEscalationStore';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
@@ -29,6 +30,8 @@ import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerR
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
+/** @import { SupplierWeeklyPublication } from './daConfirmationReadModel' */
+import { supplierWeeklyPublication } from './daConfirmationReadModel';
 /** @import { SupplierDaRow } from './demandAnticipationReadModel' */
 import { allCapacityHeadsUp } from './capacityHeadsUpReadModel';
 import { allStrategicBufferInputs } from './strategicBufferInputsReadModel';
@@ -642,6 +645,20 @@ export class MockProcurementService {
   }
 
   /**
+   * UCX-P4 v2 (BL-365) — the weekly page's publication identity (PSC-1 BR-10):
+   * the planning week, its publication id, the materials it holds and whether
+   * this week is already confirmed. NO demand figures (DRC-D10): the supplier
+   * DA view stays off, and the page carries the DA as an item only. Null for a
+   * buyer scope and for a supplier no publication holds.
+   * @param {QueryScope} scope
+   * @returns {Promise<SupplierWeeklyPublication | null>}
+   */
+  async getSupplierWeeklyPublication(scope) {
+    if (scope.personaType !== 'supplier' || !scope.supplierId) return null;
+    return supplierWeeklyPublication(scope.supplierId);
+  }
+
+  /**
    * @param {QueryScope} scope
    * @returns {Promise<Page<DaHistoryRow>>}
    */
@@ -819,6 +836,18 @@ export class MockProcurementService {
     // first time anyone looks (no timer; the same pattern as the command layer).
     await runDuePoOnHoldExecutions();
     return { items: applySupplierScope(scope, allPoOnHold()) };
+  }
+
+  /**
+   * UCX-P7 (BL-368) · UCX-D22 — the escalation records made against one PO,
+   * oldest first (the ask and PTI's decisions). A supplier seat reads only its
+   * own rows through `applySupplierScope`; the panel is the buyer's.
+   * @param {QueryScope} scope
+   * @param {string} poId
+   * @returns {Promise<Page<import('./stores/poEscalationStore').PoEscalationRecord>>}
+   */
+  async getPoEscalationRecords(scope, poId) {
+    return { items: [...applySupplierScope(scope, poEscalationStore.forPo(poId))] };
   }
 
   /**

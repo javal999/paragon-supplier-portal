@@ -251,6 +251,19 @@ const LABEL_PAD_X = 8;
 export const LABEL_H = 16;
 
 /**
+ * The fan pitch for a DIRECT pair, and why it is not the 18 the other routes use.
+ *
+ * ⚠️ **A DIRECT EDGE'S LABEL SITS AT THE CUBIC'S MIDPOINT, SO IT MOVES THREE
+ * QUARTERS OF THE BOW.** Both control points shift by the offset, and the
+ * midpoint is `(P0 + 3·P1 + 3·P2 + P3)/8` — a pitch of 18 therefore separated
+ * two direct labels by 13.5 px, less than `LABEL_H`, and the pair clashed the
+ * moment a second verb joined one state pair (`supplierDocument`'s
+ * `Awaiting Upload → Under Review`, UCX-P5). 24 puts the label centres a full
+ * pitch-and-a-clear-line apart, which is what this pitch is FOR.
+ */
+const DIRECT_FAN_PITCH = Math.ceil((LABEL_H + 2) / 0.75);
+
+/**
  * The box a verb label covers, centred on its anchor as the diagram draws it.
  * @param {LaidOutEdge} laid
  * @returns {{ left: number; right: number; top: number; bottom: number }}
@@ -533,7 +546,7 @@ export function layoutFlow(view, { separate = true } = {}) {
       const y1 = midY(from);
       const x2 = target.x;
       const y2 = midY(target);
-      const bow = fanOffset(twin, twins, 18);
+      const bow = fanOffset(twin, twins, DIRECT_FAN_PITCH);
       const dx = COL_GAP * 0.55;
       const c1y = y1 + bow;
       const c2y = y2 + bow;
@@ -577,7 +590,13 @@ export function layoutFlow(view, { separate = true } = {}) {
         // overlapped into "deli close" on the purchase order before this.
         // Sitting a third of the way down separates them without moving the
         // label off its own line.
-        labelY: y1 + (y2 - y1) * 0.32,
+        //
+        // ⚠️ **AND TWO BRACKETS BETWEEN THE SAME PAIR SHARE THAT Y**, so their
+        // lanes differ by GUTTER (14 px) while the labels are wider than that:
+        // they overlapped the day a second verb joined one pair (UCX-P5's
+        // `supplierDocument`: `submit` and `answer_coa`). The pair's fan pushes
+        // them apart along their own vertical runs, as the self-loops do.
+        labelY: y1 + (y2 - y1) * 0.32 + fanOffset(twin, twins, LABEL_H + 2),
         labelTrack: { kind: 'segment', x: gutterX + 4, y1, y2 }
       };
     }

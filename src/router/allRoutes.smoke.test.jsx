@@ -98,6 +98,7 @@ import SupplierShipments from '@pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '@pages-v2/SupplierGoodsReceipts';
 import SupplierInvoicesV2 from '@pages-v2/SupplierInvoices';
 import SupplierInventoryV2 from '@pages-v2/SupplierInventory';
+import SupplierWeekly from '@pages-v2/SupplierWeekly';
 import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
@@ -667,6 +668,13 @@ const ROUTES = [
     pattern: '/supplier/inventory',
     at: '/supplier/inventory',
     element: <SupplierInventoryV2 />,
+    identity: SUPPLIER
+  },
+  {
+    name: 'supplier/weekly',
+    pattern: '/supplier/weekly',
+    at: '/supplier/weekly',
+    element: <SupplierWeekly />,
     identity: SUPPLIER
   },
   {

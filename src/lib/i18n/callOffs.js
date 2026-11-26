@@ -21,6 +21,23 @@ export const callOffsEn = {
   'co.pti.filter.empty': 'No call-offs match this filter right now.',
   'co.sup.filter.toConfirm': 'Awaiting your confirmation',
   'co.sup.filter.dueSoon': 'Due soon, no notice',
+  // UCX-P1 (BL-362) — the To do's missing-ASN row opens this filter. [Proposed]
+  'co.sup.filter.missingAsn': 'Missing ASN',
+  // UCX-P2 v2 (BL-363) — the bulk "confirm as requested" bar on the supplier's
+  // Call-offs. Safeguard 1: nothing starts ticked. [Proposed] labels.
+  'co.bulk.colTick': 'Select for confirm',
+  'co.bulk.tickRow': 'Select {{number}} for a bulk confirm',
+  'co.bulk.selectAll': 'Select all that can be confirmed as requested',
+  'co.bulk.selected': '{{count}} selected',
+  'co.bulk.open': 'Confirm as requested…',
+  'co.bulk.dialog.title': 'Confirm {{count}} call-offs as requested',
+  'co.bulk.dialog.intro':
+    'Each call-off is confirmed exactly as released, so its own tolerance still decides whether PTI must approve it.',
+  'co.bulk.confirm': 'Confirm {{count}} call-offs',
+  'co.bulk.needBy': 'needed {{date}}',
+  'co.bulk.reason.delayPending':
+    'PTI proposes a delay: this call-off needs your delay answer, not a confirm',
+  'co.bulk.reason.answered': 'Already answered',
   'co.umbrella.ordered': 'Ordered',
   'co.umbrella.released': 'Released',
   'co.umbrella.remaining': 'Remaining',
@@ -33,7 +50,7 @@ export const callOffsEn = {
   // CAP-9 (BL-178) — blanket PO run-out and "new PO needed by".
   'co.runOut.title': 'Blanket POs running out',
   'co.runOut.subtitle':
-    'What remains on each blanket PO, drawn down week by week from this week by the LTP, as if call-offs follow the plan. Several POs for one supplier and material are used one after another, oldest first. Soonest "new PO needed by" first.',
+    'What remains on each blanket PO, drawn down week by week from this week by the LTP (PTI’s latest forecast for the material), as if call-offs follow the plan. Several POs for one supplier and material are used one after another, oldest first. Soonest "new PO needed by" first. "Raise the next PO" marks a line whose "new PO needed by" week is within 4 weeks, so PTI Procurement raises the next blanket PO in SAP before the balance runs out. "Next in line" names the PO that will cover the line once this one is used up.',
   'co.runOut.empty': 'No blanket PO runs out within the forecast horizon ({{weeks}} wk).',
   'co.runOut.col.po': 'Blanket PO',
   'co.runOut.col.material': 'Material',
@@ -236,6 +253,10 @@ export const callOffsEn = {
   'co.changeReason.ltp-dropped': 'LTP dropped',
   'co.change.reasonCode': 'Reason type',
   'co.change.reasonCodeNone': 'Not coded',
+  // UCX-P9 (BL-370) — the two option names explained where the select is
+  // (a visible hint; the field never takes an (i), UCX-D30).
+  'co.change.reasonHint':
+    'Not coded: no reason code applies; the typed reason still says why. LTP dropped: PTI’s latest forecast (LTP) fell, so the need date moves later and the supplier approves it.',
   'co.change.delayHint':
     'LTP dropped: choose a later need date and keep the quantity. The need date moves only when the supplier approves; until then the call-off stays on its current date and in the demand anticipation.',
   'co.delay.title': 'Delay for an LTP drop',
@@ -248,6 +269,10 @@ export const callOffsEn = {
   'co.delay.unattributed': 'not attributed to a person',
   'co.delay.sup.intro':
     'PTI proposes to move this call-off from {{from}} to {{to}} because the LTP dropped. The need date changes only if you approve.',
+  // UCX-P9 (BL-370) — LTP explained where the supplier meets it (a sentence,
+  // not an (i): the drawer is a form, UCX-D30).
+  'co.delay.sup.ltp':
+    'LTP is PTI’s latest forecast for this material, published each week. When it drops, PTI may ask to move a call-off to a later date; the quantity stays.',
   'co.delay.sup.reason': 'PTI’s reason',
   'co.delay.sup.approve': 'Approve the delay',
   'co.delay.sup.reject': 'Reject the delay, keep {{from}}',
@@ -300,18 +325,29 @@ export const callOffsEn = {
   'co.respond.outside': 'Outside tolerance: PTI must approve this before you ship.',
   'co.respond.send': 'Send confirmation',
   'co.respond.sendReject': 'Send rejection',
-  'co.dispatch.title': 'Dispatch notice',
-  // IA-S04 — the ASN form, started for this call-off's PO and the call-off.
-  'co.dispatch.createAsn': 'Create the ASN for this call-off',
-  'co.dispatch.asnCounts':
-    'An ASN you create for this call-off counts as a dispatch notice, so you do not need to report the same shipment twice.',
-  'co.dispatch.shippedDate': 'Shipped date',
-  'co.dispatch.expectedArrival': 'Expected arrival',
-  'co.dispatch.asn': 'ASN (optional)',
-  'co.dispatch.noAsn': 'No ASN',
-  'co.dispatch.lateWarning':
+  // UCX-P3 (BL-364) — ONE step replaces the dispatch notice and the ASN link:
+  // it sends the notice and opens a draft ASN with the same values. "Mark as
+  // shipped" is a Proposed label (UCX-D28); "shipping notice" stays the owner's
+  // name for the completion date.
+  'co.markShipped.title': 'Mark as shipped',
+  'co.markShipped.intro':
+    'One step per delivery. Step 1 tells PTI the goods are on their way. It also opens a draft ASN with the same values.',
+  'co.markShipped.shippedDate': 'Shipped date',
+  'co.markShipped.today': 'Today',
+  'co.markShipped.expectedArrival': 'Expected arrival',
+  'co.markShipped.arrivalFromCallOff': 'From the call-off need date',
+  'co.markShipped.quantity': 'Quantity ({{uom}})',
+  'co.markShipped.quantityFromCallOff': 'From the call-off',
+  'co.markShipped.lateWarning':
     'Expected arrival is after the need date. PTI will see this call-off as at risk.',
-  'co.dispatch.send': 'Send dispatch notice',
+  'co.markShipped.action': 'Mark as shipped',
+  'co.markShipped.done': 'Marked as shipped — draft ASN {{asn}} opened for {{number}}.',
+  'co.markShipped.draftFailed':
+    'The notice was sent, but the draft ASN was not created: {{reason}}',
+  'co.markShipped.sent': 'Sent — PTI now sees {{number}} as on its way.',
+  'co.markShipped.draftWaiting':
+    'Step 2: delivery details for the warehouse. The draft ASN {{asn}} waits for the Surat Jalan number, the batch and the tracking number.',
+  'co.markShipped.complete': 'Complete the delivery details',
   'co.summary.col': 'Call-offs',
   'co.summary.status.awaiting': 'Awaiting confirmation',
   'co.summary.status.escalated': 'Escalated',
@@ -401,6 +437,21 @@ export const callOffsId = {
   'co.pti.filter.empty': 'Tidak ada call-off yang cocok dengan filter ini saat ini.',
   'co.sup.filter.toConfirm': 'Menunggu konfirmasi Anda',
   'co.sup.filter.dueSoon': 'Segera jatuh tempo, belum ada pemberitahuan',
+  // UCX-P1 (BL-362) — the To do's missing-ASN row opens this filter. [Proposed]
+  'co.sup.filter.missingAsn': 'ASN belum ada',
+  'co.bulk.colTick': 'Pilih untuk konfirmasi',
+  'co.bulk.tickRow': 'Pilih {{number}} untuk konfirmasi massal',
+  'co.bulk.selectAll': 'Pilih semua yang dapat dikonfirmasi sesuai permintaan',
+  'co.bulk.selected': '{{count}} dipilih',
+  'co.bulk.open': 'Konfirmasi sesuai permintaan…',
+  'co.bulk.dialog.title': 'Konfirmasi {{count}} call-off sesuai permintaan',
+  'co.bulk.dialog.intro':
+    'Setiap call-off dikonfirmasi persis sesuai rilis, sehingga toleransinya sendiri tetap menentukan apakah PTI harus menyetujuinya.',
+  'co.bulk.confirm': 'Konfirmasi {{count}} call-off',
+  'co.bulk.needBy': 'dibutuhkan {{date}}',
+  'co.bulk.reason.delayPending':
+    'PTI mengusulkan penundaan: call-off ini memerlukan jawaban penundaan Anda, bukan konfirmasi',
+  'co.bulk.reason.answered': 'Sudah dijawab',
   'co.umbrella.ordered': 'Dipesan',
   'co.umbrella.released': 'Dirilis',
   'co.umbrella.remaining': 'Sisa',
@@ -413,7 +464,7 @@ export const callOffsId = {
   // CAP-9 (BL-178) — habisnya PO induk dan "PO baru diperlukan paling lambat".
   'co.runOut.title': 'PO induk yang akan habis',
   'co.runOut.subtitle':
-    'Sisa setiap PO induk, dikurangi LTP minggu demi minggu mulai minggu ini, dengan anggapan call-off mengikuti rencana. Beberapa PO untuk satu pemasok dan material dipakai berurutan, yang terlama lebih dulu. "PO baru diperlukan paling lambat" yang paling dekat lebih dulu.',
+    'Sisa setiap PO induk, dikurangi LTP (prakiraan terbaru PTI untuk material itu) minggu demi minggu mulai minggu ini, dengan anggapan call-off mengikuti rencana. Beberapa PO untuk satu pemasok dan material dipakai berurutan, yang terlama lebih dulu. "PO baru diperlukan paling lambat" yang paling dekat lebih dulu. "Buat PO berikutnya" menandai baris yang minggu "PO baru diperlukan paling lambat"-nya dalam 4 minggu, sehingga Procurement PTI membuat PO induk berikutnya di SAP sebelum saldonya habis. "Berikutnya" menamai PO yang akan menutup baris itu setelah PO ini terpakai.',
   'co.runOut.empty': 'Tidak ada PO induk yang habis dalam horizon prakiraan ({{weeks}} mgg).',
   'co.runOut.col.po': 'PO induk',
   'co.runOut.col.material': 'Material',
@@ -611,6 +662,8 @@ export const callOffsId = {
   'co.changeReason.ltp-dropped': 'LTP turun',
   'co.change.reasonCode': 'Jenis alasan',
   'co.change.reasonCodeNone': 'Tanpa kode',
+  'co.change.reasonHint':
+    'Tanpa kode: tidak ada kode alasan yang berlaku; alasan tertulis tetap menjelaskan sebabnya. LTP turun: prakiraan terbaru (LTP) PTI menurun, sehingga tanggal kebutuhan bergeser lebih lambat dan pemasok menyetujuinya.',
   'co.change.delayHint':
     'LTP turun: pilih tanggal kebutuhan yang lebih lambat dan pertahankan kuantitasnya. Tanggal kebutuhan baru berubah bila pemasok menyetujui; sampai itu call-off tetap pada tanggalnya sekarang dan dalam demand anticipation.',
   'co.delay.title': 'Penundaan karena LTP turun',
@@ -622,6 +675,8 @@ export const callOffsId = {
   'co.delay.unattributed': 'tidak diatribusikan ke seseorang',
   'co.delay.sup.intro':
     'PTI mengusulkan memindahkan call-off ini dari {{from}} ke {{to}} karena LTP turun. Tanggal kebutuhan hanya berubah bila Anda menyetujui.',
+  'co.delay.sup.ltp':
+    'LTP adalah prakiraan terbaru PTI untuk material ini, terbit tiap minggu. Bila turun, PTI dapat meminta call-off dipindah ke tanggal yang lebih lambat; kuantitasnya tetap.',
   'co.delay.sup.reason': 'Alasan PTI',
   'co.delay.sup.approve': 'Setujui penundaan',
   'co.delay.sup.reject': 'Tolak penundaan, tetap {{from}}',
@@ -675,17 +730,26 @@ export const callOffsId = {
   'co.respond.outside': 'Di luar toleransi: PTI harus menyetujuinya sebelum Anda mengirim.',
   'co.respond.send': 'Kirim konfirmasi',
   'co.respond.sendReject': 'Kirim penolakan',
-  'co.dispatch.title': 'Pemberitahuan pengiriman',
-  'co.dispatch.createAsn': 'Buat ASN untuk call-off ini',
-  'co.dispatch.asnCounts':
-    'ASN yang Anda buat untuk call-off ini dihitung sebagai pemberitahuan pengiriman, sehingga pengiriman yang sama tidak perlu dilaporkan dua kali.',
-  'co.dispatch.shippedDate': 'Tanggal dikirim',
-  'co.dispatch.expectedArrival': 'Perkiraan tiba',
-  'co.dispatch.asn': 'ASN (opsional)',
-  'co.dispatch.noAsn': 'Tanpa ASN',
-  'co.dispatch.lateWarning':
+  // UCX-P3 (BL-364) — satu langkah menggantikan pemberitahuan pengiriman dan
+  // tautan ASN: mengirim pemberitahuan dan membuka draf ASN dengan nilai sama.
+  'co.markShipped.title': 'Tandai sudah dikirim',
+  'co.markShipped.intro':
+    'Satu langkah per pengiriman. Langkah 1 memberi tahu PTI bahwa barang sedang dalam perjalanan. Langkah ini juga membuka draf ASN dengan nilai yang sama.',
+  'co.markShipped.shippedDate': 'Tanggal dikirim',
+  'co.markShipped.today': 'Hari ini',
+  'co.markShipped.expectedArrival': 'Perkiraan tiba',
+  'co.markShipped.arrivalFromCallOff': 'Dari tanggal kebutuhan call-off',
+  'co.markShipped.quantity': 'Kuantitas ({{uom}})',
+  'co.markShipped.quantityFromCallOff': 'Dari call-off',
+  'co.markShipped.lateWarning':
     'Perkiraan tiba setelah tanggal kebutuhan. PTI akan melihat call-off ini berisiko.',
-  'co.dispatch.send': 'Kirim pemberitahuan pengiriman',
+  'co.markShipped.action': 'Tandai sudah dikirim',
+  'co.markShipped.done': 'Ditandai sudah dikirim — draf ASN {{asn}} dibuka untuk {{number}}.',
+  'co.markShipped.draftFailed': 'Pemberitahuan terkirim, tetapi draf ASN tidak dibuat: {{reason}}',
+  'co.markShipped.sent': 'Terkirim — PTI kini melihat {{number}} dalam perjalanan.',
+  'co.markShipped.draftWaiting':
+    'Langkah 2: detail pengiriman untuk gudang. Draf ASN {{asn}} menunggu nomor Surat Jalan, batch, dan nomor resi.',
+  'co.markShipped.complete': 'Lengkapi detail pengiriman',
   'co.summary.col': 'Call-off',
   'co.summary.status.awaiting': 'Menunggu konfirmasi',
   'co.summary.status.escalated': 'Dieskalasi',

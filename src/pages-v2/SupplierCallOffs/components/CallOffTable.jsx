@@ -12,14 +12,17 @@ import CallOffRow from './CallOffRow';
  * Phase 5 page split (no behaviour change).
  * `listed`: the rows after the status, PIC and material-search filters, each
  * with the reason the search matched it.
- * @type {React.FC<{ listed: { item: CallOffView; match: React.ComponentProps<typeof CallOffRow>['match'] }[]; onOpen: (id: string) => void }>}
+ * @type {React.FC<{ listed: { item: CallOffView; match: React.ComponentProps<typeof CallOffRow>['match'] }[]; onOpen: (id: string) => void; bulkFor?: (v: CallOffView) => React.ComponentProps<typeof CallOffRow>['bulk'] }>}
  */
-const CallOffTable = ({ listed, onOpen }) => {
+const CallOffTable = ({ listed, onOpen, bulkFor }) => {
   const { t } = useTranslation();
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
       <Table>
         <TableHeader>
+          <TableHeaderCell className="w-8">
+            <span className="sr-only">{t('co.bulk.colTick')}</span>
+          </TableHeaderCell>
           {/* BL-38 — 7 columns, not 10: separately, the PO, the type and the
               confirm-by deadline pushed Confirmation, Delivery and the action
               off a 1280px screen. Each rides as a second line in the cell it
@@ -56,7 +59,13 @@ const CallOffTable = ({ listed, onOpen }) => {
         </TableHeader>
         <tbody>
           {listed.map(({ item: v, match }) => (
-            <CallOffRow key={v.callOff.id} v={v} match={match} onOpen={onOpen} />
+            <CallOffRow
+              key={v.callOff.id}
+              v={v}
+              match={match}
+              onOpen={onOpen}
+              bulk={bulkFor?.(v)}
+            />
           ))}
         </tbody>
       </Table>

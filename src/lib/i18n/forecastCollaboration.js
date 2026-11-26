@@ -188,7 +188,9 @@ export const forecastCollaborationEn = {
   'fc.sup.week.confirm.prefilledNote':
     'A pre-filled quantity is PTI’s forecast, not a figure you typed. Change it on the material row if you cannot supply it.',
   'fc.sup.week.confirm.cancel': 'Cancel',
-  'fc.sup.week.refusal.capacityNotConfirmed': 'Confirm capacity for {{group}} first.',
+  // UCX-P8 (BL-369, UCX-D24) — the wait names the owner and the act.
+  'fc.sup.week.refusal.capacityNotConfirmed':
+    'Awaiting Supplier Fulfilment: capacity for {{group}}',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Above BE: choose a reason.',
   'fc.sup.week.refusal.aboveBeNoteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.sup.week.refusal.row': 'Fix the rows of this period first.',
@@ -290,6 +292,10 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.panel.reassignHint':
     'Only suppliers that supply this material are listed. Each quantity becomes new demand for that supplier in a new forecast version, and the supplier confirms it like any other demand.',
   'fc.pti.gaps.move.shortfall': 'Shortfall',
+  // UCX-P9 (BL-370) — the panel names the zone and the shortfall; both are
+  // defined here in one sentence (body copy, not a header tip).
+  'fc.pti.gaps.move.terms':
+    'Zone Liability is the weeks the supplier commits to; Zone Capacity is the later weeks, where changes are damped and kept inside an agreed band. Shortfall is the forecast minus the commitment: the most you can move.',
   'fc.pti.gaps.move.supplier': 'Supplier',
   'fc.pti.gaps.move.qty': 'Quantity to move',
   'fc.pti.gaps.move.qtyFor': 'Quantity to move to {{supplier}}',
@@ -505,8 +511,9 @@ export const forecastCollaborationId = {
   'fc.sup.week.confirm.prefilledNote':
     'Kuantitas yang terisi adalah prakiraan PTI, bukan angka yang Anda ketik. Ubah di baris material bila Anda tidak dapat memasoknya.',
   'fc.sup.week.confirm.cancel': 'Batal',
+  // UCX-P8 (BL-369, UCX-D24) — the wait names the owner and the act.
   'fc.sup.week.refusal.capacityNotConfirmed':
-    'Konfirmasikan kapasitas untuk {{group}} terlebih dahulu.',
+    'Menunggu Pemenuhan Pemasok: kapasitas untuk {{group}}',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Di atas BE: pilih alasan.',
   'fc.sup.week.refusal.aboveBeNoteRequired':
     'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
@@ -610,6 +617,8 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.panel.reassignHint':
     'Hanya pemasok yang memasok material ini yang ditampilkan. Setiap kuantitas menjadi kebutuhan baru bagi pemasok itu dalam versi prakiraan baru, dan pemasok mengonfirmasinya seperti kebutuhan lain.',
   'fc.pti.gaps.move.shortfall': 'Kekurangan',
+  'fc.pti.gaps.move.terms':
+    'Zone Liability adalah minggu-minggu yang menjadi komitmen pemasok; Zone Capacity adalah minggu-minggu setelahnya, yang perubahannya diredam dan dijaga dalam rentang yang disepakati. Kekurangan (shortfall) adalah prakiraan dikurangi komitmen: jumlah paling banyak yang dapat Anda pindahkan.',
   'fc.pti.gaps.move.supplier': 'Pemasok',
   'fc.pti.gaps.move.qty': 'Kuantitas yang dipindahkan',
   'fc.pti.gaps.move.qtyFor': 'Kuantitas yang dipindahkan ke {{supplier}}',

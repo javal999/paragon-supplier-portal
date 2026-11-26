@@ -77,6 +77,8 @@ describe('menu and copy (section 3.7)', () => {
     expect(planning.items.map((i) => i.path)).toEqual([
       '/supplier/forecasts',
       '/supplier/fs-reconcile',
+      // UCX-P4 v2 (BL-365) — the one weekly page.
+      '/supplier/weekly',
       '/supplier/inventory',
       '/supplier/capacity'
     ]);

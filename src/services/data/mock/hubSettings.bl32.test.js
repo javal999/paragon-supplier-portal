@@ -432,6 +432,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         // with the same weekly stock update cycle.
         // PSC-1 (BL-336) — the DA panel shows the stock cutoff beside the
         // Wednesday confirmation deadline, from this same setting.
+        // UCX-P4 v2 (BL-365) — the weekly page counts its cycle with the same
+        // setting (weeklyUpdateStatus, feedstockCycleStatus, the stock cutoff).
+        'src/pages-v2/SupplierWeekly.jsx',
         'src/pages-v2/demandAnticipation/DaConfirmationPanel.jsx',
         'src/pages-v2/inventory/FeedstockConfirmPanel.jsx',
         'src/pages-v2/inventory/WeeklyUpdatePanel.jsx',

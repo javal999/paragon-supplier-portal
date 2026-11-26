@@ -12,6 +12,8 @@ export const fulfilmentCollaborationEn = {
   'fc.asn.lines.empty': 'This purchase order has no open lines left to ship.',
   'fc.asn.col.material': 'Material',
   'fc.asn.col.batch': 'Batch number',
+  // UCX-P3 (BL-364) — the one message names the material whose batch is missing.
+  'fc.asn.batch.missingFor': 'Batch number for {{material}}',
   'fc.asn.col.expiry': 'Expiry date',
   'fc.asn.col.expiryShort': 'Expiry',
   'fc.asn.shippedFor': 'Shipped quantity for {{material}}',
@@ -36,7 +38,14 @@ export const fulfilmentCollaborationEn = {
   'fc.asn.shipDate': 'Ship date',
   // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 inbound-upload identity.
   'fc.asn.sequence': 'Sequence',
+  // UCX-P3 (BL-364) — a visible hint under the field, never an (i) tip on a
+  // form field (UCX-D30; TL-D4 keeps the tip on column headers and labels).
+  'fc.asn.sequence.hint':
+    "Groups the lines of one ASN in PTI's receiving upload. Each ASN needs its own number. The next free number is filled in; you can change it.",
+  'fc.asn.sequence.inUse': 'In use: {{sequences}}.',
   'fc.asn.externalId': 'Surat Jalan (External ID)',
+  'fc.asn.externalId.hint':
+    'The number printed on your delivery note (Surat Jalan) for this shipment.',
   'fc.asn.sequence.missing': '{{fields}} required before you can continue.',
   'fc.asn.sequence.used':
     'Sequence {{sequence}} already belongs to {{asnNumber}}. One sequence is one ASN — use another sequence.',
@@ -196,6 +205,11 @@ export const fulfilmentCollaborationEn = {
   'fc.grDispute.action': 'Resolve',
   'fc.grDispute.panel.title': 'Resolve dispute on {{grNumber}}',
   'fc.grDispute.panel.supplierSays': 'The supplier says',
+  'fc.grDispute.outcome.label': 'Outcome',
+  'fc.grDispute.outcome.choose': 'Choose the outcome…',
+  'fc.grDispute.outcome.supplierRight': 'The supplier is right: correct the receipt',
+  'fc.grDispute.outcome.receiptStands': 'The receipt stands',
+  'fc.grDispute.outcome.recount': 'Agree a recount',
   'fc.grDispute.comment': 'Resolution comment for the supplier',
   'fc.grDispute.confirm': 'Resolve dispute',
   'fc.grDispute.cancel': 'Close',
@@ -289,6 +303,8 @@ export const fulfilmentCollaborationId = {
     'Pesanan pembelian ini tidak punya baris terbuka yang tersisa untuk dikirim.',
   'fc.asn.col.material': 'Material',
   'fc.asn.col.batch': 'Nomor batch',
+  // UCX-P3 (BL-364) — pesan tunggal menyebut material yang batch-nya kosong.
+  'fc.asn.batch.missingFor': 'Nomor batch untuk {{material}}',
   'fc.asn.col.expiry': 'Tanggal kedaluwarsa',
   'fc.asn.col.expiryShort': 'Kedaluwarsa',
   'fc.asn.shippedFor': 'Kuantitas dikirim untuk {{material}}',
@@ -313,7 +329,13 @@ export const fulfilmentCollaborationId = {
   'fc.asn.trackingOrVehicle': 'Nomor resi atau nomor kendaraan',
   'fc.asn.shipDate': 'Tanggal kirim',
   'fc.asn.sequence': 'Sekuens',
+  // UCX-P3 (BL-364) — petunjuk terlihat di bawah kolom, bukan (i) pada kolom
+  // isian (UCX-D30; TL-D4 menyimpan (i) untuk judul kolom dan label).
+  'fc.asn.sequence.hint':
+    'Mengelompokkan baris satu ASN dalam unggahan penerimaan PTI. Setiap ASN memerlukan nomornya sendiri. Nomor kosong berikutnya terisi otomatis; Anda dapat mengubahnya.',
+  'fc.asn.sequence.inUse': 'Sudah dipakai: {{sequences}}.',
   'fc.asn.externalId': 'Surat Jalan (ID Eksternal)',
+  'fc.asn.externalId.hint': 'Nomor yang tercetak pada surat jalan Anda untuk pengiriman ini.',
   'fc.asn.sequence.missing': '{{fields}} wajib diisi sebelum melanjutkan.',
   'fc.asn.sequence.used':
     'Sekuens {{sequence}} sudah dipakai {{asnNumber}}. Satu sekuens adalah satu ASN — gunakan sekuens lain.',
@@ -474,6 +496,11 @@ export const fulfilmentCollaborationId = {
   'fc.grDispute.action': 'Selesaikan',
   'fc.grDispute.panel.title': 'Selesaikan sanggahan pada {{grNumber}}',
   'fc.grDispute.panel.supplierSays': 'Kata pemasok',
+  'fc.grDispute.outcome.label': 'Hasil',
+  'fc.grDispute.outcome.choose': 'Pilih hasilnya…',
+  'fc.grDispute.outcome.supplierRight': 'Pemasok benar: perbaiki penerimaan',
+  'fc.grDispute.outcome.receiptStands': 'Penerimaan tetap berlaku',
+  'fc.grDispute.outcome.recount': 'Sepakati penghitungan ulang',
   'fc.grDispute.comment': 'Komentar penyelesaian untuk pemasok',
   'fc.grDispute.confirm': 'Selesaikan sanggahan',
   'fc.grDispute.cancel': 'Tutup',

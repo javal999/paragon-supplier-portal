@@ -9,7 +9,24 @@
 // (e.g. ISO 9001 vs 14001), the derivation stays coarse rather than invent one.
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @import { CertType, ComplianceDisplayStatus } from '@services/data/types' */
+/** @import { CertType, ComplianceDisplayStatus, SupplierDocumentCategory } from '@services/data/types' */
+
+/**
+ * The document category a certificate scheme is filed under. ONE map, imported
+ * by the mock store (which writes a declaration's category) and by the buyer's
+ * renewal ask (which files its request under the expiring row's category), so
+ * the two cannot drift onto different lists.
+ * @type {Readonly<Record<CertType, SupplierDocumentCategory>>}
+ */
+export const CERT_TYPE_TO_CATEGORY = Object.freeze({
+  HALAL_BPJPH: 'Halal Compliance',
+  HALAL_MUI_LEGACY: 'Halal Compliance',
+  HALAL_FOREIGN: 'Halal Compliance',
+  BPOM: 'BPOM Regulatory',
+  ISO: 'Quality',
+  TAX_LEGAL: 'Tax & Legal',
+  OTHER: 'Other'
+});
 
 /** Coarse cert category for the page's category facet. */
 /** @typedef {'Halal' | 'Quality' | 'Regulatory' | 'Other'} CertCategory */

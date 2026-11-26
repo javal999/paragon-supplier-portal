@@ -18,7 +18,7 @@ import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { scopeKey } from './useServiceQuery';
 /** @import { BidCurrency } from '@lib/currencyPolicy' */
 /** @import { FxPinSource } from '@lib/fxPin' */
-/** @import { CommandResult, CommandStatus, QueryScope, InspectionResult, CommandDecision, CertificateDeclaration, SupplierDocumentCategory, PoLineResponse, PoRejectionCause, InvoiceLine, CallOffDelivery, CallOffType, CallOffOrigin, StockUpdateMode, QualificationRequiredDoc, QualificationRuleLevel } from '../data/types' */
+/** @import { CommandResult, CommandStatus, QueryScope, InspectionResult, CommandDecision, CertificateDeclaration, CoaDeclaration, SupplierDocumentCategory, SupplierDocumentRequestKind, PoLineResponse, PoRejectionCause, InvoiceLine, CallOffDelivery, CallOffType, CallOffOrigin, StockUpdateMode, QualificationRequiredDoc, QualificationRuleLevel } from '../data/types' */
 /** @import { AsnLineInput } from '../transitions/fulfilmentRules' */
 /** @import { DelayAnswer } from '../transitions/callOffRules' */
 /** @import { SourcingType, SourcingTypeKey } from '../sourcing/sourcingType' */
@@ -33,6 +33,7 @@ import { ltpChoiceKey, ltpUploadKey } from '../transitions/ltpInputRules';
 import { eventKey } from '../transitions/eventCalendarRules';
 import { promotionKey } from '../engine/promotions';
 /** @import { ForecastStream } from '../sdc/types' */
+/** @import { PoEscalationDecision } from '../transitions/poEscalationRules' */
 
 /**
  * The COMMAND scope — tenancy plus the seat's business roles.
@@ -652,15 +653,16 @@ export function useReceiptDiscrepancyResolve() {
   const scope = useScope();
   const invalidate = useInvalidateProcurement();
 
-  return /** @type {typeof useMutation<CommandResult, Error, { receiptId: string; resolutionComment: string }>} */ (
+  return /** @type {typeof useMutation<CommandResult, Error, { receiptId: string; resolutionComment: string; resolution: import('../transitions/receiptDiscrepancyRules').ReceiptDisputeOutcome }>} */ (
     useMutation
   )({
-    mutationFn: ({ receiptId, resolutionComment }) =>
+    // UCX-P7 — the outcome is part of the act (UCX-F17), validated by the hook.
+    mutationFn: ({ receiptId, resolutionComment, resolution }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_receiptdiscrepancy_resolve',
         entity: 'receiptDiscrepancy',
         entityId: receiptId,
-        payload: { resolutionComment }
+        payload: { resolutionComment, resolution }
       }),
     onSuccess: (result) => {
       if (result.status !== 'failed') invalidate(scope);
@@ -2517,7 +2519,7 @@ export function useSupplierDocumentRequest() {
   const scope = useScope();
   const invalidate = useInvalidateProcurement();
 
-  return /** @type {typeof useMutation<CommandResult, Error, { supplierId: string; category: SupplierDocumentCategory; note?: string }>} */ (
+  return /** @type {typeof useMutation<CommandResult, Error, { supplierId: string; category: SupplierDocumentCategory; note?: string; requestKind?: SupplierDocumentRequestKind; batch?: string }>} */ (
     useMutation
   )({
     mutationFn: (vars) =>
@@ -2545,6 +2547,63 @@ export function useSupplierDocumentSubmit() {
     mutationFn: ({ docId, ...vars }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_supplierdoc_submit',
+        entity: 'supplierDocument',
+        entityId: docId,
+        payload: { ...vars }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}
+
+/**
+ * UCX-P5 · the COA answer (fires `t_supplierdoc_answer_coa`, atom
+ * `supplierdoc:submit`). The flow's kind guard refuses this verb on a row PTI
+ * did not ask for as a COA, so the surface's choice of form is not what makes
+ * the record valid.
+ */
+/**
+ * @typedef {Omit<CoaDeclaration, 'declaredAt' | 'declaredBy'>} CoaDeclarationVars
+ */
+export function useSupplierDocumentAnswerCoa() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CoaDeclarationVars & { docId: string }>} */ (
+    useMutation
+  )({
+    mutationFn: ({ docId, ...vars }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_supplierdoc_answer_coa',
+        entity: 'supplierDocument',
+        entityId: docId,
+        payload: { ...vars }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}
+
+/**
+ * UCX-P5 · the renewal (fires `t_supplierdoc_renew`, atom
+ * `supplierdoc:upload` — UCX-SD19's atom). It acts on the EXPIRING record
+ * itself, so that record lands `Under Review` and the certificate has a newer
+ * declaration while it is still inside the expiry window (UCX-SG10).
+ */
+export function useSupplierDocumentRenew() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CertificateDeclarationVars & { docId: string }>} */ (
+    useMutation
+  )({
+    mutationFn: ({ docId, ...vars }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_supplierdoc_renew',
         entity: 'supplierDocument',
         entityId: docId,
         payload: { ...vars }
@@ -4516,6 +4575,47 @@ export function usePoCancelRequestCommand() {
       }
     }
   );
+}
+
+/**
+ * UCX-P7 (BL-368) · UCX-D22 — record PTI's act on an escalated PO: the ask
+ * (`t_po_ask_confirm`) or one of the four decisions, whose verb the page sends
+ * from `PO_ESCALATION_VERB`. The three ending decisions cascade the order's
+ * move; the panel re-reads the orders and the records on success.
+ * @typedef {{
+ *   readonly poId: string;
+ *   readonly transitionId: string;
+ *   readonly decision?: PoEscalationDecision;
+ *   readonly note?: string;
+ * }} PoEscalationVars
+ */
+
+/** Record one escalated-PO act (ask, or a decision). */
+export function usePoEscalationCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, PoEscalationVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: vars.transitionId,
+        entity: 'poEscalation',
+        payload: {
+          poId: vars.poId,
+          ...(vars.decision ? { decision: vars.decision } : {}),
+          ...(vars.note ? { note: vars.note } : {})
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' &&
+          (q.queryKey[1] === 'purchaseOrders' || q.queryKey[1] === 'poEscalation')
+      });
+    }
+  });
 }
 
 /** Acknowledge a PO cancellation request (fires `t_pocancel_acknowledge`). */

@@ -55,6 +55,13 @@ export const poOnHoldEn = {
   'poh.suggest.preselected': 'Pre-selected from the conditions. You can change it before sending.',
   'poh.suggest.none': 'No option fits the conditions yet. Choose one to send.',
   'poh.suggest.sent': 'Suggestion sent for {{material}}.',
+  // UCX-P6 (BL-367) · UCX-PD22 — the suggestions go out together. [Proposed] labels.
+  'poh.suggest.sendAll': 'Send the preselected suggestions together ({{count}})',
+  'poh.suggest.sendAllHint': 'You can change any line before sending.',
+  'poh.suggest.sentAll': '{{count}} suggestions sent.',
+  // UCX-P6 · UCX-F12 — FG cap is the one term a source defines (PEX-8 BR-03).
+  'poh.hint.fgCap':
+    'Max PTI plus the smaller of Max Supplier and the supplier’s stock on hand, less PTI’s stock on hand, never below 0.',
   'poh.again.note':
     'Part of this line is still on hold after the execution. Suggest again to start round {{round}}: the supplier chooses again and a new grace period starts today.',
   'poh.again.send': 'Suggest again',
@@ -110,6 +117,10 @@ export const poOnHoldEn = {
   'poh.rec.title': 'Recommended action',
   'poh.rec.proposed':
     'Proposed: awaiting owner review (PEX-12). Read only: nothing runs by itself.',
+  // UCX-P9 (BL-370) · UCX-F25 — the supplier reads the same state without the
+  // internal code; the PTI note keeps it (PTI screens may keep codes).
+  'poh.rec.proposedSupplier':
+    'Proposed: waiting for Paragon’s decision. Read only: nothing runs by itself.',
   'poh.rec.action.autoAbsorb': 'Auto absorb',
   'poh.rec.action.autoCarryOver': 'Auto carry-over',
   'poh.rec.action.manual': 'Manual',
@@ -133,6 +144,8 @@ export const poOnHoldEn = {
   'poh.cancel.title': 'PO cancellation',
   'poh.cancel.proposed':
     'Proposed: awaiting owner review (PEX-12). Request only, not sent to SAP: the PO keeps its status.',
+  'poh.cancel.proposedSupplier':
+    'Proposed: waiting for Paragon’s decision. A request only: the PO keeps its status.',
   'poh.cancel.request': 'Request cancellation',
   'poh.cancel.reason': 'Reason (at least 10 characters)',
   'poh.cancel.send': 'Send request',
@@ -194,6 +207,11 @@ export const poOnHoldId = {
     'Dipilih otomatis dari kondisinya. Anda dapat mengubahnya sebelum mengirim.',
   'poh.suggest.none': 'Belum ada opsi yang sesuai dengan kondisinya. Pilih satu untuk dikirim.',
   'poh.suggest.sent': 'Usulan terkirim untuk {{material}}.',
+  'poh.suggest.sendAll': 'Kirim usulan terpilih sekaligus ({{count}})',
+  'poh.suggest.sendAllHint': 'Anda dapat mengubah setiap baris sebelum mengirim.',
+  'poh.suggest.sentAll': '{{count}} usulan terkirim.',
+  'poh.hint.fgCap':
+    'Max PTI ditambah yang lebih kecil antara Max Supplier dan stok pemasok, dikurangi stok PTI, tidak pernah di bawah 0.',
   'poh.again.note':
     'Sebagian baris ini masih ditahan setelah eksekusi. Usulkan lagi untuk memulai putaran {{round}}: pemasok memilih lagi dan masa tenggang baru dimulai hari ini.',
   'poh.again.send': 'Usulkan lagi',
@@ -251,6 +269,8 @@ export const poOnHoldId = {
   'poh.rec.title': 'Tindakan yang disarankan',
   'poh.rec.proposed':
     'Usulan: menunggu tinjauan pemilik (PEX-12). Hanya baca: tidak ada yang berjalan sendiri.',
+  'poh.rec.proposedSupplier':
+    'Usulan: menunggu keputusan Paragon. Hanya baca: tidak ada yang berjalan sendiri.',
   'poh.rec.action.autoAbsorb': 'Serap otomatis',
   'poh.rec.action.autoCarryOver': 'Geser otomatis',
   'poh.rec.action.manual': 'Manual',
@@ -273,6 +293,8 @@ export const poOnHoldId = {
   'poh.cancel.title': 'Pembatalan PO',
   'poh.cancel.proposed':
     'Usulan: menunggu tinjauan pemilik (PEX-12). Hanya permintaan, tidak dikirim ke SAP: status PO tidak berubah.',
+  'poh.cancel.proposedSupplier':
+    'Usulan: menunggu keputusan Paragon. Hanya permintaan: status PO tidak berubah.',
   'poh.cancel.request': 'Minta pembatalan',
   'poh.cancel.reason': 'Alasan (minimal 10 karakter)',
   'poh.cancel.send': 'Kirim permintaan',

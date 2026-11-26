@@ -11,6 +11,8 @@ import ReviewQueueItem from './ReviewQueueItem';
  *   section only when there is at least one.
  * @property {ReturnType<typeof useDocumentReview>} reviewer The page's verify / reject state and
  *   runners, threaded to each row.
+ * @property {(supplierId: string) => string | null} supplierNameOf UCX-P5 — resolves a
+ *   document's supplier id to the roster name the reviewer checks.
  * @property {TFunction} t
  */
 
@@ -20,7 +22,7 @@ import ReviewQueueItem from './ReviewQueueItem';
  * `BuyerCompliance.jsx` by the Phase 5 page split (no behaviour change).
  * @type {React.FC<ReviewQueueProps>}
  */
-const ReviewQueue = ({ reviewQueue, reviewer, t }) => (
+const ReviewQueue = ({ reviewQueue, reviewer, supplierNameOf, t }) => (
   <div
     className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm mb-6 overflow-hidden"
     data-testid="doc-review-queue"
@@ -39,7 +41,13 @@ const ReviewQueue = ({ reviewQueue, reviewer, t }) => (
 
     <div className="divide-y divide-border-subtle">
       {reviewQueue.map((doc) => (
-        <ReviewQueueItem key={doc.id} doc={doc} reviewer={reviewer} t={t} />
+        <ReviewQueueItem
+          key={doc.id}
+          doc={doc}
+          supplierName={supplierNameOf(doc.supplierId)}
+          reviewer={reviewer}
+          t={t}
+        />
       ))}
     </div>
   </div>

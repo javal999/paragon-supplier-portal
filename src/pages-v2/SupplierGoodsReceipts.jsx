@@ -428,11 +428,14 @@ const SupplierGoodsReceipts = () => {
                             <Data>{qty(l.rejected)}</Data>
                           </td>
                         </tr>
-                        {/* CR-25 (BL-45) — the quantity check on its own row, full width. */}
+                        {/* CR-25 (BL-45) — the quantity check on its own row, full width.
+                            UCX-P9 (BL-370) · UCX-F25 — the supplier reads the
+                            check's name, not the internal code; the rule
+                            number stays on the buyer's column header. */}
                         <tr>
                           <td colSpan={5} className="pb-2">
                             <span className="text-[length:var(--fs-label-3)] text-text-tertiary">
-                              {t('fc.gr.col.qtyCheck')}:{' '}
+                              <TermLabel term="grQtyCheck" />:{' '}
                             </span>
                             <ReceiptToleranceNote
                               line={l}

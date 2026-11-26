@@ -109,6 +109,13 @@ export const complianceEn = {
   'compliance.queue.noExpiry': 'no expiry',
   'compliance.queue.noDeclaration':
     'Seeded sample row — it reached review before declarations existed, so it carries no stated details.',
+  // — UCX-P5 (BL-366): what to check, and the COA's own fields —
+  'compliance.queue.check':
+    'Nothing was uploaded. Check these details against the document itself before you confirm.',
+  'compliance.queue.kind.coa': 'Certificate of analysis (COA)',
+  'compliance.queue.field.batch': 'Batch',
+  'compliance.queue.field.coaNumber': 'COA number',
+  'compliance.queue.field.issuedOn': 'Issued on',
   'compliance.queue.action.verify': 'Confirm',
   'compliance.queue.action.reject': 'Refuse',
   'compliance.queue.action.cancel': 'Cancel',
@@ -179,6 +186,13 @@ export const complianceEn = {
   'compliance.request.toast.sentDesc':
     '{{supplier}} sees it on their documents page, awaiting their declaration.',
   'compliance.request.toast.failed': 'Not opened',
+  // — UCX-P5 (BL-366): ask for a renewal FROM the expiring row —
+  'compliance.renewal.action': 'Ask for a renewal',
+  'compliance.renewal.panel.title': 'Ask for a renewal',
+  'compliance.renewal.lead':
+    'The supplier and the kind come from the expiring record. Edit the reason if you need to; the supplier reads it word for word.',
+  'compliance.renewal.fromRow': 'From the expiring record.',
+  'compliance.renewal.note': 'Renewal of the {{certificate}} certificate that expires on {{date}}.',
   // — Phase 2 integration banner —
   'compliance.phase2.title': 'Phase 2 — Live Integration:',
   'compliance.phase2.body':
@@ -265,6 +279,13 @@ export const complianceId = {
   'compliance.queue.noExpiry': 'tanpa masa berlaku',
   'compliance.queue.noDeclaration':
     'Baris contoh bawaan — sudah masuk tinjauan sebelum pernyataan ada, jadi tidak membawa rincian yang dinyatakan.',
+  // — UCX-P5 (BL-366): yang perlu diperiksa, dan kolom milik COA —
+  'compliance.queue.check':
+    'Tidak ada berkas yang diunggah. Periksa detail ini terhadap dokumen aslinya sebelum Anda mengonfirmasi.',
+  'compliance.queue.kind.coa': 'Sertifikat analisis (COA)',
+  'compliance.queue.field.batch': 'Bets',
+  'compliance.queue.field.coaNumber': 'Nomor COA',
+  'compliance.queue.field.issuedOn': 'Tanggal terbit',
   'compliance.queue.action.verify': 'Konfirmasi',
   'compliance.queue.action.reject': 'Tolak',
   'compliance.queue.action.cancel': 'Batal',
@@ -330,6 +351,13 @@ export const complianceId = {
   'compliance.request.toast.sentDesc':
     '{{supplier}} melihatnya di halaman dokumen mereka, menunggu pernyataan mereka.',
   'compliance.request.toast.failed': 'Tidak dibuka',
+  // — UCX-P5 (BL-366): minta pembaruan DARI baris yang berakhir —
+  'compliance.renewal.action': 'Minta pembaruan',
+  'compliance.renewal.panel.title': 'Minta pembaruan',
+  'compliance.renewal.lead':
+    'Pemasok dan jenisnya diambil dari catatan yang berakhir. Ubah alasannya bila perlu; pemasok membacanya kata per kata.',
+  'compliance.renewal.fromRow': 'Dari catatan yang berakhir.',
+  'compliance.renewal.note': 'Pembaruan sertifikat {{certificate}} yang berlaku sampai {{date}}.',
   // — Phase 2 integration banner —
   'compliance.phase2.title': 'Fase 2 — Integrasi Langsung:',
   'compliance.phase2.body':

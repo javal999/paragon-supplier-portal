@@ -113,6 +113,12 @@ const DOCUMENTS_RAW = [
     fileSize: '—',
     version: '—',
     linkedTo: 'PO-2025-00107 / PK-PETB-8801',
+    // UCX-P5 (BL-366) · UCX-D23 — the ONE seeded ask that is machine-readably a
+    // COA: the supplier answers it with the COA form (batch, number, issuer,
+    // date), and the batch comes from the request. Its notes carry the same ask
+    // in prose for the reader; nothing parses that text.
+    requestKind: 'COA',
+    requestBatch: 'PKG-2025-441',
     notes: 'Required before GR posting in SAP. Please upload COA for batch PKG-2025-441.'
   },
   {

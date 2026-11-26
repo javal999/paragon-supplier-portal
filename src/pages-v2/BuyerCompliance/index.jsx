@@ -9,6 +9,7 @@ import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
 import SidePanel from '@components/ui-v2/SidePanel';
+import Button from '@components/ui-v2/Button';
 import LivenessPill from '@components/ui-v2/LivenessPill';
 import { isLive, readinessNote } from '@services/liveness';
 import { formatDate } from '@lib/format';
@@ -28,6 +29,7 @@ import { useRefusalText, useDataErrorText } from '@hooks/useRefusalText';
 import { TODAY } from './const';
 import { useDocumentReview } from './hooks/useDocumentReview';
 import { useDocumentRequest } from './hooks/useDocumentRequest';
+import { useRenewalRequest } from './hooks/useRenewalRequest';
 import ReviewQueue from './components/ReviewQueue';
 import BpjphMandate from './components/BpjphMandate';
 import ComplianceKpis from './components/ComplianceKpis';
@@ -35,6 +37,7 @@ import ComplianceFilters from './components/ComplianceFilters';
 import ComplianceRegistryTable from './components/ComplianceRegistryTable';
 import RequestPanelBody from './components/RequestPanelBody';
 import RequestPanelFooter from './components/RequestPanelFooter';
+import RenewalAskPanel from './components/RenewalAskPanel';
 
 // Dates on this surface go through the canonical `formatDate` (lib/format), the
 // mechanism the tree already uses at 101 call sites. The local helper this
@@ -77,7 +80,13 @@ const BuyerCompliance = () => {
   useSectionParam('compliance-section', ['review'], reviewQueue.length > 0);
   const reviewer = useDocumentReview(t, refusalText, toast);
   const requester = useDocumentRequest(t, refusalText, dataErrorText, toast);
+  // UCX-P5 · UCX-F31 — the renewal ask, started from an expiring registry row.
+  const renewal = useRenewalRequest(t, refusalText, dataErrorText, toast);
   const { request, requestOpen, setRequestOpen, closeRequest } = requester;
+  const { askRow, closeAsk, note: renewalNote, busy: renewalBusy, runAsk } = renewal;
+  /** UCX-P5 — the reviewer checks a NAME, not a tenancy id. */
+  const supplierNameOf = (/** @type {string} */ supplierId) =>
+    requester.supplierOptions.find((sup) => sup.id === supplierId)?.name ?? null;
 
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
@@ -229,7 +238,12 @@ const BuyerCompliance = () => {
           `lifecycleState` exists to keep apart. */}
       {reviewQueue.length > 0 && (
         <div id="compliance-section-review" className="scroll-mt-4">
-          <ReviewQueue reviewQueue={reviewQueue} reviewer={reviewer} t={t} />
+          <ReviewQueue
+            reviewQueue={reviewQueue}
+            reviewer={reviewer}
+            supplierNameOf={supplierNameOf}
+            t={t}
+          />
         </div>
       )}
 
@@ -247,7 +261,13 @@ const BuyerCompliance = () => {
         t={t}
       />
 
-      <ComplianceRegistryTable filtered={filtered} toast={toast} t={t} />
+      <ComplianceRegistryTable
+        filtered={filtered}
+        toast={toast}
+        canAskRenewal={request.kind === 'held'}
+        onAskRenewal={renewal.openAsk}
+        t={t}
+      />
 
       <div className="bg-info-soft border-l-2 border-info rounded px-4 py-3 text-sm text-text-primary flex items-start gap-2">
         <Shield size={14} className="text-info shrink-0 mt-0.5" />
@@ -276,6 +296,37 @@ const BuyerCompliance = () => {
           footerActions={<RequestPanelFooter requester={requester} t={t} />}
         >
           <RequestPanelBody requester={requester} t={t} />
+        </SidePanel>
+      )}
+
+      {/* ── UCX-P5 · UCX-F31 — THE RENEWAL ASK, FROM THE EXPIRING ROW ──────
+          The supplier and the kind are read from the row and shown read-only;
+          only the reason is authored, and it starts composed from the row. The
+          MODE is gated on the same atom as the generic request (the §84 rule):
+          no panel exists for a seat that does not hold `supplierdoc:request`. */}
+      {request.kind === 'held' && (
+        <SidePanel
+          open={askRow !== null}
+          onClose={closeAsk}
+          title={t('compliance.renewal.panel.title')}
+          footerActions={
+            <>
+              <Button variant="secondary" onClick={closeAsk}>
+                {t('compliance.queue.action.cancel')}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={renewalNote.trim() === '' || renewalBusy}
+                onClick={() => {
+                  void runAsk();
+                }}
+              >
+                {t('compliance.request.action.send')}
+              </Button>
+            </>
+          }
+        >
+          <RenewalAskPanel renewal={renewal} t={t} />
         </SidePanel>
       )}
     </AppShellV2>

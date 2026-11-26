@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.49, 2026-11-25 (the owner accepted the five !203 calls as proposed; the section heading records the ruling; BL-213 closed in `BACKLOG.md`). Previous: 1.48, 2026-11-21 (docs pass after MR !199 merged as `c26d4e7c`: the BL-140 follow-up is built). Previous: 1.47, 2026-11-21 (the owner accepted the five !195 calls as proposed; the section heading records the ruling). Previous: 1.46, 2026-11-20 (the owner accepted the four !188 calls as proposed; BL-360 added in section 4i for the Oslo demo after BL-55's 90% gate and parked the same day at the owner's word; BL-326 closed with MR !195 (merged `96ecf77d`): invariant 3 now binds every description id to a tree that renders it, and AsnLinesEditor and RfqQuestionField carry the fix). Previous: 1.45, 2026-11-20 (docs pass after MR !194 merged as `90bf12f6`: the BL-140 build calls recorded, and BL-233 and BL-84 started at the owner's word). Previous: 1.44, 2026-11-20 (docs pass after MR !187 merged as `a19a4c43` and MR !188 as `f049c846`: the four !188 builder calls recorded as [Proposed], not ruled; BL-358 and BL-359 closed in `BACKLOG.md`). Previous: 1.43, 2026-11-20 (docs pass after MR !191 merged as `988180f2` and MR !192 as `49480b7f`: the ruling rows cite the merge; BL-01, BL-55, BL-70, BL-71, BL-119 and BL-145 closed; the SAP interface and the invoice keep their not-currently-checked status). Previous: 1.42, 2026-11-20 (the owner's rulings on the open decisions of 2026-11-20: the SAP interface and the invoice approved and marked not currently checked or built; BL-70 to the super admin and the planner; BL-233's four labels approved as final wording; BL-84 unchanged; BL-55, BL-70 and BL-145 built in MR !191; the other rulings recorded below). Previous: 1.41, 2026-11-20 (docs pass after MR !183 merged as `72e078ba`: CAP-D18 recorded, the commitment table's own months stay editable in Monthly, and the wave-3 calls recorded as accepted as built; BL-343 closed). Previous: 1.40, 2026-11-20 (docs pass after the away merges: the calls of MR !179, !180, !182 and !184 recorded as accepted as built with their merges; the CAP-2 BR-05 question from MR !183 recorded as open). Previous: 1.39, 2026-11-19 (docs pass after MR !178: the two BL-183 wording calls recorded as [Proposed]). Previous: 1.38, 2026-11-19 (docs pass after MR !176 merged as `b0bc84d6`: the six calls of MR !176 recorded as accepted as built with the merge, and the Strategic tip correction recorded for the owner to overrule; BL-340 closed in `BACKLOG.md`). Previous: 1.37, 2026-11-19 (owner accepted the !171 and !172 calls as proposed). Previous: 1.36, 2026-11-19 (docs pass after MR !170 merged as `7d976bad`: PSC-D14 and PSC-D15 added, the two cover settings and the protection switch; the 26 builder calls of MR !170 recorded as accepted as built with the merge; BL-338 and BL-339 closed in `BACKLOG.md`). Previous: 1.35, 2026-11-19 (docs pass after MR !171 and !172: the builder calls of the two MRs recorded as [Proposed] my calls; the Foresight note and the BUILD-GAP row updated). Previous: 1.34, 2026-11-19 (owner accepted every open call "all as proposed": BL-316's !135-1/!135-2/!135-4, the BL-139 rule, BL-324, !161-7, BL-357, BL-183, BL-288, BL-292, BL-321 and BL-343's CAP-D5 group confirmation; the goal is named as supplier user testing in the first week of December 2026). Previous: 1.33, 2026-11-18 (docs pass after MR !159, !160 and !161: the builder calls of the three MRs recorded as my calls under the owner's away grant, awaiting his ruling; the BL-284 note-vs-cell gap question recorded). Previous: 1.32, 2026-11-17 (docs pass closing nine rows built on `main`: BL-235, BL-141, BL-264, BL-265, BL-282, BL-283, BL-289, BL-290 and BL-291; the two [Proposed] calls of MR !113 recorded as !113-1 and !113-2, not ruled). Previous: 1.31, 2026-11-17 (docs pass after MR !150 and MR !151 merged to `main`: the seven builder calls of each recorded as ruled by the owner on 2026-11-17, each as proposed (!150-1 to !150-7 and !151-1 to !151-7); follow-ups BL-325 and BL-326 added to `BACKLOG.md`). Previous: 1.30, 2026-11-17 (!144: BL-313 PEX-D29 accepted by the owner 2026-11-17 and merged in MR !140 (`5d2edcea`); the !127-2 row records the ruling; renumbered after merging main, which took 1.29). Previous: 1.29, 2026-11-17 (docs pass after MR !147 merged to `main` as `f3ad2476`: the VERIFY-135 findings D1 to D3 recorded below, D1 and D2 ruled and built (BL-317, BL-318); docs MR !144 must renumber to 1.30). Previous: 1.28, 2026-11-17 (docs pass after MR !145 merged to `main` as `9f637083`: the eight builder calls of MR !145 recorded as ruled by the owner on 2026-11-17, each as proposed (!145-1 to !145-8); !135-3 and !135-3a recorded ruled the same day; if docs MR !144 merges first, renumber this to 1.29). Previous: 1.27, 2026-11-17 (!127-2: its second half replaced by BL-313, PEX-D29 [Proposed], recorded sourcing shares divided by their total; renumbered after merging main, which took the previous number). Previous: 1.26, 2026-11-17 (docs pass after MR !135: row !117-6 says the "suggest again" path exists since MR !135 [Proposed]; the four builder calls of MR !135 listed as [Proposed], not ruled, as !135-1 to !135-4, and the question !135-3a added from the browser check; MR !135 recorded as in production since 2026-11-17). Previous: 1.25, 2026-11-13 (builder calls of MR !117, !127, !130 and !131 listed as [Proposed], not ruled; the !117 "Accept all" claim marked unverified). Previous: 1.24, 2026-11-11 (ENG-D23 to ENG-D25 added: the owner's BL-286 ruling, the backtest's chosen model shown on the Demand forecast page and not applied). Previous: 1.23, 2026-11-11 (ENG-D26 to ENG-D28 added: the owner's BL-287 ruling, judging overrides by service deferred, the override ledger as backend work (BL-299), the Forecast bias service note reworded; 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) || Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 and FSR-D8 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D22 (2026-11-05) and PEX-D23 and PEX-D24 (2026-11-09 and 2026-11-05); and the rulings of 2026-11-20 on the open decisions in `BACKLOG.md` section 1 (`BL-01`, `BL-11`, `BL-54`, `BL-55`, `BL-57`, `BL-70`, `BL-71`, `BL-101`, `BL-119`, `BL-140`, `BL-145`, `BL-146`, `BL-149`, `BL-150`) |
+| Version | 1.53, 2026-11-25 (the owner accepted the five !203 calls as proposed; the section heading records the ruling; BL-213 closed in `BACKLOG.md`). Previous: 1.52, 2026-11-26 (docs pass after MR !216 merged as `7e7a39a7`: the eight builder calls of UCX-P9 recorded as [Proposed], not ruled, in the build-rulings section; BL-370 records its build). Previous: 1.51, 2026-11-26 (docs pass after the UCX implementation merged: the builder calls of MRs !207 to !214 recorded as [Proposed], not ruled, 55 calls in the new section before Sources; BL-362 to BL-369 stay [Proposed] in `BACKLOG.md` section 4j until the owner rules them and the December test confirms them). Previous: 1.50, 2026-11-25 (use-case experience review: UCX-D1 to UCX-D33 recorded in a new section before Sources, from the owner's rulings of 2026-11-20 to 2026-11-25; the proposals are [Proposed] rows BL-362 to BL-373 in `BACKLOG.md` section 4j). Previous: 1.48, 2026-11-21 (docs pass after MR !199 merged as `c26d4e7c`: the BL-140 follow-up is built). Previous: 1.47, 2026-11-21 (the owner accepted the five !195 calls as proposed; the section heading records the ruling). Previous: 1.46, 2026-11-20 (the owner accepted the four !188 calls as proposed; BL-360 added in section 4i for the Oslo demo after BL-55's 90% gate and parked the same day at the owner's word; BL-326 closed with MR !195 (merged `96ecf77d`): invariant 3 now binds every description id to a tree that renders it, and AsnLinesEditor and RfqQuestionField carry the fix). Previous: 1.45, 2026-11-20 (docs pass after MR !194 merged as `90bf12f6`: the BL-140 build calls recorded, and BL-233 and BL-84 started at the owner's word). Previous: 1.44, 2026-11-20 (docs pass after MR !187 merged as `a19a4c43` and MR !188 as `f049c846`: the four !188 builder calls recorded as [Proposed], not ruled; BL-358 and BL-359 closed in `BACKLOG.md`). Previous: 1.43, 2026-11-20 (docs pass after MR !191 merged as `988180f2` and MR !192 as `49480b7f`: the ruling rows cite the merge; BL-01, BL-55, BL-70, BL-71, BL-119 and BL-145 closed; the SAP interface and the invoice keep their not-currently-checked status). Previous: 1.42, 2026-11-20 (the owner's rulings on the open decisions of 2026-11-20: the SAP interface and the invoice approved and marked not currently checked or built; BL-70 to the super admin and the planner; BL-233's four labels approved as final wording; BL-84 unchanged; BL-55, BL-70 and BL-145 built in MR !191; the other rulings recorded below). Previous: 1.41, 2026-11-20 (docs pass after MR !183 merged as `72e078ba`: CAP-D18 recorded, the commitment table's own months stay editable in Monthly, and the wave-3 calls recorded as accepted as built; BL-343 closed). Previous: 1.40, 2026-11-20 (docs pass after the away merges: the calls of MR !179, !180, !182 and !184 recorded as accepted as built with their merges; the CAP-2 BR-05 question from MR !183 recorded as open). Previous: 1.39, 2026-11-19 (docs pass after MR !178: the two BL-183 wording calls recorded as [Proposed]). Previous: 1.38, 2026-11-19 (docs pass after MR !176 merged as `b0bc84d6`: the six calls of MR !176 recorded as accepted as built with the merge, and the Strategic tip correction recorded for the owner to overrule; BL-340 closed in `BACKLOG.md`). Previous: 1.37, 2026-11-19 (owner accepted the !171 and !172 calls as proposed). Previous: 1.36, 2026-11-19 (docs pass after MR !170 merged as `7d976bad`: PSC-D14 and PSC-D15 added, the two cover settings and the protection switch; the 26 builder calls of MR !170 recorded as accepted as built with the merge; BL-338 and BL-339 closed in `BACKLOG.md`). Previous: 1.35, 2026-11-19 (docs pass after MR !171 and !172: the builder calls of the two MRs recorded as [Proposed] my calls; the Foresight note and the BUILD-GAP row updated). Previous: 1.34, 2026-11-19 (owner accepted every open call "all as proposed": BL-316's !135-1/!135-2/!135-4, the BL-139 rule, BL-324, !161-7, BL-357, BL-183, BL-288, BL-292, BL-321 and BL-343's CAP-D5 group confirmation; the goal is named as supplier user testing in the first week of December 2026). Previous: 1.33, 2026-11-18 (docs pass after MR !159, !160 and !161: the builder calls of the three MRs recorded as my calls under the owner's away grant, awaiting his ruling; the BL-284 note-vs-cell gap question recorded). Previous: 1.32, 2026-11-17 (docs pass closing nine rows built on `main`: BL-235, BL-141, BL-264, BL-265, BL-282, BL-283, BL-289, BL-290 and BL-291; the two [Proposed] calls of MR !113 recorded as !113-1 and !113-2, not ruled). Previous: 1.31, 2026-11-17 (docs pass after MR !150 and MR !151 merged to `main`: the seven builder calls of each recorded as ruled by the owner on 2026-11-17, each as proposed (!150-1 to !150-7 and !151-1 to !151-7); follow-ups BL-325 and BL-326 added to `BACKLOG.md`). Previous: 1.30, 2026-11-17 (!144: BL-313 PEX-D29 accepted by the owner 2026-11-17 and merged in MR !140 (`5d2edcea`); the !127-2 row records the ruling; renumbered after merging main, which took 1.29). Previous: 1.29, 2026-11-17 (docs pass after MR !147 merged to `main` as `f3ad2476`: the VERIFY-135 findings D1 to D3 recorded below, D1 and D2 ruled and built (BL-317, BL-318); docs MR !144 must renumber to 1.30). Previous: 1.28, 2026-11-17 (docs pass after MR !145 merged to `main` as `9f637083`: the eight builder calls of MR !145 recorded as ruled by the owner on 2026-11-17, each as proposed (!145-1 to !145-8); !135-3 and !135-3a recorded ruled the same day; if docs MR !144 merges first, renumber this to 1.29). Previous: 1.27, 2026-11-17 (!127-2: its second half replaced by BL-313, PEX-D29 [Proposed], recorded sourcing shares divided by their total; renumbered after merging main, which took the previous number). Previous: 1.26, 2026-11-17 (docs pass after MR !135: row !117-6 says the "suggest again" path exists since MR !135 [Proposed]; the four builder calls of MR !135 listed as [Proposed], not ruled, as !135-1 to !135-4, and the question !135-3a added from the browser check; MR !135 recorded as in production since 2026-11-17). Previous: 1.25, 2026-11-13 (builder calls of MR !117, !127, !130 and !131 listed as [Proposed], not ruled; the !117 "Accept all" claim marked unverified). Previous: 1.24, 2026-11-11 (ENG-D23 to ENG-D25 added: the owner's BL-286 ruling, the backtest's chosen model shown on the Demand forecast page and not applied). Previous: 1.23, 2026-11-11 (ENG-D26 to ENG-D28 added: the owner's BL-287 ruling, judging overrides by service deferred, the override ledger as backend work (BL-299), the Forecast bias service note reworded; 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) || Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 and FSR-D8 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D22 (2026-11-05) and PEX-D23 and PEX-D24 (2026-11-09 and 2026-11-05); and the rulings of 2026-11-20 on the open decisions in `BACKLOG.md` section 1 (`BL-01`, `BL-11`, `BL-54`, `BL-55`, `BL-57`, `BL-70`, `BL-71`, `BL-101`, `BL-119`, `BL-140`, `BL-145`, `BL-146`, `BL-149`, `BL-150`) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -1424,6 +1424,361 @@ MR !194 fixes the malformed-expiry description in `AsnLinesEditor`, so the contr
 | !203-3 | The PTI bell keeps no badge, because no buyer-side read derives a notice population; BL-361 tracks choosing a source | Invent a number, or remove the bell |
 | !203-4 | The invoice count includes the supplier's own unsent Draft beside PTI-Returned | Count only what PTI waits on |
 | !203-5 | Menu counts added for Orders (Sent or Acknowledged), Call-offs (Awaiting Confirmation) and Invoices (Draft or Returned); Shipments, goods receipts, forecasts, capacity and the rest refused with reasons | Add counts where no waiting population exists |
+## Use-case experience review rulings (UCX, decided 2026-11-20 to 2026-11-25)
+
+From `research/USE-CASE-EXPERIENCE-REVIEW-2026-11.md` section 10, where Levi's words stand with their dates. Each entry records a ruling on a rule, a duty, a proposal or the December supplier test. The sessions that ran P1 to P3 recorded each answer and wrote their reading of its scope. The entries follow that reading and quote the words. UCX-D12 to UCX-D23 rest on one word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended"), which the P2 session read as ruling open questions 1 to 12, and which Levi confirmed for that range on 2026-11-25 ("Confirm questions 1-12"). Rulings on the method of the review (the screenshot size, the confidence rating of a proposal) stay in section 10 of the review. A call that Levi left open is under Open questions there (section 9). The proposals stay [Proposed] in `BACKLOG.md` section 4j (BL-362 to BL-373).
+
+### UCX-D1 · MUST and CAN for the supplier duty map (decided 2026-11-20)
+**Decision.** Levi answered "1. Yes let's do must/can rule" at the P1 supplier checkpoint. A supplier duty is a MUST when the act sits on a use case's positive path or is due by a dated requirement, and a PTI step reads its result or waits on it. Acts that the PTI flow can do without are CAN: acknowledging a PO (UCX-SD2), answering a receipt discrepancy (UCX-SD9) and the Zone Capacity acknowledgement (UCX-SD16).
+
+**Alternative not taken.** MUST by requirement wording alone, which would make UCX-SD2, UCX-SD9 and UCX-SD16 MUST.
+
+**What would change this.** A PTI step that starts to read or wait on one of UCX-SD2, UCX-SD9 and UCX-SD16, or the owner's word.
+
+### UCX-D2 · The December test includes the weekly DA confirmation as a mockup, with the flag off (decided 2026-11-20)
+**Decision.** Levi answered "2. yes". The December supplier test includes the weekly DA confirmation of PSC-1, which is built and switched off, in Part B of the kit as a mockup (UCX-P4). The flag stays off in production until DRC-D10 is lifted.
+
+**Alternative not taken.** Leave the weekly DA confirmation out of the December test.
+
+**What would change this.** Lifting DRC-D10 (the supplier DA view goes on), or the owner's word.
+
+### UCX-D3 · The Zone Capacity acknowledgement stays a supplier duty (decided 2026-11-20)
+**Decision.** Levi answered "3. yes keep it that way". The Zone Capacity acknowledgement stays a supplier duty, as a CAN act, and PEX-D22 stands. The review may raise removing it or a bulk acknowledge only as an open question (see UCX-D14).
+
+**Alternative not taken.** Take the acknowledgement out of the duty map now, because no PTI step waits on it.
+
+**What would change this.** The owner's ruling after the December test (UCX-D14).
+
+### UCX-D4 · The review may propose a hub-assigned ASN sequence number (decided 2026-11-20)
+**Decision.** Levi answered "4. Yes". P2 may propose a hub-assigned ASN sequence number against AIB-D1 ("the supplier enters the sequence"), as a proposal for his ruling that names AIB-D1. AIB-D1 stood until he ruled on open question 2 (UCX-D13).
+
+**Alternative not taken.** Make no proposal that touches AIB-D1.
+
+**What would change this.** Nothing open: UCX-D13 settles the question.
+
+### UCX-D5 · MUST for PTI-only steps (decided 2026-11-20)
+**Decision.** Levi's word at the P1 PTI checkpoint, 2026-11-20: "Accept all your calls as recommended". For a PTI-only step, MUST means that a later step of the use case cannot happen without the act, or that a validated requirement asks for it at a stated frequency.
+
+**Alternative not taken.** The brief's literal reading: MUST only where the supplier waits on the act. UCX-PD7, UCX-PD19, UCX-PD20 and UCX-PD21 would then drop out as CANs.
+
+**What would change this.** A change to the requirements that set those frequencies (AIB-2, PSC-1, PSC-3), or the owner's word.
+
+### UCX-D6 · The hub receipt wizard is not a PTI duty (decided 2026-11-20)
+**Decision.** By the same word, the hub receipt wizard (UCX-PD3) is not a PTI duty, in line with Levi's ruling of 2026-11-18 that SAP posts receipts (AIB-2 BR-03). The review keeps UCX-PD7 and the discrepancy acts, and makes no proposal for the wizard. The wizard still runs in the build, and BL-371 keeps the finding UCX-F3.
+
+**Alternative not taken.** Keep UCX-PD3 as a PTI duty and propose a wizard that passes the halal and BPOM check.
+
+**What would change this.** SAP no longer posting the receipt, or the owner's word.
+
+### UCX-D7 · UCX-PD6 is measured with a supplier-made ASN (decided 2026-11-20)
+**Decision.** By the same word, P2 measures the shelf-life approval (UCX-PD6) with a short-dated ASN that a supplier creates on the review export, and records the set-up steps apart from the counts.
+
+**Alternative not taken.** Leave UCX-PD6 blocked on demo data.
+
+**What would change this.** Nothing open: P2 measured UCX-PD6 on that path (review section 4.1).
+
+### UCX-D8 · The escalated PO stays in the PTI duty map (decided 2026-11-20)
+**Decision.** By the same word, UCX-PD2 (act on an unanswered PO) stays in the PTI map as a MUST with no atom. REQ-E07-02 BR-09 obliges PTI to act, and P2 needs to see that the hub offers no act.
+
+**Alternative not taken.** Drop it, because the act happens outside the hub or in RFx (S2).
+
+**What would change this.** UCX-P7 giving the act a verb and an atom in the hub (BL-368), or the owner's word.
+
+### UCX-D9 · The LTP upload is a monthly MUST until a feed exists (decided 2026-11-20)
+**Decision.** By the same word, UCX-PD20 (upload the LTP inputs) is a monthly MUST. PEX-5 BR-01 and BR-02: the LTP comes from outside the hub, and the planner uploads it.
+
+**Alternative not taken.** A CAN, because the hub falls back to the forecast quantity when no LTP A is uploaded.
+
+**What would change this.** An LTP feed from outside the hub, or the owner's word.
+
+### UCX-D10 · Qualification and sourcing-type atoms sit under the RFx setting (decided 2026-11-20)
+**Decision.** By the same word, `qualification:manage` and `sourcingtype:manage` sit under setting S2 (RFx is out of scope for this review), so they are not PTI duties in the review.
+
+**Alternative not taken.** Keep them as PTI CANs in scope, because both decide who may bid and an event's type (CE-12d to CE-12g).
+
+**What would change this.** RFx coming into the scope of a later review.
+
+### UCX-D11 · What counts as a duty in the PTI map (decided 2026-11-20)
+**Decision.** By the same word, administration and planning-input atoms are CANs that create no supplier duty: they change when or how an existing duty runs. The missing-ASN chase (`calloffchase:close`) is not a duty: it appears and clears by itself, and closing it creates nothing for the supplier.
+
+**Alternative not taken.** Count `setting:set` and `reasoncode:maintain` as duties, because they change the terms of supplier duties. Keep the chase as a duty, because My tasks lists it.
+
+**What would change this.** The owner's word.
+
+### UCX-D12 · Open question 1: the supplier To do keeps its areas (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). Keep the areas of RFX-D20, add the seat filter and the record links (UCX-P1), and show layout B to suppliers in December as a probe.
+
+**Alternative not taken.** Rank the supplier To do across areas as a decided change. RFX-D20 (accepted) groups the list by area, and its text says a red row no longer jumps above other lanes.
+
+**What would change this.** The December test, task K1, which shows layout B as a probe.
+
+### UCX-D13 · Open question 2: the ASN form prefills the next free sequence number (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). The ASN form prefills the next free sequence number, editable. The SAP rules still run (AIB-D1, UCX-P3).
+
+**Alternative not taken.** No prefill: the supplier enters the sequence, as AIB-D1 reads.
+
+**What would change this.** The December test, tasks K6 and K7. UCX-P3 carries confidence low for its defaults and sequence (accepted 2026-11-22 09:57:14 WIB, "Yes, accept").
+
+### UCX-D14 · Open question 3: the Zone Capacity acknowledgement stays, with a bulk action to follow (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). Keep the Zone Capacity acknowledgement, add the bulk action as the smallest change, and decide after the December test (PEX-D22, UCX-F20).
+
+**Alternative not taken.** Remove the acknowledgement, or derive it from the commitment visit (the question named both).
+
+**What would change this.** The December test, task K9 (watch only). BL-372 carries the work.
+
+### UCX-D15 · Open question 4: "Acknowledge receipt" stays a CAN act (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). Keep "Acknowledge receipt" of a PO as a CAN act beside Confirm, and correct the guides that put it first. No build.
+
+**Alternative not taken.** Merge the acknowledgement into Confirm, or remove it (the P1 duty question on UCX-SD2).
+
+**What would change this.** The owner's word. BL-373 carries the guide text.
+
+### UCX-D16 · Open question 5: CR-05 does not change (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). CR-05 does not change. The counter-offer and approval panels show cover and open balance (UCX-P7).
+
+**Alternative not taken.** Change CR-05 so that a 5.1% overage for a full carton layer does not need a planner.
+
+**What would change this.** The owner's word on CR-05.
+
+### UCX-D17 · Open question 6: what "nothing changed" carries (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). "Nothing changed" carries only the DA, the due POs and the Foresight periods. Stock needs a confirmed figure each week. Capacity shows the date of its last change (UCX-P4 v2). The carry-forward of stock is declined.
+
+**Alternative not taken.** Carry stock and capacity forward with "nothing changed": the one-click week of the first UCX-P4 mockup.
+
+**What would change this.** The December test, task K5, where the one-click week runs once as a labelled probe (UCX-D33).
+
+### UCX-D18 · Open question 7: the weekly page writes feedstock and in-production (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). The weekly page writes feedstock and in-production through the existing stock verbs (PSC-1 BR-07, REQ-E08-02 BR-09).
+
+**Alternative not taken.** Show feedstock and in-production read-only, with a link.
+
+**What would change this.** The owner's word.
+
+### UCX-D19 · Open question 8: a remembered DA agreement stands, with no re-ask (decided 2026-11-22, no re-ask 2026-11-25)
+**Decision.** Levi first answered question 8 with the word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended"), confirmed on 2026-11-25 ("Confirm questions 1-12"). On 2026-11-22 at 09:47:38 WIB he answered "Yes, accept" to the question whether to accept a standing DA agreement, which changes owner rule DRC-2 BR-03 (A8). A remembered DA agreement stands until the planner changes it, with its date shown (UCX-P6). On 2026-11-25 he answered "No re-ask" to the question after how many weeks the hub should ask the planner again whether a supplier still agrees to take the remainder of a DA.
+
+**Alternative not taken.** Record the agreement "on the move" each week, as DRC-2 BR-03 reads. Or re-ask after a number of weeks, the recommendation of P2.
+
+**What would change this.** A stale agreement seen in use (UCX-PG12 is at risk), or the owner's word.
+
+### UCX-D20 · Open question 9: the commitment deadline is Wednesday (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). The deadline of the Zone Liability commitments is Wednesday inside the weekly cycle (CR-26 as amended, UCX-F29).
+
+**Alternative not taken.** One working day, as the page shows today.
+
+**What would change this.** The owner's word.
+
+### UCX-D21 · Open question 10: the alert reason "Asked the supplier" (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). Add the alert reason "Asked the supplier" now, and keep BL-150 grouped per supplier × material (UCX-P7, INV-D5).
+
+**Alternative not taken.** Leave the alert reasons and the BL-150 grouping as they are.
+
+**What would change this.** The owner's word.
+
+### UCX-D22 · Open question 11: decisions on an escalated PO (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). PTI records which decision it took on an escalated PO: the supplier confirmed outside the hub, sourcing elsewhere, cancelling in SAP, or still waiting (UCX-P7).
+
+**Alternative not taken.** Leave the escalated PO with no act in the hub, as today (UCX-F1).
+
+**What would change this.** The owner's word. The build needs a new escalation verb and atom (UCX-D29).
+
+### UCX-D23 · Open question 12: a COA request carries its own fields (decided 2026-11-25)
+**Decision.** Accepted as recommended on Levi's word of 2026-11-21 16:19:38 WIB ("Accept all your calls as recommended") and confirmed on 2026-11-25 ("Confirm questions 1-12"). A COA request carries its own form fields (batch, number, issuer, date). The file route waits for BL-27 (UCX-P5).
+
+**Alternative not taken.** Keep one declaration form for every document, as today.
+
+**What would change this.** BL-27 (file storage) being built, which opens the file route.
+
+### UCX-D24 · Open question 13: waiting texts name the owner (decided 2026-11-22)
+**Decision.** Levi answered "Yes, accept all" on 2026-11-22 at 09:29:48 WIB to the question whether to accept calls 12 to 16 and open questions 13 and 14 as recommended. The supplier's "Awaiting exception" row and its "Confirm capacity for {group} first" text read "Awaiting PTI Quality: exception decision" and "Awaiting Supplier Fulfilment: capacity for {group}". The agreed words stay, and the owner sits beside them (UCX-P8, TL BR-03).
+
+**Alternative not taken.** Keep both texts as they are: no term-label row names either, and TL BR-03 asks a ruling for a rename.
+
+**What would change this.** A term-label ruling that names either text, or the owner's word.
+
+### UCX-D25 · Open question 14: the PO On Hold chips may carry the (i) tip (decided 2026-11-22)
+**Decision.** By the same answer of 2026-11-22 09:29:48 WIB ("Yes, accept all"), the read-only chips of the PO On Hold panel (PIPO, Max PTI, FG cap) may carry the (i) tip (UCX-P6, TL-D4).
+
+**Alternative not taken.** Keep the (i) tip to column headers, grid row labels and KPI titles, as TL-D4 reads.
+
+**What would change this.** BL-297: the definitions of PIPO and Max PTI wait for it (UCX-P6).
+
+### UCX-D26 · The proposals that P3 tests, the probes and the DA view (decided 2026-11-21)
+**Decision.** Levi answered "Accept all your calls as recommended" on 2026-11-21 at 16:19:38 WIB at the P2 checkpoint, which the P2 session read as accepting checkpoint questions 1 to 4. UCX-P1 to UCX-P9 are the proposals that P3 tests. Layout B of UCX-P1 and the in-place fields of UCX-P4 go to the December participants as probes, not as decisions. The supplier DA view stays off (DRC-D10), and UCX-P4 is tested only as a mockup.
+
+**Alternative not taken.** Show layout B and the in-place fields as decisions, and switch the supplier DA view on for the test.
+
+**What would change this.** The December test results, or lifting DRC-D10.
+
+### UCX-D27 · The Undo in UCX-P2 is a dependency, size L (decided 2026-11-22)
+**Decision.** Levi answered "Yes, accept all" on 2026-11-22 at 09:29:48 WIB (call 12 of P2). The Undo in UCX-P2 is a dependency: a new verb for POs and call-offs. The size of UCX-P2 is L. No supplier act returns a Confirmed record to its earlier state today (`purchaseOrder.flow.js:86-98`), and the risk answer to UCX-SG1 counts on the Undo.
+
+**Alternative not taken.** Drop the Undo and keep size M.
+
+**What would change this.** The rule that Levi sets for what PTI reads for 10 minutes after an Undo, and the December test, task K3.
+
+### UCX-D28 · The one-step shipment act is named "Mark as shipped" (decided 2026-11-22)
+**Decision.** By the same answer (call 13 of P2), the one-step act of UCX-P3 is named "Mark as shipped", a Proposed label. "Shipping notice" is the owner's name for the completion date (REQ-E07-05, PSC-D6).
+
+**Alternative not taken.** Keep "shipment notice".
+
+**What would change this.** A term-label ruling on the label.
+
+### UCX-D29 · The "Ask the supplier to confirm" verb goes to Procurement (decided 2026-11-22)
+**Decision.** By the same answer (call 15 of P2), the new "Ask the supplier to confirm" verb goes to the Procurement lane, with a new atom (UCX-P7). Procurement holds `po:review-response` and is the owner shown on the escalated PO in the mockup.
+
+**Alternative not taken.** The Planning lane, which holds `supplierask:raise` and matches the "Material Planner" of REQ-E07-02.
+
+**What would change this.** The owner's word on which lane owns the act.
+
+### UCX-D30 · No (i) tip on form fields (decided 2026-11-22)
+**Decision.** By the same answer (call 16 of P2), the (i) tip stays off form fields in UCX-P3 and UCX-P9, and visible hints serve there. TL-D4 (accepted 2026-10-29) puts the tip on column headers, grid row labels and KPI titles.
+
+**Alternative not taken.** Ask the owner to extend TL-D4 to form fields.
+
+**What would change this.** An owner ruling that extends TL-D4 to form fields.
+
+### UCX-D31 · The December test: days, build freeze and people (decided 2026-11-25)
+**Decision.** Levi answered the questions of the P3 session on 2026-11-25 with the options "Tue 1, Wed 2, Thu 3 Dec (Recommended)", "Freeze the build on Mon 30 Nov (Recommended)", "Levi moderates, a colleague takes notes (Recommended)", "Leave the name open for now" and "DP Group Tue 1, DKSH Wed 2, Lautan Luas Thu 3 (Recommended)". The words are the labels of options that the P3 session offered, and the details are its reading. The December supplier test runs on Tue 1, Wed 2 and Thu 3 Dec 2026, one session per day at 10:00 WIB (75 minutes), with 14:00 WIB as a spare slot. The build is frozen on Mon 30 Nov: no production deploy from that day until the last session, the commit SHA goes on the sheets, and the moderator runs the pre-session check (kit section 4) on 30 Nov and before each session. Levi moderates, and a colleague of his team takes notes; the name is open. DP Group takes Tue 1 Dec, DKSH Indonesia Wed 2 Dec and Lautan Luas Thu 3 Dec, subject to each supplier's confirmation, which nobody has asked for yet.
+
+**Alternative not taken.** Other days, no build freeze, another moderator, or another order of the suppliers. The P3 session offered options, and its file records only the ones that Levi chose.
+
+**What would change this.** A supplier that cannot take its day, or a change that must reach production during the freeze.
+
+### UCX-D32 · The December sessions: no recording, one spoken consent line (decided 2026-11-25)
+**Decision.** Levi chose "Accept C3 defaults" on 2026-11-25. For the December sessions there is no recording, and the note-taker takes notes only (C3 kit MC-13). The moderator reads one spoken consent line, in the Indonesian and English texts of kit section 3, and no written consent form is used (MC-15). The word is the label of a button that the P3 session offered, and the scope is its reading.
+
+**Alternative not taken.** Record the sessions, or use a written consent form.
+
+**What would change this.** The owner's word.
+
+### UCX-D33 · The one-click week of K5 runs once as a labelled probe (decided 2026-11-25)
+**Decision.** Levi chose "Allow K5 probe" on 2026-11-25. The moderator may show the one-click week of UCX-P4 (the option "Probe, question 6 not confirmed: one click for the whole week" in `UCX-P4-weekly-page-v2.html`) once per session, after the main task of K5, and says that it is a drawing. Open question 6 stays ruled (UCX-D17): the carry-forward of stock stays declined. The probe tests how far a supplier trusts a carried-forward figure. It is not a proposal.
+
+**Alternative not taken.** Do not show the one-click week to suppliers.
+
+**What would change this.** The K5 result on trust in a carried-forward figure, or the owner's word on open question 6.
+
+## Use-case experience implementation build rulings (merged 2026-11-26)
+
+The eight implementation MRs merged on 2026-11-26: !207 (P8, BL-369), !208 (P1, BL-362), !209 (P6, BL-367), !210 (P4, BL-365), !211 (P5, BL-366), !212 (P7, BL-368), !213 (P2, BL-363) and !214 (P3, BL-364). The builds made every call below under the owner's away rule; each is [Proposed], not ruled, and the owner may reopen any of them. The rulings the builds applied are UCX-D1 to UCX-D33 above. The build notes are in `prompts/use-case-experience-2026-11/implement/P1-NOTES-FOR-LEVI.md`, P2, P6 and P7; the others are in their MR descriptions. BL-362 to BL-369 stay [Proposed] in `BACKLOG.md` section 4j until the owner rules them and the December test confirms them.
+
+### Builder calls from MR !207 (BL-369, UCX-P8)
+**Source:** the MR description.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !207-1 | The Indonesian waiting texts: "Menunggu Mutu PTI: keputusan pengecualian" and "Menunggu Pemenuhan Pemasok: kapasitas untuk {group}" | "Kualitas PTI"; another fulfilment wording |
+| !207-2 | The ruled capacity text replaces "Confirm capacity for {group} first."; a seat without the fulfilment lane reads the wait and sees no link | Keep an imperative for that seat |
+| !207-3 | A new "Confirm capacity" link after the wait text | The owner words as the link |
+| !207-4 | `fc.refusal.capacityNotConfirmed` and `fc.sup.week.help` stay unchanged | Align them now |
+| !207-5 | The ASN sentence sits beside the status pill, not in the Actions column | The Actions column |
+
+### Builder calls from MR !208 (BL-362, UCX-P1 v2)
+**Source:** the MR description; the full list is in P1's build notes.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !208-1 | The act per row, where the row's page offers a different verb than its lane name suggests (`po:review-response`, `calloff:plan`, `calloffchase:close`, `supplierask:raise`, `gr:inspect`, `gr:receive`, `rfq:negotiate`, `osiplevel:set`, `capacitydecision:accept`, `calloff:dispatch`, `inventorydeclaration:declare`) | The neighbouring atom named in P1's notes |
+| !208-2 | Four rows with no act, always shown: "Create a PR in SAP", "SAP messages failed", the award rows and "Invoices awaiting payment" | Hide them behind the link too |
+| !208-3 | The four new rows' routes: the buyer call-offs page has no `rejected` filter, and the shelf-life row opens the page rather than one exception | Add the filter and the deep link now |
+| !208-4 | The hidden-rows link toggles to "Hide the rows…" | The link disappears after one use |
+| !208-5 | The one-record rule is applied to the two named walks; the other supplier rows keep their page targets | Extend it to create-ASN, shipping-notice, certs and docs-requested |
+| !208-6 | The labels are [Proposed] in EN and ID, including "Missing ASN"; "lane" stays "lane" in Indonesian | The alternatives in P1's notes |
+
+### Builder calls from MR !209 (BL-367, UCX-P6)
+**Source:** the MR description; the full list is in P6's build notes.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !209-1 | The standing agreement is derived from the publication history, not a new store; the date is the run's start and the quantity the newest recorded remainder | A separate agreement store |
+| !209-2 | "New" and "changed" are the [Proposed] rule (no agreement / remainder differs from the recorded quantity) | Changed also when the horizon moved; or never changed |
+| !209-3 | A standing row keeps its checkbox, pre-ticked, so the planner changes the agreement by unticking | Read-only standing rows with a separate revoke control |
+| !209-4 | A pair whose remainder is absorbed into the next horizon stops being a candidate, and the publish at that week revokes its agreement | Keep the agreement for a pair with no remainder |
+| !209-5 | The labels are [Proposed] (the summary, standing/new/changed lines, the bulk button and its hint, the FG cap hint), EN and ID | The alternatives in P6's notes |
+| !209-6 | Questions for the owner of the terms (BL-297): what is PIPO, what is Max PTI, and does "Max Supplier" in BR-03 mean supplier capacity or supplier stock? | Answer them and write the two tips |
+| !209-7 | The FG cap hint and its (i) ship; PIPO and Max PTI carry no text until BL-297 | A "definition pending" tip |
+
+### Builder calls from MR !210 (BL-365, UCX-P4 v2)
+**Source:** the MR description.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !210-1 | The week confirmation dispatches the existing PSC-1 DA confirmation while the DA view stays off; the page names the publication's identity and never a DA figure | Leave "Confirm the week" off until DRC-D10 lifts |
+| !210-2 | A narrow read `getSupplierWeeklyPublication` returns identity only (week, publication id, published date, material codes, confirmation time) | No read, no week confirm while the flag is off |
+| !210-3 | A menu item "Weekly confirmation" under Planning, and a link from the To do weekly panel | Reach the page only from To do |
+| !210-4 | The [Proposed] labels: "Weekly confirmation" and the mockup's labels ("Confirm", "Confirm the new figures", "Confirm the week", "Last confirmed", "Last changed", "Open capacity") | The alternatives in P4's description |
+| !210-5 | The one-stock-entry guard names three drivers; a fourth driver still needs a ruling | Keep two drivers and give the weekly page a different write path |
+| !210-6 | An unchanged in-production figure keeps BL-358's runs and shows its completion date read-only; a changed figure reveals MAT-D4's editable date | Always editable, or always write the pair |
+| !210-7 | The page pre-fills stock from the stock record and feedstock from the last feedstock confirmation; a never-confirmed material shows an empty field | Seed one material's feedstock |
+| !210-8 | A raw material shows no feedstock field; its stock confirmation may be refused by the raw-material batch rule and the refusal shows on the row | Hide the weekly confirmation for raw materials |
+
+### Builder calls from MR !211 (BL-366, UCX-P5)
+**Source:** the MR description.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !211-1 | The COA request kind is a model field pair (`requestKind` + `requestBatch`) plus a sibling `coaDeclaration` | A discriminated union, or a separate request entity |
+| !211-2 | The buyer's generic request panel does not offer a COA kind yet | Add the kind select and a batch field |
+| !211-3 | "Ask for a renewal" lives on the Compliance registry row | A separate "Supplier documents" card |
+| !211-4 | The renewal's scheme comes from the record's category (`CERT_TYPE_FOR_CATEGORY`) | Leave it to the supplier, or derive it from the issuer text |
+| !211-5 | The renewal's "What it covers" is prefilled from the record's own linked-to text, not the mockup's literal sentence | The literal phrase |
+| !211-6 | The confirm sentence says "the document itself" | The mockup's "the certificate itself" |
+| !211-7 | The new labels are [Proposed] ("Answer", "Send answer", "Renew your {name}", "Replaces", "Batch number", "COA number", "Date issued", "Ask for a renewal", the renewal receipt line) | The alternatives in P5's description |
+| !211-8 | The record's status reads "Under Review"; the mockup's "Renewal under review" is a draw label | A distinct display label |
+| !211-9 | The renewal ask commits in one step | Reuse the generic panel's confirm step |
+
+### Builder calls from MR !212 (BL-368, UCX-P7)
+**Source:** the MR description; the full list is in P7's build notes.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !212-1 | The new atom `po:escalation` sits in Procurement and in the automation grant; the record is a new entity, not a PO state | A statePreserving record with three page dispatches |
+| !212-2 | The decision states: confirmed → Confirmed, sourcing elsewhere → Rejected, cancel → Closed, still waiting → records only | Other mappings |
+| !212-3 | "Ask the supplier to confirm" records on the escalation entity, not as a `supplierAsk` | Raise a supplier ask instead |
+| !212-4 | The dead footer is removed for every status | Bring a working "View full details" back |
+| !212-5 | Cover = PTI stock / average daily demand vs lead time; open balance = PO quantity not yet called off | Other cover or balance reads |
+| !212-6 | The dispute outcomes `supplierRight` / `receiptStands` / `recount` are [Proposed] | Other outcome sets |
+| !212-7 | Every new label is [Proposed], EN and ID | The alternatives in P7's notes |
+
+### Builder calls from MR !213 (BL-363, UCX-P2 v2)
+**Source:** the MR description; the full list is in P2's build notes.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !213-1 | The Undo is deferred (Q-P2-1 unanswered: what PTI reads for 10 minutes after an Undo); UCX-SG1 stays at risk until it lands | Build the Undo now on a guessed window |
+| !213-2 | The eligibility rule (awaiting, not escalated, no value-limit line; call-off awaiting confirmation with no PTI delay) | Allow an escalated order with a warning, or a value-limit order with a zero quantity |
+| !213-3 | Partial failure: report each refused record and keep the confirmed ones; no rollback | Stop at the first failure |
+| !213-4 | The labels are [Proposed] in EN and ID; the 10-minute window is the mockup's number and this MR has no timer | The alternatives in P2's notes |
+| !213-5 | Foresight commitments gets no bar (BL-363 names Purchase orders and Call-offs) | Extend the bar there |
+
+### Builder calls from MR !214 (BL-364, UCX-P3)
+**Source:** the MR description.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !214-1 | Step defaults: quantity = the agreed deliveries, arrival = the call-off need date, shipped date = the hub's today (the arrival source is [Proposed]) | The released quantity; the approved earliest delivery date; an empty shipped date |
+| !214-2 | "Mark as shipped" replaces the dispatch-notice form and the ASN link | Keep both |
+| !214-3 | While a draft for the call-off is open, the drawer shows "Complete the delivery details" instead of a second mark | Always offer the mark |
+| !214-4 | The act requires `calloff:dispatch` + `asn:create` + `asn:submit`, and reads the wait for the first atom missing | Gate each verb separately |
+| !214-5 | Next free sequence = highest live numeric sequence + 1, starting at 1; a cancelled ASN frees its number | The lowest unused positive integer |
+| !214-6 | The wording of "Mark as shipped", "Complete the delivery details", the one message and the hints is [Proposed] | The alternatives in P3's description |
+| !214-7 | Draft mode opens at step 2 with all three steps reachable | A two-step wizard in draft mode |
+| !214-8 | Race for the same sequence: the existing uniqueness rule stands and the refusal names the number | A new rule |
+
+### Builder calls from MR !216 (BL-370, UCX-P9)
+**Source:** the MR description and `implement/P9-NOTES-FOR-LEVI.md`.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !216-1 | The supplier's receipt row reads "Quantity check", not "Quantity check (CR-25)"; the buyer's column header keeps the code | Keep the code and add a tip explaining it |
+| !216-2 | The supplier's PO On Hold notes read "waiting for Paragon's decision" instead of "awaiting owner review (PEX-12)"; the PTI panel keeps PEX-12 | "waiting for PTI's decision", or keep the code on both |
+| !216-3 | The three scheme names are decoded in one hint (BPJPH, MUI, BPOM) | A link to the glossary page instead of a sentence |
+| !216-4 | "Not coded" is described as "no reason code applies; the typed reason still says why" | The owner's own sentence, or drop the clause |
+| !216-5 | The day-band cut-offs are written into three tips and the alert basis line | One place only, with the others pointing to it |
+| !216-6 | "Raise the next PO" is described with the 4-week window (CAP-9 BR-05, [Proposed]) | Describe the pill without the window |
+| !216-7 | The move-demand panel explains Zone Liability and Zone Capacity together | Explain only the zone the line is in |
+| !216-8 | The Confirmations tip lists Cap, Fore and Ship | Leave the definition and give each chip an aria-label |
 
 ## Sources
 
