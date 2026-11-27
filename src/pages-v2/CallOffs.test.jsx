@@ -231,7 +231,7 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
       // UCX-P2 (BL-363) — the leading select-for-confirm column.
       'Select for confirm',
       'Call-off Purchase order',
-      'Material PICSynthetic data · awaiting the MDM SAP feed',
+      'Material PICSample data · not from SAP yet',
       'Quantity',
       'Need date Type',
       'Confirmation Confirm by',

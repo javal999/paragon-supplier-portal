@@ -36,6 +36,10 @@ export const widgetEn = {
   // BL-102 — the forecast engine's inputs are synthetic until the Master Data
   // Management team's SAP feed lands (ENG-D1).
   'widget.honesty.awaitingMdmFeed': 'Synthetic data · awaiting the MDM SAP feed',
+  // Material A2 — the SAP-copied material fields are fixture values until the
+  // MDM material feed runs. The owner ruled one plain sentence for both
+  // personas on 2026-11-26 (DECISION-GUIDE 1.54).
+  'widget.honesty.sampleNotFromSap': 'Sample data · not from SAP yet',
   // Material B2 — the scheduled stock pull is not running until Stage F.
   'widget.honesty.awaitingStageF': 'Not running · awaiting Stage F',
   // D-CENSUS-8 — the VERB axis of ProvenanceMarker. Says the narrow true thing
@@ -139,6 +143,7 @@ export const widgetId = {
   'widget.honesty.awaitingSupplierFeed': 'Data contoh',
   'widget.honesty.awaitingDiscoveryFeed': 'Data contoh',
   'widget.honesty.awaitingMdmFeed': 'Data sintetis · menunggu data SAP dari tim MDM',
+  'widget.honesty.sampleNotFromSap': 'Data contoh · belum dari SAP',
   'widget.honesty.awaitingStageF': 'Belum berjalan · menunggu Stage F',
   'widget.honesty.commandsDispatch': 'Perubahan hilang saat dimuat ulang',
   'widget.allClear': 'Semua beres',
