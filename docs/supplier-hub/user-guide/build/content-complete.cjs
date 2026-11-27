@@ -163,22 +163,22 @@ add({
   menus: [{ actor: 'PTI', text: 'Order collaboration → Goods receipts' }, { actor: 'SUP', text: 'Orders → Purchase orders · Shipments & ASN · Goods receipts' }],
   lanes: {
     pti: [{ n: 3, label: 'Create GR, post to SAP' }, { n: 5, label: 'Reconcile or resolve' }],
-    sup: [{ n: 1, label: 'Acknowledge and confirm PO' }, { n: 2, label: 'Create and submit ASN' }, { n: 4, label: 'Answer a receipt discrepancy' }]
+    sup: [{ n: 1, label: 'Confirm the PO (acknowledge is optional)' }, { n: 2, label: 'Create and submit ASN' }, { n: 4, label: 'Answer a receipt discrepancy' }]
   },
   caption: 'The PO itself comes from SAP. Steps 4 and 5 happen only when the receipt is short or has rejected lines.',
   notes: 'Evidence: SCENARIOS.md UC1.'
 });
 add({
-  type: 'step', kicker: u2(1), title: 'Supplier acknowledges and confirms the PO',
+  type: 'step', kicker: u2(1), title: 'Supplier confirms the PO',
   menu: 'Orders → Purchase orders',
   shot: 'UC2-1-supplier.png', route: '/supplier/orders', seat: 'Supplier', record: 'PO-2026-00121 Sent',
   steps: [
     S('Open the PO (To do: "Purchase orders to respond to")'),
-    S('Acknowledge receipt'),
     S('Confirm order, with the confirmed quantity and date'),
+    S('Acknowledge receipt is optional: Confirm is allowed straight from Sent'),
     S('Or: Adjust → Send adjustment, or Reject → Send rejection')
   ],
-  statusAfter: 'PO: Sent → Acknowledged → Confirmed',
+  statusAfter: 'PO: Sent → Confirmed (acknowledge is optional)',
   notes: 'Evidence: src/lib/i18n/supplierOrders.js:65; src/pages-v2/SupplierOrders/components/PanelFooter.jsx:94-103,125-126,146-156,163-192; src/pages-v2/SupplierOrders/hooks/usePoCommands.js:74,164,203; src/lib/i18n/hub.js:188.'
 });
 add({

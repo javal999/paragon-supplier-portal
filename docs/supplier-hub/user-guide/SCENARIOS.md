@@ -84,7 +84,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful | Orders → **Purchase orders** | **Acknowledge receipt** | Acknowledged | `lib/i18n/supplierOrders.js:65`; `pages-v2/SupplierOrders/components/PanelFooter.jsx:94-103`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:203` |
+| 1 | Sup-Ful | Orders → **Purchase orders** | **Acknowledge receipt** (optional — Confirm is allowed straight from Sent, so it is not needed first) | Acknowledged, or Sent if skipped | `lib/i18n/supplierOrders.js:65`; `pages-v2/SupplierOrders/components/PanelFooter.jsx:94-103`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:203` |
 | 2 | Sup-Ful | same | **Confirm order**, with confirmed qty and date | Confirmed | `pages-v2/SupplierOrders/components/PanelFooter.jsx:125-126,163-170`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:74` |
 | 3 | Sup-Ful | same, or Orders → **Shipments & ASN** | **Create ASN** (or **Create ASN now** after confirming) opens the ASN wizard for that PO → **Submit ASN** | ASN Submitted | `lib/i18n/supplierOrders.js:58`; `pages-v2/SupplierOrders/index.jsx:338-354`; `pages-v2/shipments/asnWizardEntry.js:42`; `pages-v2/SupplierShipments/index.jsx:306,346-349` |
 | 4 | PTI-Rcv | Order collaboration → **Goods receipts** | **New GR** → 4-step wizard → **Create GR** | Approved → Posted to SAP | `pages-v2/BuyerGoodsReceipt/components/GoodsReceiptHeader.jsx:63`; `components/v2-features/GRInspectionWizard/index.jsx:206`; `services/transitions/grRollup.js` |
